@@ -18,6 +18,7 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-konva": "^19.2.2",
+    "react-resizable-panels": "^4.6.5",
     "tailwindcss": "^4.1.18",
     "use-image": "^1.1.4",
     "uuid": "^13.0.0",
