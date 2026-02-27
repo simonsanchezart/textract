@@ -1,1 +1,10 @@
 @import "tailwindcss";
+
+@font-face {
+    font-family: "OpenSans";
+    src: url("./assets/fonts/OpenSans-VariableFont_wdth\,wght.ttf");
+}
+
+:root {
+    font-family: OpenSans;
+}
