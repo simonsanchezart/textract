@@ -8,3 +8,8 @@
 :root {
     font-family: OpenSans;
 }
+
+@theme {
+    --color-dark-main: #282828;
+    --color-dark-secondary: #3e3e3e;
+}

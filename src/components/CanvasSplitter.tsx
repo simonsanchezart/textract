@@ -1,35 +1,42 @@
 import { Group as ResizableGroup, Panel, Separator, useDefaultLayout, usePanelRef } from "react-resizable-panels";
+import Canvas from "./Canvas";
 
 function CanvasSplitter({ className }: { className?: string }) {
-    const PANEL_MIN_PERCENT = `${10}%`;
-
     const { defaultLayout, onLayoutChanged } = useDefaultLayout({
         id: "default",
         storage: localStorage,
     });
 
-    const leftPanel = usePanelRef();
+    const PANEL_MIN_SIZE = `${10}%`;
+    const leftPanelRef = usePanelRef();
 
     return (
         <div className={className}>
             <ResizableGroup defaultLayout={defaultLayout} onLayoutChanged={onLayoutChanged}>
                 <Panel
                     id="markPanel"
-                    panelRef={leftPanel}
-                    className="bg-red-500 rounded-l-md"
-                    minSize={PANEL_MIN_PERCENT}
+                    panelRef={leftPanelRef}
+                    className="bg-dark-main rounded-l-md"
+                    minSize={PANEL_MIN_SIZE}
                 >
-                    Left
+                    <Canvas className="rounded-l-md"/>
                 </Panel>
 
                 <Separator
-                    className="bg-amber-400 focus:outline-none w-0 opacity-100 drop-shadow-sm/50 hover:w-2 data-[separator='hover']:w-2 data-[separator='active']:w-2 duration-100 transition-all"
+                    className="bg-dark-main focus:outline-none w-0.5 drop-shadow-md/50 duration-100 transition-all
+                                hover:drop-shadow-xl/75
+                                data-[separator='hover']:drop-shadow-xl/75
+                                data-[separator='active']:drop-shadow-xl/75
+                                hover:w-2
+                                data-[separator='hover']:w-2
+                                data-[separator='active']:w-2
+                    "
                     onClick={(e) => e.preventDefault()}
-                    onDoubleClick={() => leftPanel.current?.resize("50%")}
+                    onDoubleClick={() => leftPanelRef.current?.resize("50%")}
                 />
 
-                <Panel id="atlasPanel" className="bg-blue-500 rounded-r-md" minSize={PANEL_MIN_PERCENT}>
-                    Right
+                <Panel id="atlasPanel" className="bg-dark-main drop-shadow-2xl rounded-r-md" minSize={PANEL_MIN_SIZE}>
+                    <Canvas className="rounded-r-md"/>
                 </Panel>
             </ResizableGroup>
         </div>
