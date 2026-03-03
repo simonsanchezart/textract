@@ -1,8 +1,10 @@
 import Konva from "konva";
-import { useRef } from "react";
-import { Layer, Rect, Shape, Stage } from "react-konva";
+import { ReactNode, useRef } from "react";
+import { Layer, Shape, Stage } from "react-konva";
 
-function Canvas({ className }: { className?: string }) {
+//marker: if I need custom actions I can make a type of Actions, all optional, and call them from the childs
+
+function Canvas({ className, children }: { className?: string, children?: ReactNode }) {
     const SIZE = 2048;
     const DOT_SPACING = 32;
     const DOT_SIZE = 1;
@@ -76,7 +78,7 @@ function Canvas({ className }: { className?: string }) {
             x={32}
             y={32}
             draggable
-            className={`rounded-md ${className}-300`}
+            className={`h-1 ${className}`}
             ref={stageRef}
             onWheel={handleZoom}
         >
@@ -84,8 +86,9 @@ function Canvas({ className }: { className?: string }) {
                 <Shape sceneFunc={dragGrid} />
             </Layer>
             <Layer>
-                <Rect fill={"red"} width={32} height={32} />
-                <Rect fill={"red"} width={32} height={32} x={64} draggable />
+                {/* <Rect fill={"red"} width={32} height={32} />
+                <Rect fill={"red"} width={32} height={32} x={64} draggable /> */}
+                {children}
             </Layer>
         </Stage>
     );

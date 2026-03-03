@@ -4,7 +4,7 @@ import Textract from "./components/Textract";
 
 function App() {
     return (
-        <main className="flex flex-col h-screen">
+        <main className="flex flex-col h-screen text-light-main">
             <Navbar />
             <Textract />
         </main>

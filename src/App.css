@@ -10,6 +10,12 @@
 }
 
 @theme {
+    --color-dark-main-darker: #202020;
     --color-dark-main: #282828;
     --color-dark-secondary: #3e3e3e;
+    --color-light-main: #faf1c9;
+}
+
+.button-icon {
+    @apply opacity-50 hover:opacity-100 hover:cursor-pointer hover:scale-125 duration-100 transition-all;
 }

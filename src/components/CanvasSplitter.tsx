@@ -1,5 +1,6 @@
 import { Group as ResizableGroup, Panel, Separator, useDefaultLayout, usePanelRef } from "react-resizable-panels";
-import Canvas from "./Canvas";
+import MarkCanvas from "./MarkCanvas";
+import AtlasCanvas from "./AtlasCanvas";
 
 function CanvasSplitter({ className }: { className?: string }) {
     const { defaultLayout, onLayoutChanged } = useDefaultLayout({
@@ -16,10 +17,10 @@ function CanvasSplitter({ className }: { className?: string }) {
                 <Panel
                     id="markPanel"
                     panelRef={leftPanelRef}
-                    className="bg-dark-main rounded-l-md"
+                    className="bg-dark-main"
                     minSize={PANEL_MIN_SIZE}
                 >
-                    <Canvas className="rounded-l-md"/>
+                    <MarkCanvas/>
                 </Panel>
 
                 <Separator
@@ -35,8 +36,8 @@ function CanvasSplitter({ className }: { className?: string }) {
                     onDoubleClick={() => leftPanelRef.current?.resize("50%")}
                 />
 
-                <Panel id="atlasPanel" className="bg-dark-main drop-shadow-2xl rounded-r-md" minSize={PANEL_MIN_SIZE}>
-                    <Canvas className="rounded-r-md"/>
+                <Panel id="atlasPanel" className="bg-dark-main drop-shadow-2xl" minSize={PANEL_MIN_SIZE}>
+                    <AtlasCanvas />
                 </Panel>
             </ResizableGroup>
         </div>
