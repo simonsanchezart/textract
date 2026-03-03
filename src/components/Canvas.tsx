@@ -1,14 +1,15 @@
 import Konva from "konva";
-import { ReactNode, useRef } from "react";
+import { ReactNode, useRef, useState } from "react";
 import { Layer, Shape, Stage } from "react-konva";
 
 //marker: if I need custom actions I can make a type of Actions, all optional, and call them from the childs
 
-function Canvas({ className, children }: { className?: string, children?: ReactNode }) {
+function Canvas({ className, children }: { className?: string; children?: ReactNode }) {
     const SIZE = 2048;
     const DOT_SPACING = 32;
     const DOT_SIZE = 1;
 
+    const [zoomLevel, setZoomLevel] = useState(1.0);
     const stageRef = useRef<Konva.Stage>(null);
 
     const handleZoom = (e: Konva.KonvaEventObject<WheelEvent>) => {
@@ -27,6 +28,7 @@ function Canvas({ className, children }: { className?: string, children?: ReactN
 
         let newScale = direction > 0 ? oldScale * 1.1 : oldScale / 1.1;
         newScale = Math.max(Math.min(10, newScale), 0.1);
+        if (Math.abs(newScale - 1.0) < 0.05) newScale = 1;
 
         const newPos = {
             x: pointer.x - mousePointTo.x * newScale,
@@ -36,6 +38,7 @@ function Canvas({ className, children }: { className?: string, children?: ReactN
         stage.scale({ x: newScale, y: newScale });
         stage.position(newPos);
         stage.batchDraw();
+        setZoomLevel(newScale);
     };
 
     const dragGrid = (ctx: Konva.Context, shape: Konva.Shape) => {
@@ -72,25 +75,26 @@ function Canvas({ className, children }: { className?: string, children?: ReactN
     };
 
     return (
-        <Stage
-            width={SIZE}
-            height={SIZE}
-            x={32}
-            y={32}
-            draggable
-            className={`h-1 ${className}`}
-            ref={stageRef}
-            onWheel={handleZoom}
-        >
-            <Layer listening={false}>
-                <Shape sceneFunc={dragGrid} />
-            </Layer>
-            <Layer>
-                {/* <Rect fill={"red"} width={32} height={32} />
-                <Rect fill={"red"} width={32} height={32} x={64} draggable /> */}
-                {children}
-            </Layer>
-        </Stage>
+        <div className="h-full">
+            <Stage
+                width={SIZE}
+                height={SIZE}
+                x={32}
+                y={32}
+                draggable
+                className={`h-0 ${className}`}
+                ref={stageRef}
+                onWheel={handleZoom}
+            >
+                <Layer listening={false}>
+                    <Shape sceneFunc={dragGrid} />
+                </Layer>
+                <Layer>{children}</Layer>
+            </Stage>
+            <p className="opacity-50 text-sm select-none absolute bottom-0 right-0 m-2">
+                {Math.round(zoomLevel * 100)}%
+            </p>
+        </div>
     );
 }
 export default Canvas;
