@@ -1,16 +1,25 @@
 import Konva from "konva";
-import { ReactNode, useRef, useState } from "react";
-import { Layer, Shape, Stage } from "react-konva";
+import { KonvaPointerEvent } from "konva/lib/PointerEvents";
+import React, { ReactNode, useRef, useState } from "react";
+import { Layer, Shape, Stage, Transformer } from "react-konva";
 
-//marker: if I need custom actions I can make a type of Actions, all optional, and call them from the childs
+type CanvasProps = {
+    className?: string;
+    children?: ReactNode;
+} & React.ComponentProps<typeof Stage>;
 
-function Canvas({ className, children }: { className?: string; children?: ReactNode }) {
+function Canvas({ className, children, ...props }: CanvasProps) {
+    const ZOOM_MULTIPLIER = 1.1;
+    const MIN_ZOOM = 0.1;
+    const MAX_ZOOM = 10;
     const SIZE = 2048;
     const DOT_SPACING = 32;
     const DOT_SIZE = 1;
 
     const [zoomLevel, setZoomLevel] = useState(1.0);
+
     const stageRef = useRef<Konva.Stage>(null);
+    const transformerRef = useRef<Konva.Transformer | null>(null);
 
     const handleZoom = (e: Konva.KonvaEventObject<WheelEvent>) => {
         e.evt.preventDefault();
@@ -26,8 +35,8 @@ function Canvas({ className, children }: { className?: string; children?: ReactN
 
         const direction = e.evt.deltaY > 0 ? -1 : 1;
 
-        let newScale = direction > 0 ? oldScale * 1.1 : oldScale / 1.1;
-        newScale = Math.max(Math.min(10, newScale), 0.1);
+        let newScale = direction > 0 ? oldScale * ZOOM_MULTIPLIER : oldScale / ZOOM_MULTIPLIER;
+        newScale = Math.max(Math.min(MAX_ZOOM, newScale), MIN_ZOOM);
         if (Math.abs(newScale - 1.0) < 0.05) newScale = 1;
 
         const newPos = {
@@ -41,6 +50,17 @@ function Canvas({ className, children }: { className?: string; children?: ReactN
         setZoomLevel(newScale);
     };
 
+    //todo: multiselect
+    const onClick = (e: KonvaPointerEvent) => {
+        if (e.target === e.target.getStage()) {
+            transformerRef.current?.nodes([]);
+            return;
+        }
+
+        //bug: this should target the group
+        transformerRef.current?.nodes([e.target]);
+    };
+
     const dragGrid = (ctx: Konva.Context, shape: Konva.Shape) => {
         const stage = stageRef.current;
         if (!stage) return;
@@ -48,6 +68,7 @@ function Canvas({ className, children }: { className?: string; children?: ReactN
         const scale = stage.scaleX();
         const stagePos = stage.getPosition();
 
+        // don't draw grid if zoom < 50%
         if (scale < 0.5) return;
 
         const viewWidth = stage.width() / scale;
@@ -85,11 +106,23 @@ function Canvas({ className, children }: { className?: string; children?: ReactN
                 className={`h-0 ${className}`}
                 ref={stageRef}
                 onWheel={handleZoom}
+                onClick={onClick}
+                {...props}
             >
                 <Layer listening={false}>
                     <Shape sceneFunc={dragGrid} />
                 </Layer>
-                <Layer>{children}</Layer>
+                <Layer>
+                    {children}
+
+                    <Transformer
+                        ref={transformerRef}
+                        rotationSnaps={[0, 90, 180, 270]}
+                        rotationSnapTolerance={45}
+                        keepRatio={true}
+                        enabledAnchors={["top-left", "top-right", "bottom-left", "bottom-right"]}
+                    />
+                </Layer>
             </Stage>
             <p className="opacity-50 text-sm select-none absolute bottom-0 right-0 m-2">
                 {Math.round(zoomLevel * 100)}%
