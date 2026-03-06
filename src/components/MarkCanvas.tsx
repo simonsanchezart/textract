@@ -8,29 +8,17 @@ import { Stage, Layer, Rect, Image, Transformer, Circle, Line, KonvaNodeComponen
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import { KonvaPointerEvent } from "konva/lib/PointerEvents";
+import { MarkImage, Point2D, useMarkStore } from "../stores/markStore";
 
 //todo: test every image format
 
-type PointType = {
-    x: number;
-    y: number;
-};
+const MarkImageComponent = ({ imageData }: { imageData: MarkImage }) => {
+    const updateImagePosition = useMarkStore((s) => s.updateImagePosition);
+    const addMark = useMarkStore((s) => s.addMark);
+    const marks = useMarkStore((s) => s.marks);
 
-type MarkType = {
-    points: PointType[];
-};
-
-type MarkImageType = {
-    id: string;
-    src: string;
-    x: number;
-    y: number;
-};
-
-const MarkImageComponent = ({ imageData }: { imageData: MarkImageType }) => {
     const [image] = useImage(imageData.src);
-    const [marks, setMarks] = useState<MarkType[]>([]);
-    const [currentPoints, setCurrentPoints] = useState<PointType[]>([]);
+    const [currentPoints, setCurrentPoints] = useState<Point2D[]>([]);
     const imageRef = useRef<Konva.Image | null>(null);
     const POINT_SIZE = 4;
 
@@ -43,38 +31,39 @@ const MarkImageComponent = ({ imageData }: { imageData: MarkImageType }) => {
         const pos = imageRef.current?.getRelativePointerPosition();
         if (pos == null) return;
 
-        setCurrentPoints((prev) => {
-            const updated = [...prev, { x: pos.x, y: pos.y }];
+        const updated = [...currentPoints, { x: pos.x, y: pos.y }];
+        if (updated.length === 4) {
+            addMark(imageData.id, {
+                id: crypto.randomUUID(),
+                imageId: imageData.id,
+                points: updated,
+            });
 
-            if (updated.length === 4) {
-                setMarks((marksPrev) => [...marksPrev, { points: updated }]);
-                return [];
-            }
+            setCurrentPoints([]);
+        } else {
+            setCurrentPoints(updated);
+        }
 
-            return updated;
-        });
+        // setCurrentPoints((prev) => {
+        //         return [];
+        //     }
+
+        //     return updated;
+        // });
+    };
+    const onDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
+        if (e.target.name() !== "master") return;
+        updateImagePosition(imageData.id, { x: e.target.attrs.x, y: e.target.attrs.y });
     };
 
     return (
         <Group
+            name="master"
             draggable
-            x={imageData.x}
-            y={imageData.y}
+            x={imageData.position.x}
+            y={imageData.position.y}
             onClick={addPoint}
-            className="bg-red-400"
-            // onMouseDown={(e) => {
-            //     if (e.evt.button !== 0) {
-            //         e.cancelBubble = false;
-            //         e.target.draggable(false);
-            //     } else {
-            //         e.target.draggable(true);
-            //     }
-            // }}
-            // onDragStart={(e) => {
-            //     if (e.evt.buttons != 1) {
-            //         e.target.stopDrag();
-            //     }
-            // }}
+            onDragEnd={onDragEnd}
         >
             <Image ref={imageRef} image={image} />
 
@@ -85,44 +74,57 @@ const MarkImageComponent = ({ imageData }: { imageData: MarkImageType }) => {
                     fill={"red"}
                     width={POINT_SIZE}
                     height={POINT_SIZE}
+                    // todo: set point position on draggable
                     // draggable
                 />
             ))}
 
-            {marks.map((m) => (
-                <Group draggable>
-                    {m.points.map((p) => (
-                        <Rect
-                            x={p.x - POINT_SIZE / 2}
-                            y={p.y - POINT_SIZE / 2}
-                            fill={"blue"}
-                            width={POINT_SIZE}
-                            height={POINT_SIZE}
-                            draggable
-                        />
-                    ))}
+            {imageData.markIds.map((id) => {
+                const mark = marks[id];
+                if (!mark) return;
 
-                    <Line
-                        points={m.points.flatMap((p) => [p.x, p.y])}
-                        fill="#FF000022"
-                        stroke="white"
-                        strokeWidth={1}
-                        closed
-                    />
-                </Group>
-            ))}
+                return (
+                    <Group key={id} draggable name="mark">
+                        {mark.points.map((p) => (
+                            <Rect
+                                key={crypto.randomUUID()} // might not work??  add id to type?
+                                x={p.x - POINT_SIZE / 2}
+                                y={p.y - POINT_SIZE / 2}
+                                fill={"blue"}
+                                width={POINT_SIZE}
+                                height={POINT_SIZE}
+                                draggable
+                            />
+                        ))}
+
+                        <Line
+                            points={mark.points.flatMap((p) => [p.x, p.y])}
+                            fill="#FF000022"
+                            stroke="white"
+                            strokeWidth={1}
+                            closed
+                        />
+                    </Group>
+                );
+            })}
         </Group>
     );
 };
 
 function MarkCanvas({ className = "" }: { className?: string; chldren?: ReactNode }) {
-    const [images, setImages] = useState<MarkImageType[]>([]);
+    // const [images, setImages] = useState<MarkImageType[]>([]);
+    const images = useMarkStore((state) => state.images);
+    const addImage = useMarkStore((state) => state.addImage);
+    // const { images, addImage } = useMarkStore((state) => ({
+    //     images: state.images,
+    //     addImage: state.addImage,
+    // }));
 
     return (
         <div className={`relative h-full ${className}`} id="tester">
             <Canvas>
-                {images.map((i) => {
-                    return <MarkImageComponent imageData={i} />;
+                {Object.values(images).map((i) => {
+                    return <MarkImageComponent key={i.id} imageData={i} />;
                 })}
             </Canvas>
 
@@ -140,14 +142,16 @@ function MarkCanvas({ className = "" }: { className?: string; chldren?: ReactNod
                         if (!selectedImages) return;
                         const internalUrls = selectedImages.map((i) => convertFileSrc(i));
 
-                        const imageSet: MarkImageType[] = internalUrls.map((url) => ({
+                        const imageSet: MarkImage[] = internalUrls.map((url) => ({
                             id: crypto.randomUUID(),
                             src: url,
-                            x: 0,
-                            y: 0,
-                            marks: [],
+                            position: { x: 0, y: 0 },
+                            markIds: [],
                         }));
-                        setImages((prev) => [...prev, ...imageSet]);
+
+                        imageSet.map((i) => addImage(i));
+                        // addImage()
+                        // setImages((prev) => [...prev, ...imageSet]);
                     }}
                 />
             </div>
