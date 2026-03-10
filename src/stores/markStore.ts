@@ -96,7 +96,7 @@ export const useMarkStore = create(
                     const mark = state.marks[markId];
                     if (!mark) return state;
 
-                    const newPoints = mark.points;
+                    const newPoints = [...mark.points];
                     newPoints[pointIdx] = newPoint;
 
                     return {
