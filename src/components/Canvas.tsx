@@ -13,8 +13,8 @@ function Canvas({ className, children, ...props }: CanvasProps) {
     const MIN_ZOOM = 0.1;
     const MAX_ZOOM = 10;
     const SIZE = 2048;
-    const DOT_SPACING = 32;
-    const DOT_SIZE = 1;
+    const DOT_SPACING = 64;
+    const DOT_SIZE = 2;
 
     const [zoomLevel, setZoomLevel] = useState(1.0);
 
@@ -69,7 +69,7 @@ function Canvas({ className, children, ...props }: CanvasProps) {
         const stagePos = stage.getPosition();
 
         // don't draw grid if zoom < 50%
-        if (scale < 0.5) return;
+        if (scale < 0.35) return;
 
         const viewWidth = stage.width() / scale;
         const viewHeight = stage.height() / scale;
