@@ -57,8 +57,8 @@ function Canvas({ className, children, ...props }: CanvasProps) {
             return;
         }
 
-        //bug: this should target the group
-        transformerRef.current?.nodes([e.target]);
+        const group = e.target.findAncestor(".master", false);
+        if (group) transformerRef.current?.nodes([group]);
     };
 
     const dragGrid = (ctx: Konva.Context, shape: Konva.Shape) => {
