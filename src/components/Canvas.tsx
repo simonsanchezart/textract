@@ -107,6 +107,9 @@ function Canvas({ className, children, ...props }: CanvasProps) {
                 ref={stageRef}
                 onWheel={handleZoom}
                 onClick={onClick}
+                onContextMenu={(e) => {
+                    e.evt.preventDefault();
+                }}
                 {...props}
             >
                 <Layer listening={false}>

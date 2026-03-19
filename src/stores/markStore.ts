@@ -1,33 +1,33 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export type Point2D = {
+export type Point2DType = {
     x: number;
     y: number;
 };
 
-export type Mark = {
+export type MarkType = {
     id: string;
     imageId: string;
-    points: Point2D[];
+    points: Point2DType[];
 };
 
-export type MarkImage = {
+export type MarkImageType = {
     id: string;
     src: string;
-    position: Point2D;
+    position: Point2DType;
     markIds: string[];
 };
 
 type MarkStore = {
-    images: Record<string, MarkImage>;
-    marks: Record<string, Mark>;
+    images: Record<string, MarkImageType>;
+    marks: Record<string, MarkType>;
 
-    addImage: (image: MarkImage) => void;
-    updateImagePosition: (imageId: string, newPos: Point2D) => void;
-    addMark: (imageId: string, mark: Mark) => void;
-    updateMark: (markId: string, newPoints: Point2D[]) => void;
-    updateMarkPoint: (markId: string, pointIdx: number, newPoint: Point2D) => void;
+    addImage: (image: MarkImageType) => void;
+    updateImagePosition: (imageId: string, newPos: Point2DType) => void;
+    addMark: (imageId: string, mark: MarkType) => void;
+    updateMark: (markId: string, newPoints: Point2DType[]) => void;
+    updateMarkPoint: (markId: string, pointIdx: number, newPoint: Point2DType) => void;
     removeMark: (markId: string) => void;
 };
 
@@ -42,7 +42,7 @@ export const useMarkStore = create(
                     images: { ...state.images, [image.id]: image },
                 })),
 
-            updateImagePosition: (imageId: string, newPos: Point2D) =>
+            updateImagePosition: (imageId: string, newPos: Point2DType) =>
                 set((state) => {
                     const image = state.images[imageId];
                     if (!image) return state;
@@ -91,7 +91,7 @@ export const useMarkStore = create(
                         },
                     };
                 }),
-            updateMarkPoint: (markId: string, pointIdx: number, newPoint: Point2D) =>
+            updateMarkPoint: (markId: string, pointIdx: number, newPoint: Point2DType) =>
                 set((state) => {
                     const mark = state.marks[markId];
                     if (!mark) return state;
