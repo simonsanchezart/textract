@@ -1,40 +1,30 @@
 {
     "compilerOptions": {
-        /* Language and Environment */
-        "target": "ES2022",
-        "lib": ["ES2022", "DOM", "DOM.Iterable"],
+        "target": "ES2020",
+        "useDefineForClassFields": true,
+        "lib": ["ES2020", "DOM", "DOM.Iterable"],
         "module": "ESNext",
-        "moduleResolution": "Bundler",
+        "skipLibCheck": true,
+
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["./src/*"]
+        },
+
+        /* Bundler mode */
+        "moduleResolution": "bundler",
+        "allowImportingTsExtensions": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "noEmit": true,
         "jsx": "react-jsx",
 
-        /* Strictness */
+        /* Linting */
         "strict": true,
-        "noImplicitAny": true,
-        "strictNullChecks": true,
-        "strictFunctionTypes": true,
-        "strictBindCallApply": true,
-        "strictPropertyInitialization": true,
-        "noImplicitThis": true,
-        "useUnknownInCatchVariables": true,
-
-        /* Additional Strictness (Often Forgotten) */
-        "noUncheckedIndexedAccess": true,
-        "exactOptionalPropertyTypes": false,
-        "noImplicitOverride": true,
-        "noPropertyAccessFromIndexSignature": true,
-        "noFallthroughCasesInSwitch": true,
-
-        /* Module Hygiene */
-        "isolatedModules": true,
-
-        /* Interop */
-        "esModuleInterop": false,
-
-        /* Safety */
-        "forceConsistentCasingInFileNames": true,
-        "skipLibCheck": false,
-
-        /* Emission */
-        "noEmit": true
-    }
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noFallthroughCasesInSwitch": true
+    },
+    "include": ["src"],
+    "references": [{ "path": "./tsconfig.node.json" }]
 }

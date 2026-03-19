@@ -1,6 +1,7 @@
 import "./App.css";
 import Navbar from "./components/Navbar";
 import Textract from "./components/Textract";
+import { Button } from "./components/ui/button";
 
 function App() {
     return (
