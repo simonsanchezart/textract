@@ -29,6 +29,7 @@ type MarkStore = {
     updateMark: (markId: string, newPoints: Point2DType[]) => void;
     updateMarkPoint: (markId: string, pointIdx: number, newPoint: Point2DType) => void;
     removeMark: (markId: string) => void;
+    removeImage: (imageId: string) => void;
 };
 
 export const useMarkStore = create(
@@ -78,7 +79,6 @@ export const useMarkStore = create(
                         },
                     };
                 }),
-
             updateMark: (markId, newPoints) =>
                 set((state) => {
                     const mark = state.marks[markId];
@@ -126,6 +126,25 @@ export const useMarkStore = create(
                                 markIds: image.markIds.filter((m) => m != markId),
                             },
                         },
+                    };
+                }),
+            removeImage: (imageId) =>
+                set((state) => {
+                    console.log(state.images);
+                    const image = state.images[imageId];
+                    console.log(imageId);
+                    if (!image) return state;
+
+                    const { [imageId]: _, ...remainingImages } = state.images;
+
+                    const remainingMarks = { ...state.marks };
+                    for (const markId of image.markIds) {
+                        delete remainingMarks[markId];
+                    }
+
+                    return {
+                        images: remainingImages,
+                        marks: remainingMarks,
                     };
                 }),
         }),

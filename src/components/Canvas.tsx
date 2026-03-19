@@ -6,9 +6,10 @@ import { Layer, Shape, Stage, Transformer } from "react-konva";
 type CanvasProps = {
     className?: string;
     children?: ReactNode;
+    onDelete?: (ids: string[]) => void;
 } & React.ComponentProps<typeof Stage>;
 
-function Canvas({ className, children, ...props }: CanvasProps) {
+function Canvas({ className, children, onDelete, ...props }: CanvasProps) {
     const ZOOM_MULTIPLIER = 1.1;
     const MIN_ZOOM = 0.1;
     const MAX_ZOOM = 10;
@@ -61,6 +62,15 @@ function Canvas({ className, children, ...props }: CanvasProps) {
         if (group) transformerRef.current?.nodes([group]);
     };
 
+    const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        switch (e.code) {
+            case "Delete":
+                const selected = transformerRef.current?.nodes() ?? [];
+                const selectedIds = selected.map((node) => node.id());
+                onDelete?.(selectedIds);
+        }
+    };
+
     const dragGrid = (ctx: Konva.Context, shape: Konva.Shape) => {
         const stage = stageRef.current;
         if (!stage) return;
@@ -96,7 +106,7 @@ function Canvas({ className, children, ...props }: CanvasProps) {
     };
 
     return (
-        <div className="h-full">
+        <div className="h-full" tabIndex={-1} onKeyDown={onKeyDown}>
             <Stage
                 width={SIZE}
                 height={SIZE}

@@ -45,6 +45,7 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
     return (
         // todo: Save transform state
         <Group
+            id={imageData.id}
             name="master"
             x={imageData.position.x}
             y={imageData.position.y}

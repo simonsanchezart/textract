@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { CgAdd } from "react-icons/cg";
-import { open } from "@tauri-apps/plugin-dialog";
+import { open, confirm } from "@tauri-apps/plugin-dialog";
 import Canvas from "./Canvas";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { MarkImageType, Point2DType, useMarkStore } from "../stores/markStore";
@@ -11,10 +11,22 @@ import MarkImage from "./MarkImage";
 function MarkCanvas({ className = "" }: { className?: string; chldren?: ReactNode }) {
     const images = useMarkStore((state) => state.images);
     const addImage = useMarkStore((state) => state.addImage);
+    const removeImage = useMarkStore((state) => state.removeImage);
 
     return (
         <div className={`relative h-full ${className}`} id="tester">
-            <Canvas>
+            <Canvas
+                onDelete={async (ids) => {
+                    if (
+                        await confirm("Are you sure you want to delete the selected images?", {
+                            title: "Delete Selected",
+                            kind: "warning",
+                        })
+                    ) {
+                        for (const id of ids) removeImage(id);
+                    }
+                }}
+            >
                 {Object.values(images).map((i) => {
                     return <MarkImage key={i.id} imageData={i} />;
                 })}
