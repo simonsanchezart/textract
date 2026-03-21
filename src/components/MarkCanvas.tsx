@@ -42,7 +42,9 @@ function MarkCanvas({ className = "" }: { className?: string; chldren?: ReactNod
                         const imageSet: MarkImageType[] = internalUrls.map((url) => ({
                             id: crypto.randomUUID(),
                             src: url,
+                            scale: { x: 1, y: 1 },
                             position: { x: 0, y: 0 },
+                            rotation: 0,
                             markIds: [],
                         }));
 

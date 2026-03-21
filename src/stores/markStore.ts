@@ -16,6 +16,8 @@ export type MarkImageType = {
     id: string;
     src: string;
     position: Point2DType;
+    scale: Point2DType;
+    rotation: number;
     markIds: string[];
 };
 
@@ -25,6 +27,8 @@ type MarkStore = {
 
     addImage: (image: MarkImageType) => void;
     updateImagePosition: (imageId: string, newPos: Point2DType) => void;
+    updateImageScale: (imageId: string, newScale: Point2DType) => void;
+    updateImageRotation: (imageId: string, newRot: number) => void;
     addMark: (imageId: string, mark: MarkType) => void;
     updateMark: (markId: string, newPoints: Point2DType[]) => void;
     updateMarkPoint: (markId: string, pointIdx: number, newPoint: Point2DType) => void;
@@ -54,6 +58,38 @@ export const useMarkStore = create(
                             [imageId]: {
                                 ...image,
                                 position: newPos,
+                            },
+                        },
+                    };
+                }),
+            updateImageScale: (imageId: string, newScale: Point2DType) =>
+                set((state) => {
+                    const image = state.images[imageId];
+                    if (!image) return state;
+
+                    console.log(newScale)
+
+                    return {
+                        images: {
+                            ...state.images,
+                            [imageId]: {
+                                ...image,
+                                scale: newScale,
+                            },
+                        },
+                    };
+                }),
+            updateImageRotation: (imageId: string, newRot: number) =>
+                set((state) => {
+                    const image = state.images[imageId];
+                    if (!image) return state;
+
+                    return {
+                        images: {
+                            ...state.images,
+                            [imageId]: {
+                                ...image,
+                                rotation: newRot,
                             },
                         },
                     };

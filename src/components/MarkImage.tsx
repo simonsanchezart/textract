@@ -10,15 +10,14 @@ import Mark from "./Mark";
 
 function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
     const updateImagePosition = useMarkStore((s) => s.updateImagePosition);
+    const updateImageScale = useMarkStore((s) => s.updateImageScale);
+    const updateImageRotation = useMarkStore((s) => s.updateImageRotation);
     const addMark = useMarkStore((s) => s.addMark);
     const marks = useMarkStore((s) => s.marks);
 
     const [image] = useImage(imageData.src);
     const [currentPoints, setCurrentPoints] = useState<Point2DType[]>([]);
     const imageRef = useRef<Konva.Image | null>(null);
-
-    // allow for cancelling
-    // disable dragging, etc... while drawings
 
     const addPoint = (e: KonvaEventObject<MouseEvent>) => {
         const pos = e.target.getRelativePointerPosition()!;
@@ -39,16 +38,27 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
 
     const onDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
         if (e.target.name() !== "master") return;
-        updateImagePosition(imageData.id, { x: e.target.attrs.x, y: e.target.attrs.y });
+        updateImagePosition(imageData.id, { x: e.currentTarget.attrs.x, y: e.currentTarget.attrs.y });
     };
 
     return (
-        // todo: Save transform state
         <Group
             id={imageData.id}
             name="master"
+            onTransformEnd={(e) => {
+                const attrs = e.currentTarget.attrs;
+                const scale = { x: attrs.scaleX, y: attrs.scaleY };
+                const pos = { x: attrs.x, y: attrs.y };
+                const rotation = attrs.rotation;
+
+                updateImageScale(imageData.id, scale);
+                updateImageRotation(imageData.id, rotation);
+                updateImagePosition(imageData.id, pos);
+            }}
             x={imageData.position.x}
             y={imageData.position.y}
+            rotation={imageData.rotation}
+            scale={imageData.scale}
             onClick={(e) => {
                 if (e.evt.button === 2) {
                     setCurrentPoints([]);
