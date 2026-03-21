@@ -40,12 +40,8 @@ function PopupConfirm({
                 </DialogHeader>
 
                 <DialogFooter>
-                    <DialogClose
-                        onClick={() => {
-                            setOpen(false);
-                        }}
-                    >
-                        <Button variant={"outline"}>{cancelLabel}</Button>
+                    <DialogClose asChild>
+                        <Button variant={"outline"}> {cancelLabel}</Button>
                     </DialogClose>
 
                     <Button
