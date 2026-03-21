@@ -122,37 +122,6 @@ function Canvas({ className, children, onDelete, ...props }: CanvasProps) {
                     transformerRef.current?.nodes([]);
                 }}
             />
-            {/* <AlertDialog open={openConfirmation} onOpenChange={setOpenConfirmation}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Selected</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Are you sure you want to delete the selected images?
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-
-                    <AlertDialogFooter>
-                        <AlertDialogCancel
-                            onClick={() => {
-                                setOpenConfirmation(false);
-                            }}
-                        >
-                            Cancel
-                        </AlertDialogCancel>
-
-                        <AlertDialogAction
-                            onClick={() => {
-                                const selected = transformerRef.current?.nodes() ?? [];
-                                const selectedIds = selected.map((node) => node.id());
-                                onDelete?.(selectedIds);
-                                transformerRef.current?.nodes([]);
-                            }}
-                        >
-                            Delete
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog> */}
 
             <Stage
                 width={SIZE}
