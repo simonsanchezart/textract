@@ -130,9 +130,7 @@ export const useMarkStore = create(
                 }),
             removeImage: (imageId) =>
                 set((state) => {
-                    console.log(state.images);
                     const image = state.images[imageId];
-                    console.log(imageId);
                     if (!image) return state;
 
                     const { [imageId]: _, ...remainingImages } = state.images;
