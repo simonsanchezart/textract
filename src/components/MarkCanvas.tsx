@@ -3,7 +3,7 @@ import { CgAdd } from "react-icons/cg";
 import { open, confirm } from "@tauri-apps/plugin-dialog";
 import Canvas from "./Canvas";
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { MarkImageType, Point2DType, useMarkStore } from "../stores/markStore";
+import { MarkImageType, useMarkStore } from "../stores/markStore";
 import MarkImage from "./MarkImage";
 
 //todo: test every image format
@@ -17,14 +17,7 @@ function MarkCanvas({ className = "" }: { className?: string; chldren?: ReactNod
         <div className={`relative h-full ${className}`} id="tester">
             <Canvas
                 onDelete={async (ids) => {
-                    if (
-                        await confirm("Are you sure you want to delete the selected images?", {
-                            title: "Delete Selected",
-                            kind: "warning",
-                        })
-                    ) {
-                        for (const id of ids) removeImage(id);
-                    }
+                    for (const id of ids) removeImage(id);
                 }}
             >
                 {Object.values(images).map((i) => {

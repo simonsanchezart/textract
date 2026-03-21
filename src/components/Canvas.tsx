@@ -2,6 +2,17 @@ import Konva from "konva";
 import { KonvaPointerEvent } from "konva/lib/PointerEvents";
 import React, { ReactNode, useRef, useState } from "react";
 import { Layer, Shape, Stage, Transformer } from "react-konva";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "./ui/alert-dialog";
+import PopupConfirm from "./PopupConfirm";
 
 type CanvasProps = {
     className?: string;
@@ -18,9 +29,10 @@ function Canvas({ className, children, onDelete, ...props }: CanvasProps) {
     const DOT_SIZE = 2;
 
     const [zoomLevel, setZoomLevel] = useState(1.0);
-
     const stageRef = useRef<Konva.Stage>(null);
     const transformerRef = useRef<Konva.Transformer | null>(null);
+
+    const [openConfirmation, setOpenConfirmation] = useState(false);
 
     const handleZoom = (e: Konva.KonvaEventObject<WheelEvent>) => {
         e.evt.preventDefault();
@@ -52,22 +64,12 @@ function Canvas({ className, children, onDelete, ...props }: CanvasProps) {
     };
 
     //todo: multiselect
-    const onClick = (e: KonvaPointerEvent) => {
-        if (e.target === e.target.getStage()) {
-            transformerRef.current?.nodes([]);
-            return;
-        }
 
-        const group = e.target.findAncestor(".master", false);
-        if (group) transformerRef.current?.nodes([group]);
-    };
-
-    const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const onKeyDown = async (e: React.KeyboardEvent<HTMLDivElement>) => {
         switch (e.code) {
             case "Delete":
                 const selected = transformerRef.current?.nodes() ?? [];
-                const selectedIds = selected.map((node) => node.id());
-                onDelete?.(selectedIds);
+                if (selected.length !== 0) setOpenConfirmation(true);
         }
     };
 
@@ -107,6 +109,51 @@ function Canvas({ className, children, onDelete, ...props }: CanvasProps) {
 
     return (
         <div className="h-full" tabIndex={-1} onKeyDown={onKeyDown}>
+            <PopupConfirm
+                title="Delete Selected"
+                description="Are you sure you want to delete the selected images?"
+                confirmLabel="Delete"
+                open={openConfirmation}
+                setOpen={setOpenConfirmation}
+                onConfirm={() => {
+                    const selected = transformerRef.current?.nodes() ?? [];
+                    const selectedIds = selected.map((node) => node.id());
+                    onDelete?.(selectedIds);
+                    transformerRef.current?.nodes([]);
+                }}
+            />
+            {/* <AlertDialog open={openConfirmation} onOpenChange={setOpenConfirmation}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Selected</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete the selected images?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+
+                    <AlertDialogFooter>
+                        <AlertDialogCancel
+                            onClick={() => {
+                                setOpenConfirmation(false);
+                            }}
+                        >
+                            Cancel
+                        </AlertDialogCancel>
+
+                        <AlertDialogAction
+                            onClick={() => {
+                                const selected = transformerRef.current?.nodes() ?? [];
+                                const selectedIds = selected.map((node) => node.id());
+                                onDelete?.(selectedIds);
+                                transformerRef.current?.nodes([]);
+                            }}
+                        >
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog> */}
+
             <Stage
                 width={SIZE}
                 height={SIZE}
@@ -116,7 +163,15 @@ function Canvas({ className, children, onDelete, ...props }: CanvasProps) {
                 className={`h-0 ${className}`}
                 ref={stageRef}
                 onWheel={handleZoom}
-                onClick={onClick}
+                onClick={(e: KonvaPointerEvent) => {
+                    if (e.target === e.target.getStage()) {
+                        transformerRef.current?.nodes([]);
+                        return;
+                    }
+
+                    const group = e.target.findAncestor(".master", false);
+                    if (group) transformerRef.current?.nodes([group]);
+                }}
                 onContextMenu={(e) => {
                     e.evt.preventDefault();
                 }}
