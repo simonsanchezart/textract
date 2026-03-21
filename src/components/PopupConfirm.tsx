@@ -1,16 +1,14 @@
 import { Dispatch, SetStateAction } from "react";
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "./ui/alert-dialog";
-import { buttonVariants } from "./ui/button";
-import { VariantProps } from "class-variance-authority";
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "./ui/dialog";
+import { Button } from "./ui/button";
 
 type PopupProps = {
     open: boolean;
@@ -34,23 +32,23 @@ function PopupConfirm({
     onConfirm,
 }: PopupProps) {
     return (
-        <AlertDialog open={open} onOpenChange={setOpen}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>{title}</AlertDialogTitle>
-                    <AlertDialogDescription>{description}</AlertDialogDescription>
-                </AlertDialogHeader>
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{title}</DialogTitle>
+                    <DialogDescription>{description}</DialogDescription>
+                </DialogHeader>
 
-                <AlertDialogFooter>
-                    <AlertDialogCancel
+                <DialogFooter>
+                    <DialogClose
                         onClick={() => {
                             setOpen(false);
                         }}
                     >
-                        {cancelLabel}
-                    </AlertDialogCancel>
+                        <Button variant={"outline"}>{cancelLabel}</Button>
+                    </DialogClose>
 
-                    <AlertDialogAction
+                    <Button
                         onClick={async () => {
                             await onConfirm?.();
                             setOpen(false);
@@ -58,10 +56,10 @@ function PopupConfirm({
                         className={confirmStyling}
                     >
                         {confirmLabel}
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }
 export default PopupConfirm;
