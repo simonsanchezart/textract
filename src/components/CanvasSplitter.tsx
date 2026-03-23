@@ -14,23 +14,15 @@ function CanvasSplitter({ className }: { className?: string }) {
     return (
         <div className={className}>
             <ResizableGroup defaultLayout={defaultLayout} onLayoutChanged={onLayoutChanged}>
-                <Panel
-                    id="markPanel"
-                    panelRef={leftPanelRef}
-                    className="bg-dark-main"
-                    minSize={PANEL_MIN_SIZE}
-                >
-                    <MarkCanvas/>
+                <Panel id="markPanel" panelRef={leftPanelRef} className="bg-dark-main" minSize={PANEL_MIN_SIZE}>
+                    <MarkCanvas />
                 </Panel>
 
                 <Separator
-                    className="bg-dark-main focus:outline-none w-0.5 drop-shadow-md/50 duration-100 transition-all
-                                hover:drop-shadow-xl/75
-                                data-[separator='hover']:drop-shadow-xl/75
-                                data-[separator='active']:drop-shadow-xl/75
-                                hover:w-2
-                                data-[separator='hover']:w-2
-                                data-[separator='active']:w-2
+                    className="bg-dark-main focus:outline-none w-1 drop-shadow-md/40 duration-100 transition-all
+                                hover:drop-shadow-xl/100
+                                data-[separator='hover']:drop-shadow-xl/100
+                                data-[separator='active']:drop-shadow-xl/100
                     "
                     onClick={(e) => e.preventDefault()}
                     onDoubleClick={() => leftPanelRef.current?.resize("50%")}
