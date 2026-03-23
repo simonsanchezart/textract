@@ -2,16 +2,6 @@ import Konva from "konva";
 import { KonvaPointerEvent } from "konva/lib/PointerEvents";
 import React, { ReactNode, useRef, useState } from "react";
 import { Layer, Shape, Stage, Transformer } from "react-konva";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "./ui/alert-dialog";
 import PopupConfirm from "./PopupConfirm";
 
 type CanvasProps = {
