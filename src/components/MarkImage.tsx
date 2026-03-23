@@ -60,12 +60,14 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
             rotation={imageData.rotation}
             scale={imageData.scale}
             onClick={(e) => {
-                if (e.evt.button === 2) {
-                    setCurrentPoints([]);
-                }
-
-                if (e.evt.button === 0 && e.evt.ctrlKey) {
-                    addPoint(e);
+                if (e.evt.button === 2) setCurrentPoints([]);
+                if (e.evt.button === 0 && e.evt.ctrlKey) addPoint(e);
+            }}
+            onDragStart={(e) => {
+                if (e.evt.buttons !== 1) {
+                    e.target.stopDrag();
+                    const stage = e.target.getStage();
+                    if (stage && e.evt.buttons === 4) stage.startDrag();
                 }
             }}
             onDragEnd={onDragEnd}
@@ -79,7 +81,7 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
 
                     <Line
                         points={currentPoints.flatMap((p) => [p.x, p.y])}
-                        fill="#00FF0022"
+                        fill="#00FF0022" //todo: use Colors.ts
                         stroke={Colors.LIGHT}
                         strokeWidth={1}
                         closed
