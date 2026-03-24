@@ -16,11 +16,11 @@ function Mark({ mark }: { mark: MarkType }) {
         <Group draggable>
             <Line
                 points={mark.points.flatMap((p) => [p.x, p.y])}
-                fill={Colors.LIGHT + "22"}
+                fill={Colors.GREEN + "11"}
                 stroke={Colors.LIGHT}
                 strokeWidth={1.0}
                 shadowOffset={{ x: 0.5, y: 0.5 }}
-                shadowOpacity={0.25}
+                shadowOpacity={1}
                 closed
                 draggable
                 onClick={(e) => {
@@ -60,7 +60,7 @@ function Mark({ mark }: { mark: MarkType }) {
                     new Konva.Tween({
                         node: e.target,
                         duration: 0.02,
-                        fill: Colors.LIGHT + "22",
+                        fill: Colors.GREEN + "11",
                     }).play();
                 }}
             />
@@ -72,11 +72,7 @@ function Mark({ mark }: { mark: MarkType }) {
                         position={p}
                         offset={markOffset}
                         onDragMove={(e) => {
-                            const newPoint = {
-                                x: e.target.x(),
-                                y: e.target.y(),
-                            };
-                            updateMarkPoint(mark.id, id, newPoint);
+                            updateMarkPoint(mark.id, id, { x: e.target.x(), y: e.target.y() });
                         }}
                     />
                 );
