@@ -9,18 +9,16 @@ type MarkPointProps = {
 } & React.ComponentProps<typeof Rect>;
 
 function MarkPoint({ position, offset = { x: 0, y: 0 }, ...props }: MarkPointProps) {
-    const POINT_SIZE = 2;
+    const POINT_SIZE = 3;
     const POINT_SIZE_H = POINT_SIZE / 2;
 
     return (
         <Rect
             x={position.x}
             y={position.y}
-            strokeWidth={0.5}
-            fill={"#282828"}
-            stroke={Colors.LIGHT}
-            shadowOffset={{ x: 0.25, y: 0.25 }}
-            shadowOpacity={0.25}
+            fill={Colors.LIGHT}
+            shadowOffset={{ x: 0.5, y: 0.5 }}
+            shadowOpacity={1}
             cornerRadius={100}
             width={POINT_SIZE}
             height={POINT_SIZE}
