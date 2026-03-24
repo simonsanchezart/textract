@@ -77,7 +77,7 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
 
             {currentPoints.map((m, i) => (
                 <Group key={i}>
-                    <MarkPoint position={{ x: m.x, y: m.y }} offset={{ x: 0, y: 0 }} scale={{ x: 2.0, y: 2.0 }} />
+                    <MarkPoint position={{ x: m.x, y: m.y }} />
 
                     <Line
                         points={currentPoints.flatMap((p) => [p.x, p.y])}
