@@ -81,7 +81,7 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
 
                     <Line
                         points={currentPoints.flatMap((p) => [p.x, p.y])}
-                        fill="#00FF0022" //todo: use Colors.ts
+                        fill={Colors.GREEN + "22"}
                         stroke={Colors.LIGHT}
                         strokeWidth={1}
                         closed
