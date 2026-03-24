@@ -13,7 +13,7 @@ type CanvasProps = {
 function Canvas({ className, children, onDelete, ...props }: CanvasProps) {
     const ZOOM_MULTIPLIER = 1.1;
     const MIN_ZOOM = 0.1;
-    const MAX_ZOOM = 10;
+    const MAX_ZOOM = 100;
     const SIZE = 2048;
     const DOT_SPACING = 64;
     const DOT_SIZE = 2;
