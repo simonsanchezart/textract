@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { Line, Group } from "react-konva";
 import Konva from "konva";
-import { MarkType, useMarkActions } from "../stores/markStore";
+import { MarkType, useMarkStore } from "../stores/markStore";
 import { Colors } from "../types/colors";
 import MarkPoint from "./MarkPoint";
 
 function Mark({ mark }: { mark: MarkType }) {
-    const { updateMark, updateMarkPoint, removeMark } = useMarkActions();
+    const updateMark = useMarkStore((s) => s.updateMark);
+    const updateMarkPoint = useMarkStore((s) => s.updateMarkPoint);
+    const removeMark = useMarkStore((s) => s.removeMark);
+
     const [markOffset, setMarkOffset] = useState({ x: 0, y: 0 });
     const [points, setPoints] = useState(mark.points);
 

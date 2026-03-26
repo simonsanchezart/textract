@@ -22,7 +22,10 @@ export type MarkImageType = {
     markIds: string[];
 };
 
-type MarkStoreActions = {
+type MarkStore = {
+    images: Record<string, MarkImageType>;
+    marks: Record<string, MarkType>;
+
     addImage: (image: MarkImageType) => void;
     updateImagePosition: (imageId: string, newPos: Point2DType) => void;
     updateImageScale: (imageId: string, newScale: Point2DType) => void;
@@ -34,87 +37,78 @@ type MarkStoreActions = {
     removeImage: (imageId: string) => void;
 };
 
-type MarkStore = {
-    images: Record<string, MarkImageType>;
-    marks: Record<string, MarkType>;
-    actions: MarkStoreActions;
-};
-
 export const useMarkStore = create(
     persist(
         immer<MarkStore>((set) => ({
             images: {},
             marks: {},
 
-            actions: {
-                addImage: (image) =>
-                    set((state) => {
-                        state.images[image.id] = image;
-                    }),
-                updateImagePosition: (imageId, newPos) =>
-                    set((state) => {
-                        if (!state.images[imageId]) return;
-                        state.images[imageId].position = newPos;
-                    }),
+            addImage: (image) =>
+                set((state) => {
+                    state.images[image.id] = image;
+                }),
 
-                updateImageScale: (imageId, newScale) =>
-                    set((state) => {
-                        if (!state.images[imageId]) return;
-                        state.images[imageId].scale = newScale;
-                    }),
+            updateImagePosition: (imageId, newPos) =>
+                set((state) => {
+                    if (!state.images[imageId]) return;
+                    state.images[imageId].position = newPos;
+                }),
 
-                updateImageRotation: (imageId, newRot) =>
-                    set((state) => {
-                        if (!state.images[imageId]) return;
-                        state.images[imageId].rotation = newRot;
-                    }),
+            updateImageScale: (imageId, newScale) =>
+                set((state) => {
+                    if (!state.images[imageId]) return;
+                    state.images[imageId].scale = newScale;
+                }),
 
-                addMark: (imageId, mark) =>
-                    set((state) => {
-                        if (!state.images[imageId]) return;
-                        state.marks[mark.id] = mark;
-                        state.images[imageId].markIds.push(mark.id);
-                    }),
+            updateImageRotation: (imageId, newRot) =>
+                set((state) => {
+                    if (!state.images[imageId]) return;
+                    state.images[imageId].rotation = newRot;
+                }),
 
-                updateMark: (markId, newPoints) =>
-                    set((state) => {
-                        if (!state.marks[markId]) return;
-                        state.marks[markId].points = newPoints;
-                    }),
+            addMark: (imageId, mark) =>
+                set((state) => {
+                    if (!state.images[imageId]) return;
+                    state.marks[mark.id] = mark;
+                    state.images[imageId].markIds.push(mark.id);
+                }),
 
-                updateMarkPoint: (markId, pointIdx, newPoint) =>
-                    set((state) => {
-                        if (!state.marks[markId]) return;
-                        state.marks[markId].points[pointIdx] = newPoint;
-                    }),
+            updateMark: (markId, newPoints) =>
+                set((state) => {
+                    if (!state.marks[markId]) return;
+                    state.marks[markId].points = newPoints;
+                }),
 
-                removeMark: (markId) =>
-                    set((state) => {
-                        const mark = state.marks[markId];
-                        if (!mark) return;
-                        if (!state.images[mark.imageId]) return;
+            updateMarkPoint: (markId, pointIdx, newPoint) =>
+                set((state) => {
+                    if (!state.marks[markId]) return;
+                    state.marks[markId].points[pointIdx] = newPoint;
+                }),
 
+            removeMark: (markId) =>
+                set((state) => {
+                    const mark = state.marks[markId];
+                    if (!mark) return;
+                    if (!state.images[mark.imageId]) return;
+
+                    delete state.marks[markId];
+                    state.images[mark.imageId].markIds = state.images[mark.imageId].markIds.filter(
+                        (id) => id !== markId
+                    );
+                }),
+
+            removeImage: (imageId) =>
+                set((state) => {
+                    const image = state.images[imageId];
+                    if (!image) return;
+
+                    for (const markId of image.markIds) {
                         delete state.marks[markId];
-                        state.images[mark.imageId].markIds = state.images[mark.imageId].markIds.filter(
-                            (id) => id !== markId
-                        );
-                    }),
+                    }
 
-                removeImage: (imageId) =>
-                    set((state) => {
-                        const image = state.images[imageId];
-                        if (!image) return;
-
-                        for (const markId of image.markIds) {
-                            delete state.marks[markId];
-                        }
-
-                        delete state.images[imageId];
-                    }),
-            },
+                    delete state.images[imageId];
+                }),
         })),
         { name: "mark-storage" }
     )
 );
-
-export const useMarkActions = () => useMarkStore((s) => s.actions);

@@ -3,7 +3,7 @@ import useImage from "use-image";
 import { Image, Line, Group } from "react-konva";
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
-import { MarkImageType, Point2DType, useMarkActions, useMarkStore } from "../stores/markStore";
+import { MarkImageType, Point2DType, useMarkStore } from "../stores/markStore";
 import { Colors } from "../types/colors";
 import MarkPoint from "./MarkPoint";
 import Mark from "./Mark";
@@ -11,7 +11,10 @@ import { getMiddle } from "@/lib/utils";
 import { useShallow } from "zustand/react/shallow";
 
 function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
-    const { updateImagePosition, updateImageScale, updateImageRotation, addMark } = useMarkActions();
+    const updateImagePosition = useMarkStore((s) => s.updateImagePosition);
+    const updateImageScale = useMarkStore((s) => s.updateImageScale);
+    const updateImageRotation = useMarkStore((s) => s.updateImageRotation);
+    const addMark = useMarkStore((s) => s.addMark);
     const marks = useMarkStore(useShallow((s) => s.marks));
 
     const [image] = useImage(imageData.src);

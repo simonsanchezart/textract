@@ -3,15 +3,15 @@ import { CgAdd } from "react-icons/cg";
 import { open, confirm } from "@tauri-apps/plugin-dialog";
 import Canvas from "./Canvas";
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { MarkImageType, useMarkActions, useMarkStore } from "../stores/markStore";
+import { MarkImageType, useMarkStore } from "../stores/markStore";
 import MarkImage from "./MarkImage";
-import { useShallow } from "zustand/react/shallow";
 
 //todo: test every image format
 
 function MarkCanvas({ className = "" }: { className?: string; chldren?: ReactNode }) {
-    const images = useMarkStore(useShallow((state) => state.images));
-    const { addImage, removeImage } = useMarkActions();
+    const images = useMarkStore((state) => state.images);
+    const addImage = useMarkStore((state) => state.addImage);
+    const removeImage = useMarkStore((state) => state.removeImage);
 
     return (
         <div className={`relative h-full ${className}`} id="tester">
