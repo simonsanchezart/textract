@@ -33,8 +33,9 @@ function Mark({ mark }: { mark: MarkType }) {
                 onDragEnd={(e) => {
                     const dx = e.target.x();
                     const dy = e.target.y();
-                    const newPoints = mark.points.map((p) => ({ x: p.x + dx, y: p.y + dy }));
+                    const newPoints = points.map((p) => ({ x: p.x + dx, y: p.y + dy }));
 
+                    setPoints(newPoints);
                     updateMark(mark.id, newPoints);
                     e.target.setPosition({ x: 0, y: 0 });
                     setMarkOffset({ x: 0, y: 0 });
@@ -72,16 +73,16 @@ function Mark({ mark }: { mark: MarkType }) {
                         key={id}
                         position={p}
                         offset={markOffset}
-                        // onDragMove={(e) => {
-                        //     setPoints((prev) => {
-                        //         const next = [...prev];
-                        //         next[id] = { x: e.target.x(), y: e.target.y() };
-                        //         return next;
-                        //     });
-                        // }}
-                        // onDragEnd={(e) => {
-                        //     updateMarkPoint(mark.id, id, { x: e.target.x(), y: e.target.y() });
-                        // }}
+                        onDragMove={(e) => {
+                            setPoints((prev) => {
+                                const next = [...prev];
+                                next[id] = { x: e.target.x(), y: e.target.y() };
+                                return next;
+                            });
+                        }}
+                        onDragEnd={(e) => {
+                            updateMarkPoint(mark.id, id, { x: e.target.x(), y: e.target.y() });
+                        }}
                     />
                 );
             })}
