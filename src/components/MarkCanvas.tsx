@@ -5,6 +5,7 @@ import Canvas from "./Canvas";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { MarkImageType, useMarkStore } from "../stores/markStore";
 import MarkImage from "./MarkImage";
+import { CanvasType } from "@/types/types";
 
 //todo: test every image format
 
@@ -19,6 +20,7 @@ function MarkCanvas({ className = "" }: { className?: string; chldren?: ReactNod
                 onDelete={async (ids) => {
                     for (const id of ids) removeImage(id);
                 }}
+                type={CanvasType.MARK}
             >
                 {Object.values(images).map((i) => {
                     return <MarkImage key={i.id} imageData={i} />;

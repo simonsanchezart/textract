@@ -3,14 +3,21 @@ import { KonvaPointerEvent } from "konva/lib/PointerEvents";
 import React, { ReactNode, useRef, useState } from "react";
 import { Layer, Shape, Stage, Transformer } from "react-konva";
 import PopupConfirm from "./PopupConfirm";
+import { CanvasType } from "@/types/types";
+import { useCanvasStore } from "@/stores/canvasStore";
 
 type CanvasProps = {
+    type: CanvasType;
     className?: string;
     children?: ReactNode;
     onDelete?: (ids: string[]) => void;
 } & React.ComponentProps<typeof Stage>;
 
-function Canvas({ className, children, onDelete, ...props }: CanvasProps) {
+function Canvas({ type, className, children, onDelete, ...props }: CanvasProps) {
+    const canvasState = useCanvasStore((s) => s.canvas[type]);
+    const setCanvasScale = useCanvasStore((s) => s.setCanvasScale);
+    const setCanvasPosition = useCanvasStore((s) => s.setCanvasPosition);
+
     const ZOOM_MULTIPLIER = 1.1;
     const MIN_ZOOM = 0.1;
     const MAX_ZOOM = 100;
@@ -18,7 +25,6 @@ function Canvas({ className, children, onDelete, ...props }: CanvasProps) {
     const DOT_SPACING = 64;
     const DOT_SIZE = 2;
 
-    const [zoomLevel, setZoomLevel] = useState(1.0);
     const stageRef = useRef<Konva.Stage>(null);
     const transformerRef = useRef<Konva.Transformer | null>(null);
 
@@ -47,10 +53,8 @@ function Canvas({ className, children, onDelete, ...props }: CanvasProps) {
             y: pointer.y - mousePointTo.y * newScale,
         };
 
-        stage.scale({ x: newScale, y: newScale });
-        stage.position(newPos);
-        stage.batchDraw();
-        setZoomLevel(newScale);
+        setCanvasPosition(type, newPos);
+        setCanvasScale(type, newScale);
     };
 
     //todo: multiselect
@@ -116,8 +120,9 @@ function Canvas({ className, children, onDelete, ...props }: CanvasProps) {
             <Stage
                 width={SIZE}
                 height={SIZE}
-                x={32}
-                y={32}
+                scale={{ x: canvasState.scale, y: canvasState.scale }}
+                x={canvasState.x}
+                y={canvasState.y}
                 draggable
                 className={`h-0 ${className}`}
                 ref={stageRef}
@@ -152,7 +157,7 @@ function Canvas({ className, children, onDelete, ...props }: CanvasProps) {
                 </Layer>
             </Stage>
             <p className="opacity-50 text-sm select-none absolute bottom-0 right-0 m-2">
-                {Math.round(zoomLevel * 100)}%
+                {Math.round(canvasState.scale * 100)}%
             </p>
         </div>
     );

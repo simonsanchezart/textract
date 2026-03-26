@@ -1,11 +1,7 @@
+import { Point2DType } from "@/types/types";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
-
-export type Point2DType = {
-    x: number;
-    y: number;
-};
 
 export type MarkType = {
     id: string;
