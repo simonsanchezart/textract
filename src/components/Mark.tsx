@@ -19,7 +19,7 @@ function Mark({ mark }: { mark: MarkType }) {
                 points={points.flatMap((p) => [p.x, p.y])}
                 fill={Colors.GREEN + "11"}
                 stroke={Colors.LIGHT}
-                strokeWidth={1.0}
+                strokeWidth={4.0}
                 shadowOffset={{ x: 0.5, y: 0.5 }}
                 shadowOpacity={1}
                 closed
