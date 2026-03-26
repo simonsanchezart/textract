@@ -8,13 +8,14 @@ import { Colors } from "../types/colors";
 import MarkPoint from "./MarkPoint";
 import Mark from "./Mark";
 import { getMiddle } from "@/lib/utils";
+import { useShallow } from "zustand/react/shallow";
 
 function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
     const updateImagePosition = useMarkStore((s) => s.updateImagePosition);
     const updateImageScale = useMarkStore((s) => s.updateImageScale);
     const updateImageRotation = useMarkStore((s) => s.updateImageRotation);
     const addMark = useMarkStore((s) => s.addMark);
-    const marks = useMarkStore((s) => s.marks);
+    const marks = useMarkStore(useShallow((s) => s.marks));
 
     const [image] = useImage(imageData.src);
     const [currentPoints, setCurrentPoints] = useState<Point2DType[]>([]);
