@@ -7,6 +7,7 @@ import { MarkImageType, Point2DType, useMarkStore } from "../stores/markStore";
 import { Colors } from "../types/colors";
 import MarkPoint from "./MarkPoint";
 import Mark from "./Mark";
+import { getMiddle } from "@/lib/utils";
 
 function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
     const updateImagePosition = useMarkStore((s) => s.updateImagePosition);
@@ -24,10 +25,18 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
 
         const updated = [...currentPoints, { x: pos.x, y: pos.y }];
         if (updated.length === 4) {
+            const c = getMiddle(updated);
+            const sortedPoints = updated.sort((a, b) => {
+                const angleA = Math.atan2(c.y - a.y, c.x - a.x);
+                const angleB = Math.atan2(c.y - b.y, c.x - b.x);
+
+                return angleA < angleB ? 1 : -1;
+            });
+
             addMark(imageData.id, {
                 id: crypto.randomUUID(),
                 imageId: imageData.id,
-                points: updated,
+                points: sortedPoints,
             });
 
             setCurrentPoints([]);
