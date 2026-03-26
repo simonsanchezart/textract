@@ -1,21 +1,19 @@
 import { useState } from "react";
 import { Line, Group } from "react-konva";
 import Konva from "konva";
-import { MarkType, useMarkStore } from "../stores/markStore";
+import { MarkType, useMarkActions } from "../stores/markStore";
 import { Colors } from "../types/colors";
 import MarkPoint from "./MarkPoint";
 
 function Mark({ mark }: { mark: MarkType }) {
-    const updateMark = useMarkStore((s) => s.updateMark);
-    const updateMarkPoint = useMarkStore((s) => s.updateMarkPoint);
-    const removeMark = useMarkStore((s) => s.removeMark);
-
+    const { updateMark, updateMarkPoint, removeMark } = useMarkActions();
     const [markOffset, setMarkOffset] = useState({ x: 0, y: 0 });
+    const [points, setPoints] = useState(mark.points);
 
     return (
         <Group draggable>
             <Line
-                points={mark.points.flatMap((p) => [p.x, p.y])}
+                points={points.flatMap((p) => [p.x, p.y])}
                 fill={Colors.GREEN + "11"}
                 stroke={Colors.LIGHT}
                 strokeWidth={1.0}
@@ -65,15 +63,22 @@ function Mark({ mark }: { mark: MarkType }) {
                 }}
             />
 
-            {mark.points.map((p, id) => {
+            {points.map((p, id) => {
                 return (
                     <MarkPoint
                         key={id}
                         position={p}
                         offset={markOffset}
-                        onDragMove={(e) => {
-                            updateMarkPoint(mark.id, id, { x: e.target.x(), y: e.target.y() });
-                        }}
+                        // onDragMove={(e) => {
+                        //     setPoints((prev) => {
+                        //         const next = [...prev];
+                        //         next[id] = { x: e.target.x(), y: e.target.y() };
+                        //         return next;
+                        //     });
+                        // }}
+                        // onDragEnd={(e) => {
+                        //     updateMarkPoint(mark.id, id, { x: e.target.x(), y: e.target.y() });
+                        // }}
                     />
                 );
             })}
