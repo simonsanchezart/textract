@@ -1,32 +1,10 @@
+use base64::{engine::general_purpose, Engine};
 use image::{open, GenericImage, RgbaImage};
 use imageproc::geometric_transformations::{warp, Interpolation, Projection};
 use path_clean::PathClean;
-use std::env;
+use std::{env, io::Cursor, time::Instant};
 
 use nalgebra::{DMatrix, DVector, Matrix3};
-
-fn order_quad(points: &[(f64, f64); 4]) -> [(f64, f64); 4] {
-    let cx = points.iter().map(|p| p.0).sum::<f64>() / 4.0;
-    let cy = points.iter().map(|p| p.1).sum::<f64>() / 4.0;
-
-    let mut pts = points.clone();
-    pts.sort_by(|a, b| {
-        let aa = (a.1 - cy).atan2(a.0 - cx);
-        let bb = (b.1 - cy).atan2(b.0 - cx);
-        aa.partial_cmp(&bb).unwrap()
-    });
-
-    // rotate so first point is top-left
-    let idx = pts
-        .iter()
-        .enumerate()
-        .min_by(|(_, a), (_, b)| (a.0 + a.1).partial_cmp(&(b.0 + b.1)).unwrap())
-        .unwrap()
-        .0;
-
-    pts.rotate_left(idx);
-    pts
-}
 
 fn quad_dimensions(q: &[(f64, f64); 4]) -> (f64, f64) {
     let dist = |a: (f64, f64), b: (f64, f64)| ((a.0 - b.0).powi(2) + (a.1 - b.1).powi(2)).sqrt();
@@ -71,32 +49,14 @@ fn homography_from_4pts(src: &[(f64, f64); 4], dst: &[(f64, f64); 4]) -> Option<
     ))
 }
 
-// #[tauri::command]
-// fn print_points(img_url: String, points: Vec<i32>) {
-//     println!("{}", img_url);
-//     for number in &points {
-//         println!("{}", number);
-//     }
-// }
-
 #[tauri::command]
 fn transform_image(img_url: String, points: Vec<f64>) -> Result<String, String> {
-    // let p0 = (168., 740.);
-    // let p1 = (160., 670.);
-    // let p2 = (243., 660.);
-    // let p3 = (255., 730.);
+    let tr = (points[0], points[1]);
+    let tl = (points[2], points[3]);
+    let bl = (points[4], points[5]);
+    let br = (points[6], points[7]);
 
-    let p0 = (points[0], points[1]);
-    let p1 = (points[2], points[3]);
-    let p2 = (points[4], points[5]);
-    let p3 = (points[6], points[7]);
-    // println!("{:?} -> {:?}", p0, p0_a);
-    // println!("{:?} -> {:?}", p1, p1_a);
-    // println!("{:?} -> {:?}", p2, p2_a);
-    // println!("{:?} -> {:?}", p3, p3_a);
-    // Ok(())
-
-    let src = order_quad(&[p0, p1, p2, p3]);
+    let src = &[tl, tr, br, bl];
     let (width, height) = quad_dimensions(&src);
     let dst = [(0.0, 0.0), (width, 0.0), (width, height), (0.0, height)];
 
@@ -114,7 +74,7 @@ fn transform_image(img_url: String, points: Vec<f64>) -> Result<String, String> 
     ])
     .unwrap();
 
-    let img = open(img_url).unwrap().into_rgba8();
+    let img = open(img_url).unwrap().to_rgba8();
 
     let mut result: RgbaImage = warp(
         &img,
@@ -123,14 +83,23 @@ fn transform_image(img_url: String, points: Vec<f64>) -> Result<String, String> 
         image::Rgba([0, 0, 0, 0]),
     );
 
-    let a = result.sub_image(0, 0, width as u32, height as u32);
-    let _ = a.to_image().save("../output.png");
+    let crop_result = result.sub_image(0, 0, width as u32, height as u32);
+    // let _ = a.to_image().save("../output.png");
 
-    let absolute_output = env::current_dir()
-        .map_err(|e| e.to_string())?
-        .join("../output.png")
-        .clean();
-    Ok(absolute_output.display().to_string())
+    let mut crop_buffer: Vec<u8> = Vec::new();
+    crop_result.to_image()
+        .write_to(&mut Cursor::new(&mut crop_buffer), image::ImageFormat::Png)
+        .unwrap();
+    let base64 = format!("data:image/png;base64,{}", general_purpose::STANDARD.encode(crop_buffer));
+
+    // println!("{:?}", base64);
+
+    // let absolute_output = env::current_dir()
+    //     .map_err(|e| e.to_string())?
+    //     .join("../output.png")
+    //     .clean();
+    // Ok(absolute_output.display().to_string())
+    Ok(base64)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

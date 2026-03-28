@@ -11,6 +11,7 @@ export type MarkType = {
 
 export type MarkImageType = {
     id: string;
+    originalSrc: string;
     src: string;
     position: Point2DType;
     scale: Point2DType;
@@ -108,3 +109,4 @@ export const useMarkStore = create(
         { name: "mark-storage" }
     )
 );
+

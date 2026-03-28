@@ -1,15 +1,18 @@
 import { ReactNode } from "react";
 import { CgAdd } from "react-icons/cg";
-import { open, confirm } from "@tauri-apps/plugin-dialog";
+import { FaPlay } from "react-icons/fa";
+import { open } from "@tauri-apps/plugin-dialog";
 import Canvas from "./Canvas";
-import { convertFileSrc } from "@tauri-apps/api/core";
+import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { MarkImageType, useMarkStore } from "../stores/markStore";
 import MarkImage from "./MarkImage";
 import { CanvasType } from "@/types/types";
+import { useShallow } from "zustand/react/shallow";
 
 //todo: test every image format
 
 function MarkCanvas({ className = "" }: { className?: string; chldren?: ReactNode }) {
+    const marks = useMarkStore(useShallow((state) => state.marks));
     const images = useMarkStore((state) => state.images);
     const addImage = useMarkStore((state) => state.addImage);
     const removeImage = useMarkStore((state) => state.removeImage);
@@ -39,18 +42,42 @@ function MarkCanvas({ className = "" }: { className?: string; chldren?: ReactNod
                         });
 
                         if (!selectedImages) return;
-                        const internalUrls = selectedImages.map((i) => convertFileSrc(i));
 
-                        const imageSet: MarkImageType[] = internalUrls.map((url) => ({
-                            id: crypto.randomUUID(),
-                            src: url,
-                            scale: { x: 1, y: 1 },
-                            position: { x: 0, y: 0 },
-                            rotation: 0,
-                            markIds: [],
-                        }));
+                        selectedImages.forEach((img) => {
+                            const assetUrl = convertFileSrc(img);
 
-                        imageSet.map((i) => addImage(i));
+                            const markImage: MarkImageType = {
+                                id: crypto.randomUUID(),
+                                originalSrc: img,
+                                src: assetUrl,
+                                scale: { x: 1, y: 1 },
+                                position: { x: 0, y: 0 },
+                                rotation: 0,
+                                markIds: [],
+                            };
+
+                            addImage(markImage);
+                        });
+                    }}
+                />
+
+                <FaPlay
+                    className="size-4 button-icon"
+                    onClick={async () => {
+                        Object.values(images).map((i) => {
+                            const imageMarks = i.markIds;
+                            //todo: https://github.com/konvajs/use-image/issues/25
+                            imageMarks.forEach(async (id) => {
+                                const pointsFlat = marks[id].points.flatMap((p) => [Math.round(p.x), Math.round(p.y)]);
+
+                                const outputFile: string = await invoke("transform_image", {
+                                    imgUrl: i.originalSrc,
+                                    points: pointsFlat,
+                                });
+
+                                console.log(outputFile);
+                            });
+                        });
                     }}
                 />
             </div>
