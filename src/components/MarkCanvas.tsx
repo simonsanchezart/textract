@@ -8,24 +8,26 @@ import { MarkImageType, useMarkStore } from "../stores/markStore";
 import MarkImage from "./MarkImage";
 import { CanvasType } from "@/types/types";
 import { useShallow } from "zustand/react/shallow";
+import { AtlasImageType, useAtlasStore } from "@/stores/atlasStore";
 
 //todo: test every image format
 
 function MarkCanvas({ className = "" }: { className?: string; chldren?: ReactNode }) {
     const marks = useMarkStore(useShallow((state) => state.marks));
-    const images = useMarkStore((state) => state.images);
-    const addImage = useMarkStore((state) => state.addImage);
-    const removeImage = useMarkStore((state) => state.removeImage);
+    const markImages = useMarkStore((state) => state.images);
+    const addMarkImage = useMarkStore((state) => state.addImage);
+    const removeMarkImage = useMarkStore((state) => state.removeImage);
+    const addAtlasImage = useAtlasStore((state) => state.addImage);
 
     return (
         <div className={`relative h-full ${className}`} id="tester">
             <Canvas
                 onDelete={async (ids) => {
-                    for (const id of ids) removeImage(id);
+                    for (const id of ids) removeMarkImage(id);
                 }}
                 type={CanvasType.MARK}
             >
-                {Object.values(images).map((i) => {
+                {Object.values(markImages).map((i) => {
                     return <MarkImage key={i.id} imageData={i} />;
                 })}
             </Canvas>
@@ -50,13 +52,13 @@ function MarkCanvas({ className = "" }: { className?: string; chldren?: ReactNod
                                 id: crypto.randomUUID(),
                                 originalSrc: img,
                                 src: assetUrl,
-                                scale: { x: 1, y: 1 },
                                 position: { x: 0, y: 0 },
                                 rotation: 0,
+                                scale: { x: 1, y: 1 },
                                 markIds: [],
                             };
 
-                            addImage(markImage);
+                            addMarkImage(markImage);
                         });
                     }}
                 />
@@ -64,18 +66,26 @@ function MarkCanvas({ className = "" }: { className?: string; chldren?: ReactNod
                 <FaPlay
                     className="size-4 button-icon"
                     onClick={async () => {
-                        Object.values(images).map((i) => {
+                        Object.values(markImages).map((i) => {
                             const imageMarks = i.markIds;
-                            //todo: https://github.com/konvajs/use-image/issues/25
                             imageMarks.forEach(async (id) => {
                                 const pointsFlat = marks[id].points.flatMap((p) => [Math.round(p.x), Math.round(p.y)]);
 
-                                const outputFile: string = await invoke("transform_image", {
+                                const base64: string = await invoke("transform_image", {
                                     imgUrl: i.originalSrc,
                                     points: pointsFlat,
                                 });
 
-                                console.log(outputFile);
+                                const atlasImage: AtlasImageType = {
+                                    id: crypto.randomUUID(),
+                                    base64: base64,
+                                    markId: id,
+                                    position: { x: 0, y: 0 },
+                                    rotation: 0,
+                                    scale: { x: 1, y: 1 },
+                                };
+
+                                addAtlasImage(atlasImage);
                             });
                         });
                     }}
