@@ -1,10 +1,11 @@
 import Konva from "konva";
 import { KonvaPointerEvent } from "konva/lib/PointerEvents";
-import React, { ReactNode, useRef, useState } from "react";
+import React, { ReactNode, useEffect, useRef, useState } from "react";
 import { Layer, Shape, Stage, Transformer } from "react-konva";
 import PopupConfirm from "./PopupConfirm";
 import { CanvasType } from "@/types/types";
 import { useCanvasStore } from "@/stores/canvasStore";
+import { NodeConfig, Node } from "konva/lib/Node";
 
 type CanvasProps = {
     type: CanvasType;
@@ -26,10 +27,15 @@ function Canvas({ type, transformerRatio = true, className, children, onDelete, 
     const DOT_SPACING = 64;
     const DOT_SIZE = 2;
 
-    const stageRef = useRef<Konva.Stage>(null);
     const transformerRef = useRef<Konva.Transformer | null>(null);
+    const [selectedNodes, setSelectedNodes] = useState<Node<NodeConfig>[]>([]);
 
+    const stageRef = useRef<Konva.Stage>(null);
     const [openConfirmation, setOpenConfirmation] = useState(false);
+
+    useEffect(() => {
+        transformerRef.current?.nodes(selectedNodes);
+    }, [selectedNodes]);
 
     const handleZoom = (e: Konva.KonvaEventObject<WheelEvent>) => {
         e.evt.preventDefault();
@@ -75,7 +81,7 @@ function Canvas({ type, transformerRatio = true, className, children, onDelete, 
         const scale = stage.scaleX();
         const stagePos = stage.getPosition();
 
-        // don't draw grid if zoom < 50%
+        // don't draw grid if zoom < 35%
         if (scale < 0.35) return;
 
         const viewWidth = stage.width() / scale;
@@ -130,12 +136,18 @@ function Canvas({ type, transformerRatio = true, className, children, onDelete, 
                 onWheel={handleZoom}
                 onClick={(e: KonvaPointerEvent) => {
                     if (e.target === e.target.getStage()) {
-                        transformerRef.current?.nodes([]);
+                        setSelectedNodes([]);
                         return;
                     }
 
                     const group = e.target.findAncestor(".master", false);
-                    if (group) transformerRef.current?.nodes([group]);
+                    if (!group) return;
+
+                    setSelectedNodes((prev) => {
+                        if (!e.evt.shiftKey) return [group];
+                        if (selectedNodes.includes(group)) return prev.filter((i) => i !== group);
+                        return [...prev, group];
+                    });
                 }}
                 onContextMenu={(e) => {
                     e.evt.preventDefault();
