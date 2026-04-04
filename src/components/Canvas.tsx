@@ -8,12 +8,13 @@ import { useCanvasStore } from "@/stores/canvasStore";
 
 type CanvasProps = {
     type: CanvasType;
+    transformerRatio?: boolean;
     className?: string;
     children?: ReactNode;
     onDelete?: (ids: string[]) => void;
 } & React.ComponentProps<typeof Stage>;
 
-function Canvas({ type, className, children, onDelete, ...props }: CanvasProps) {
+function Canvas({ type, transformerRatio = true, className, children, onDelete, ...props }: CanvasProps) {
     const canvasState = useCanvasStore((s) => s.canvas[type]);
     const setCanvasScale = useCanvasStore((s) => s.setCanvasScale);
     const setCanvasPosition = useCanvasStore((s) => s.setCanvasPosition);
@@ -151,8 +152,21 @@ function Canvas({ type, className, children, onDelete, ...props }: CanvasProps) 
                         ref={transformerRef}
                         rotationSnaps={[0, 90, 180, 270]}
                         rotationSnapTolerance={45}
-                        keepRatio={true}
-                        enabledAnchors={["top-left", "top-right", "bottom-left", "bottom-right"]}
+                        keepRatio={transformerRatio}
+                        enabledAnchors={
+                            transformerRatio
+                                ? ["top-left", "top-right", "bottom-left", "bottom-right"]
+                                : [
+                                      "top-left",
+                                      "top-right",
+                                      "bottom-left",
+                                      "bottom-right",
+                                      "middle-left",
+                                      "middle-right",
+                                      "top-center",
+                                      "bottom-center",
+                                  ]
+                        }
                     />
                 </Layer>
             </Stage>
