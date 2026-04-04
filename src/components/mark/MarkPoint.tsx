@@ -24,7 +24,7 @@ function MarkPoint({ position, offset = { x: 0, y: 0 }, ...props }: MarkPointPro
             height={POINT_SIZE}
             offset={{ x: POINT_SIZE_H - offset.x, y: POINT_SIZE_H - offset.y }}
             onPointerEnter={(e) => {
-                //xfunc: also cache?
+                //refactor: also cache?
                 new Konva.Tween({
                     node: e.target,
                     duration: 0.02,
@@ -36,7 +36,7 @@ function MarkPoint({ position, offset = { x: 0, y: 0 }, ...props }: MarkPointPro
                 }).play();
             }}
             onPointerLeave={(e) => {
-                //xfunc: also cache?
+                //refactor: also cache?
                 new Konva.Tween({
                     node: e.target,
                     duration: 0.02,

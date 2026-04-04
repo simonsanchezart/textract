@@ -42,14 +42,14 @@ function Mark({ mark }: { mark: MarkType }) {
                 }}
                 onPointerMove={(e) => {
                     if (e.evt.altKey) {
-                        //xfunc: also cache?
+                        //refactor: also cache?
                         new Konva.Tween({
                             node: e.target,
                             duration: 0.02,
                             fill: Colors.RED + "22",
                         }).play();
                     } else {
-                        //xfunc: also cache?
+                        //refactor: also cache?
                         new Konva.Tween({
                             node: e.target,
                             duration: 0.02,
@@ -58,7 +58,7 @@ function Mark({ mark }: { mark: MarkType }) {
                     }
                 }}
                 onPointerLeave={(e) => {
-                    //xfunc: also cache?
+                    //refactor: also cache?
                     new Konva.Tween({
                         node: e.target,
                         duration: 0.02,

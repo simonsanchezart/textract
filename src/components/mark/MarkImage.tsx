@@ -47,6 +47,7 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
         }
     };
 
+    // refactor: should share logic between Mark and Atlas images
     const onDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
         if (e.target.name() !== "master") return;
         updateImagePosition(imageData.id, { x: e.currentTarget.attrs.x, y: e.currentTarget.attrs.y });
@@ -56,6 +57,7 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
         <Group
             id={imageData.id}
             name="master"
+            // refactor: should share logic between Mark and Atlas images
             onTransformEnd={(e) => {
                 const attrs = e.currentTarget.attrs;
                 const scale = { x: attrs.scaleX, y: attrs.scaleY };
@@ -74,6 +76,7 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
                 if (e.evt.button === 2) setCurrentPoints([]);
                 if (e.evt.button === 0 && e.evt.ctrlKey) addPoint(e);
             }}
+            // refactor: should share logic between Mark and Atlas images
             onDragStart={(e) => {
                 if (e.evt.buttons !== 1) {
                     e.target.stopDrag();

@@ -64,8 +64,6 @@ function Canvas({ type, transformerRatio = true, className, children, onDelete, 
         setCanvasScale(type, newScale);
     };
 
-    //todo: multiselect
-
     const onKeyDown = async (e: React.KeyboardEvent<HTMLDivElement>) => {
         switch (e.code) {
             case "Delete":
