@@ -1,6 +1,6 @@
 import { Group as ResizableGroup, Panel, Separator, useDefaultLayout, usePanelRef } from "react-resizable-panels";
-import MarkCanvas from "./MarkCanvas";
-import AtlasCanvas from "./AtlasCanvas";
+import MarkCanvas from "./mark/MarkCanvas";
+import AtlasCanvas from "./atlas/AtlasCanvas";
 
 function CanvasSplitter({ className }: { className?: string }) {
     const { defaultLayout, onLayoutChanged } = useDefaultLayout({

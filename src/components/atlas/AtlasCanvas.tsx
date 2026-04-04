@@ -1,5 +1,5 @@
 import { CanvasType } from "@/types/types";
-import Canvas from "./Canvas";
+import Canvas from "../Canvas";
 import { AtlasImageType, useAtlasStore } from "@/stores/atlasStore";
 import useImage from "use-image";
 import { Group, Image } from "react-konva";
@@ -33,6 +33,7 @@ function AtlasCanvas({ className }: { className?: string }) {
                     for (const id of ids) removeAtlasImage(id);
                 }}
                 type={CanvasType.ATLAS}
+                transformerRatio={false}
             >
                 {Object.values(atlasImages).map((i) => {
                     return <AtlasImageComponent key={i.id} imageData={i} />;

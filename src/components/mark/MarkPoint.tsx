@@ -1,6 +1,6 @@
 import { Rect } from "react-konva";
 import Konva from "konva";
-import { Colors } from "../types/colors";
+import { Colors } from "../../types/colors";
 import { Point2DType } from "@/types/types";
 
 type MarkPointProps = {
