@@ -26,6 +26,7 @@ function Canvas({ type, transformerRatio = true, className, children, onDelete, 
     const SIZE = 2048;
     const DOT_SPACING = 64;
     const DOT_SIZE = 2;
+    const SNAP = 2;
 
     const transformerRef = useRef<Konva.Transformer | null>(null);
     const [selectedNodes, setSelectedNodes] = useState<Node<NodeConfig>[]>([]);
@@ -36,6 +37,16 @@ function Canvas({ type, transformerRatio = true, className, children, onDelete, 
     useEffect(() => {
         transformerRef.current?.nodes(selectedNodes);
     }, [selectedNodes]);
+
+    const handleDragMove = (e: Konva.KonvaEventObject<DragEvent>) => {
+        const target = e.target;
+        if (target.name() !== "master") return;
+
+        const x = Math.round(target.x() / SNAP) * SNAP;
+        const y = Math.round(target.y() / SNAP) * SNAP;
+
+        target.position({ x, y });
+    };
 
     const handleZoom = (e: Konva.KonvaEventObject<WheelEvent>) => {
         e.evt.preventDefault();
@@ -132,6 +143,7 @@ function Canvas({ type, transformerRatio = true, className, children, onDelete, 
                 className={`h-0 ${className}`}
                 ref={stageRef}
                 onWheel={handleZoom}
+                onDragMove={handleDragMove}
                 onClick={(e: KonvaPointerEvent) => {
                     if (e.target === e.target.getStage()) {
                         setSelectedNodes([]);
@@ -157,12 +169,33 @@ function Canvas({ type, transformerRatio = true, className, children, onDelete, 
                 </Layer>
                 <Layer>
                     {children}
-
                     <Transformer
                         ref={transformerRef}
                         rotationSnaps={[0, 90, 180, 270]}
                         rotationSnapTolerance={45}
                         keepRatio={transformerRatio}
+                        boundBoxFunc={(oldBox, newBox) => {
+                            const stage = stageRef.current;
+                            if (!stage) return newBox;
+
+                            const scale = stage.scaleX();
+                            const stageX = stage.x();
+                            const stageY = stage.y();
+
+                            // Snap in logical space to ensure zoom independence
+                            const lX = Math.round((newBox.x - stageX) / scale);
+                            const lY = Math.round((newBox.y - stageY) / scale);
+                            const lW = Math.round(newBox.width / scale);
+                            const lH = Math.round(newBox.height / scale);
+
+                            return {
+                                x: lX * scale + stageX,
+                                y: lY * scale + stageY,
+                                width: Math.max(lW * scale, scale),
+                                height: Math.max(lH * scale, scale),
+                                rotation: newBox.rotation,
+                            };
+                        }}
                         enabledAnchors={
                             transformerRatio
                                 ? ["top-left", "top-right", "bottom-left", "bottom-right"]
