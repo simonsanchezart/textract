@@ -1,11 +1,12 @@
 use base64::{engine::general_purpose, Engine};
 use image::{open, GenericImage, RgbaImage};
 use imageproc::geometric_transformations::{warp, Interpolation, Projection};
-use path_clean::PathClean;
-use std::{env, io::Cursor, time::Instant};
+use std::{env, io::Cursor};
 
 use nalgebra::{DMatrix, DVector, Matrix3};
 
+// research: learn how this works properly, is this the best way to estimate the dimensions?
+// refactor: extract to module
 fn quad_dimensions(q: &[(f64, f64); 4]) -> (f64, f64) {
     let dist = |a: (f64, f64), b: (f64, f64)| ((a.0 - b.0).powi(2) + (a.1 - b.1).powi(2)).sqrt();
 
@@ -15,6 +16,8 @@ fn quad_dimensions(q: &[(f64, f64); 4]) -> (f64, f64) {
     (width, height)
 }
 
+// research:
+// refactor: extract to module
 fn homography_from_4pts(src: &[(f64, f64); 4], dst: &[(f64, f64); 4]) -> Option<Matrix3<f64>> {
     let mut a = DMatrix::<f64>::zeros(8, 8);
     let mut b = DVector::<f64>::zeros(8);
@@ -49,6 +52,8 @@ fn homography_from_4pts(src: &[(f64, f64); 4], dst: &[(f64, f64); 4]) -> Option<
     ))
 }
 
+// refactor: extract to module
+// refactor: optimize by passing all marks from image in a single call
 #[tauri::command]
 fn transform_image(img_url: String, points: Vec<f64>) -> Result<String, String> {
     let tr = (points[0], points[1]);
@@ -79,26 +84,24 @@ fn transform_image(img_url: String, points: Vec<f64>) -> Result<String, String> 
     let mut result: RgbaImage = warp(
         &img,
         &proj,
-        Interpolation::Bilinear,
+        Interpolation::Bilinear, // refactor: pass interpolation as parameter
         image::Rgba([0, 0, 0, 0]),
     );
 
     let crop_result = result.sub_image(0, 0, width as u32, height as u32);
-    // let _ = a.to_image().save("../output.png");
 
     let mut crop_buffer: Vec<u8> = Vec::new();
-    crop_result.to_image()
+    crop_result
+        .to_image()
         .write_to(&mut Cursor::new(&mut crop_buffer), image::ImageFormat::Png)
         .unwrap();
-    let base64 = format!("data:image/png;base64,{}", general_purpose::STANDARD.encode(crop_buffer));
 
-    // println!("{:?}", base64);
+    // research: is there a better way to pass this data to the front-end other than base-64?
+    let base64 = format!(
+        "data:image/png;base64,{}",
+        general_purpose::STANDARD.encode(crop_buffer)
+    );
 
-    // let absolute_output = env::current_dir()
-    //     .map_err(|e| e.to_string())?
-    //     .join("../output.png")
-    //     .clean();
-    // Ok(absolute_output.display().to_string())
     Ok(base64)
 }
 

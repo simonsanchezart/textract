@@ -14,15 +14,15 @@ function Navbar() {
                 <div className="flex gap-2 text-center items-center absolute right-0 top-0">
                     <CgMinimizeAlt
                         className="size-5 hover:text-blue-400 button-icon"
-                        onClick={() => appWindow.minimize()}
+                        onClick={appWindow.minimize.bind(appWindow)}
                     />
                     <CgMaximizeAlt
                         className="size-5 hover:text-yellow-400 button-icon"
-                        onClick={() => appWindow.toggleMaximize()}
+                        onClick={appWindow.toggleMaximize.bind(appWindow)}
                     />
                     <CgClose
                         className="size-6 hover:text-red-400 button-icon"
-                        onClick={() => appWindow.close()}
+                        onClick={appWindow.close.bind(appWindow)}
                     />
                 </div>
             </div>

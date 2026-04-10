@@ -3,12 +3,15 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
+//refactor: rename to Mark, move to namespace if conflict
 export type MarkType = {
     id: string;
     imageId: string;
     points: Point2DType[];
 };
 
+//refactor: add ImageType for AtlasImageType and MarkImageType
+//refactor: rename to MarkImage, move to namespace if conflict
 export type MarkImageType = {
     id: string;
     originalSrc: string;
@@ -23,6 +26,7 @@ type MarkStore = {
     images: Record<string, MarkImageType>;
     marks: Record<string, MarkType>;
 
+    //refactor: add to actions object
     addImage: (image: MarkImageType) => void;
     updateImagePosition: (imageId: string, newPos: Point2DType) => void;
     updateImageScale: (imageId: string, newScale: Point2DType) => void;
@@ -109,4 +113,3 @@ export const useMarkStore = create(
         { name: "mark-storage" }
     )
 );
-

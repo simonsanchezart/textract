@@ -3,6 +3,8 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
+//refactor: add ImageType for AtlasImageType and MarkImageType
+//refactor: rename to AtlasImage,  move to namespace if conflict
 export type AtlasImageType = {
     id: string;
     markId: string;
@@ -12,9 +14,11 @@ export type AtlasImageType = {
     rotation: number;
 };
 
+// refactor: make a parent Store for behavior shader with MarkStore
 type AtlasStore = {
     images: Record<string, AtlasImageType>;
 
+    //refactor: add to actions object
     addImage: (image: AtlasImageType) => void;
     removeImage: (imageId: string) => void;
     updateImagePosition: (imageId: string, newPos: Point2DType) => void;
@@ -42,6 +46,7 @@ export const useAtlasStore = create(
                 set((state) => {
                     if (!state.images[imageId]) return;
                     state.images[imageId].scale = newScale;
+                    console.log(newScale);
                 }),
 
             updateImageRotation: (imageId, newRot) =>

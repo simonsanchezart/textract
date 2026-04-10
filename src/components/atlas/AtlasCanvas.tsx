@@ -8,13 +8,12 @@ function AtlasCanvas({ className }: { className?: string }) {
     const removeAtlasImage = useAtlasStore((state) => state.removeImage);
 
     return (
-        <div className={`relative h-full ${className}`} id="tester">
+        <div className={`relative h-full ${className}`}>
             <Canvas
                 onDelete={async (ids) => {
                     for (const id of ids) removeAtlasImage(id);
                 }}
-                type={CanvasType.ATLAS}
-                transformerRatio={false}
+                canvasType={CanvasType.ATLAS}
             >
                 {Object.values(atlasImages).map((i) => {
                     return <AtlasImageComponent key={i.id} imageData={i} />;

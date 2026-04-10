@@ -1,4 +1,4 @@
-import { Point2DType } from "@/stores/markStore";
+import { Point2DType } from "@/types/types";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 

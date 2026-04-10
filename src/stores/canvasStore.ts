@@ -12,6 +12,7 @@ export type CanvasState = {
 type CanvasStore = {
     canvas: Record<CanvasType, CanvasState>;
 
+    //refactor: extract to actions object
     setCanvasScale: (canvas: CanvasType, scale: number) => void;
     setCanvasPosition: (canvas: CanvasType, pos: Point2DType) => void;
 };

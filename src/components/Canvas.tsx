@@ -6,27 +6,27 @@ import PopupConfirm from "./PopupConfirm";
 import { CanvasType } from "@/types/types";
 import { useCanvasStore } from "@/stores/canvasStore";
 import { NodeConfig, Node } from "konva/lib/Node";
+import { Box } from "konva/lib/shapes/Transformer";
 
 type CanvasProps = {
-    type: CanvasType;
-    transformerRatio?: boolean;
+    canvasType: CanvasType;
     className?: string;
     children?: ReactNode;
     onDelete?: (ids: string[]) => void;
 } & React.ComponentProps<typeof Stage>;
 
-function Canvas({ type, transformerRatio = true, className, children, onDelete, ...props }: CanvasProps) {
-    const canvasState = useCanvasStore((s) => s.canvas[type]);
+function Canvas({ canvasType, className, children, ...props }: CanvasProps) {
+    const canvasState = useCanvasStore((s) => s.canvas[canvasType]);
     const setCanvasScale = useCanvasStore((s) => s.setCanvasScale);
     const setCanvasPosition = useCanvasStore((s) => s.setCanvasPosition);
 
     const ZOOM_MULTIPLIER = 1.1;
     const MIN_ZOOM = 0.1;
     const MAX_ZOOM = 100;
-    const SIZE = 2048;
+    const STAGE_SIZE = 2048;
     const DOT_SPACING = 64;
     const DOT_SIZE = 2;
-    const SNAP = 8;
+    const SNAP = 16;
 
     const transformerRef = useRef<Konva.Transformer | null>(null);
     const [selectedNodes, setSelectedNodes] = useState<Node<NodeConfig>[]>([]);
@@ -48,6 +48,7 @@ function Canvas({ type, transformerRatio = true, className, children, onDelete, 
         target.position({ x, y });
     };
 
+    //refactor: can this be extracted into a hook?
     const handleZoom = (e: Konva.KonvaEventObject<WheelEvent>) => {
         e.evt.preventDefault();
         const stage = stageRef.current;
@@ -71,18 +72,11 @@ function Canvas({ type, transformerRatio = true, className, children, onDelete, 
             y: pointer.y - mousePointTo.y * newScale,
         };
 
-        setCanvasPosition(type, newPos);
-        setCanvasScale(type, newScale);
+        setCanvasPosition(canvasType, newPos);
+        setCanvasScale(canvasType, newScale);
     };
 
-    const onKeyDown = async (e: React.KeyboardEvent<HTMLDivElement>) => {
-        switch (e.code) {
-            case "Delete":
-                const selected = transformerRef.current?.nodes() ?? [];
-                if (selected.length !== 0) setOpenConfirmation(true);
-        }
-    };
-
+    //refactor: extract into hook or custom element
     const dragGrid = (ctx: Konva.Context, shape: Konva.Shape) => {
         const stage = stageRef.current;
         if (!stage) return;
@@ -117,8 +111,55 @@ function Canvas({ type, transformerRatio = true, className, children, onDelete, 
         ctx.fillStrokeShape(shape);
     };
 
+    const handleShortcuts = async (e: React.KeyboardEvent<HTMLDivElement>) => {
+        switch (e.code) {
+            case "Delete":
+                const selected = transformerRef.current?.nodes() ?? [];
+                if (selected.length !== 0) setOpenConfirmation(true);
+        }
+    };
+
+    const handleSelection = (e: KonvaPointerEvent) => {
+        if (e.target === e.target.getStage()) {
+            setSelectedNodes([]);
+            return;
+        }
+
+        const group = e.target.findAncestor(".master", false);
+        if (!group) return;
+
+        setSelectedNodes((prev) => {
+            if (!e.evt.shiftKey) return [group];
+            if (selectedNodes.includes(group)) return prev.filter((i) => i !== group);
+            return [...prev, group];
+        });
+    };
+
+    const handleTransformSnapping = (_oldBox: Box, newBox: Box) => {
+        const stage = stageRef.current;
+        if (!stage) return newBox;
+
+        const scale = stage.scaleX();
+        const stageX = stage.x();
+        const stageY = stage.y();
+
+        //refactor: extract snap to increment util
+        const newX = Math.round((newBox.x - stageX) / scale / SNAP) * SNAP;
+        const newY = Math.round((newBox.y - stageY) / scale / SNAP) * SNAP;
+        const newW = Math.round(newBox.width / scale / SNAP) * SNAP;
+        const newH = Math.round(newBox.height / scale / SNAP) * SNAP;
+
+        return {
+            x: newX * scale + stageX,
+            y: newY * scale + stageY,
+            width: Math.max(newW * scale, scale * SNAP),
+            height: Math.max(newH * scale, scale * SNAP),
+            rotation: newBox.rotation,
+        };
+    };
+
     return (
-        <div className="h-full" tabIndex={-1} onKeyDown={onKeyDown}>
+        <div className="h-full" tabIndex={-1} onKeyDown={handleShortcuts}>
             <PopupConfirm
                 title="Delete Selected"
                 description="Are you sure you want to delete the selected images?"
@@ -128,14 +169,14 @@ function Canvas({ type, transformerRatio = true, className, children, onDelete, 
                 onConfirm={() => {
                     const selected = transformerRef.current?.nodes() ?? [];
                     const selectedIds = selected.map((node) => node.id());
-                    onDelete?.(selectedIds);
+                    props.onDelete?.(selectedIds);
                     transformerRef.current?.nodes([]);
                 }}
             />
 
             <Stage
-                width={SIZE}
-                height={SIZE}
+                width={STAGE_SIZE}
+                height={STAGE_SIZE}
                 scale={{ x: canvasState.scale, y: canvasState.scale }}
                 x={canvasState.x}
                 y={canvasState.y}
@@ -144,22 +185,9 @@ function Canvas({ type, transformerRatio = true, className, children, onDelete, 
                 ref={stageRef}
                 onWheel={handleZoom}
                 onDragMove={handleDragMove}
-                onClick={(e: KonvaPointerEvent) => {
-                    if (e.target === e.target.getStage()) {
-                        setSelectedNodes([]);
-                        return;
-                    }
-
-                    const group = e.target.findAncestor(".master", false);
-                    if (!group) return;
-
-                    setSelectedNodes((prev) => {
-                        if (!e.evt.shiftKey) return [group];
-                        if (selectedNodes.includes(group)) return prev.filter((i) => i !== group);
-                        return [...prev, group];
-                    });
-                }}
+                onClick={handleSelection}
                 onContextMenu={(e) => {
+                    //todo: add context menu
                     e.evt.preventDefault();
                 }}
                 {...props}
@@ -173,31 +201,10 @@ function Canvas({ type, transformerRatio = true, className, children, onDelete, 
                         ref={transformerRef}
                         rotationSnaps={[0, 90, 180, 270]}
                         rotationSnapTolerance={45}
-                        keepRatio={transformerRatio}
-                        boundBoxFunc={(oldBox, newBox) => {
-                            const stage = stageRef.current;
-                            if (!stage) return newBox;
-
-                            const scale = stage.scaleX();
-                            const stageX = stage.x();
-                            const stageY = stage.y();
-
-                            // Snap in logical space to ensure zoom independence
-                            const lX = Math.round((newBox.x - stageX) / scale / SNAP) * SNAP;
-                            const lY = Math.round((newBox.y - stageY) / scale / SNAP) * SNAP;
-                            const lW = Math.round(newBox.width / scale / SNAP) * SNAP;
-                            const lH = Math.round(newBox.height / scale / SNAP) * SNAP;
-
-                            return {
-                                x: lX * scale + stageX,
-                                y: lY * scale + stageY,
-                                width: Math.max(lW * scale, scale * SNAP),
-                                height: Math.max(lH * scale, scale * SNAP),
-                                rotation: newBox.rotation,
-                            };
-                        }}
+                        keepRatio={canvasType === CanvasType.MARK}
+                        boundBoxFunc={handleTransformSnapping}
                         enabledAnchors={
-                            transformerRatio
+                            canvasType === CanvasType.MARK
                                 ? ["top-left", "top-right", "bottom-left", "bottom-right"]
                                 : [
                                       "top-left",
@@ -213,9 +220,9 @@ function Canvas({ type, transformerRatio = true, className, children, onDelete, 
                     />
                 </Layer>
             </Stage>
-            <p className="opacity-50 text-sm select-none absolute bottom-0 right-0 m-2">
+            <small className="opacity-50 text-sm select-none absolute bottom-0 right-0 m-2">
                 {Math.round(canvasState.scale * 100)}%
-            </p>
+            </small>
         </div>
     );
 }
