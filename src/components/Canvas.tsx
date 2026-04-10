@@ -26,7 +26,7 @@ function Canvas({ type, transformerRatio = true, className, children, onDelete, 
     const SIZE = 2048;
     const DOT_SPACING = 64;
     const DOT_SIZE = 2;
-    const SNAP = 2;
+    const SNAP = 8;
 
     const transformerRef = useRef<Konva.Transformer | null>(null);
     const [selectedNodes, setSelectedNodes] = useState<Node<NodeConfig>[]>([]);
@@ -183,16 +183,16 @@ function Canvas({ type, transformerRatio = true, className, children, onDelete, 
                             const stageY = stage.y();
 
                             // Snap in logical space to ensure zoom independence
-                            const lX = Math.round((newBox.x - stageX) / scale);
-                            const lY = Math.round((newBox.y - stageY) / scale);
-                            const lW = Math.round(newBox.width / scale);
-                            const lH = Math.round(newBox.height / scale);
+                            const lX = Math.round((newBox.x - stageX) / scale / SNAP) * SNAP;
+                            const lY = Math.round((newBox.y - stageY) / scale / SNAP) * SNAP;
+                            const lW = Math.round(newBox.width / scale / SNAP) * SNAP;
+                            const lH = Math.round(newBox.height / scale / SNAP) * SNAP;
 
                             return {
                                 x: lX * scale + stageX,
                                 y: lY * scale + stageY,
-                                width: Math.max(lW * scale, scale),
-                                height: Math.max(lH * scale, scale),
+                                width: Math.max(lW * scale, scale * SNAP),
+                                height: Math.max(lH * scale, scale * SNAP),
                                 rotation: newBox.rotation,
                             };
                         }}
