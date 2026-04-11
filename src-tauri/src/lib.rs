@@ -55,7 +55,7 @@ fn homography_from_4pts(src: &[(f64, f64); 4], dst: &[(f64, f64); 4]) -> Option<
 // refactor: extract to module
 // refactor: optimize by passing all marks from image in a single call
 #[tauri::command]
-fn transform_image(img_url: String, points: Vec<f64>) -> Result<String, String> {
+async fn transform_image(img_url: String, points: Vec<f64>) -> Result<String, String> {
     let tr = (points[0], points[1]);
     let tl = (points[2], points[3]);
     let bl = (points[4], points[5]);
