@@ -3,13 +3,13 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
-export type CanvasState = {
+export interface CanvasState {
     scale: number;
     x: number;
     y: number;
 };
 
-type CanvasStore = {
+interface CanvasStore {
     canvas: Record<CanvasType, CanvasState>;
 
     //refactor: extract to actions object

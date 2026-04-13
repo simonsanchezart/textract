@@ -5,7 +5,7 @@ import { immer } from "zustand/middleware/immer";
 
 //refactor: add ImageType for AtlasImageType and MarkImageType
 //refactor: rename to AtlasImage,  move to namespace if conflict
-export type AtlasImageType = {
+export interface AtlasImageType {
     id: string;
     markId: string;
     base64: string;
@@ -15,7 +15,7 @@ export type AtlasImageType = {
 };
 
 // refactor: make a parent Store for behavior shader with MarkStore
-type AtlasStore = {
+interface AtlasStore {
     images: Record<string, AtlasImageType>;
 
     //refactor: add to actions object

@@ -4,7 +4,7 @@ import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
 //refactor: rename to Mark, move to namespace if conflict
-export type MarkType = {
+export interface MarkType {
     id: string;
     imageId: string;
     points: Point2DType[];
@@ -12,7 +12,7 @@ export type MarkType = {
 
 //refactor: add ImageType for AtlasImageType and MarkImageType
 //refactor: rename to MarkImage, move to namespace if conflict
-export type MarkImageType = {
+export interface MarkImageType {
     id: string;
     originalSrc: string;
     src: string;
@@ -22,7 +22,7 @@ export type MarkImageType = {
     markIds: string[];
 };
 
-type MarkStore = {
+interface MarkStore {
     images: Record<string, MarkImageType>;
     marks: Record<string, MarkType>;
 

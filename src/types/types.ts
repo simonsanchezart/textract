@@ -1,5 +1,5 @@
 //refactor: rename to Vec2, move to namespace if conflict
-export type Point2DType = {
+export interface Point2DType {
     x: number;
     y: number;
 };

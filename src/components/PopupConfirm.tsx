@@ -11,7 +11,7 @@ import {
 } from "./ui/dialog";
 import { Button } from "./ui/button";
 
-type PopupProps = {
+interface PopupProps {
     open: boolean;
     setOpen: Dispatch<SetStateAction<boolean>>;
     title?: string;
