@@ -14,8 +14,8 @@ import { Button } from "./ui/button";
 interface PopupProps {
     open: boolean;
     setOpen: Dispatch<SetStateAction<boolean>>;
-    title?: string;
-    description?: string;
+    title: string;
+    description: string;
     cancelLabel?: string;
     confirmLabel?: string;
     confirmStyling?: string;

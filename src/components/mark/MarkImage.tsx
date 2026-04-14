@@ -1,15 +1,14 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import useImage from "use-image";
 import { Image, Line, Group } from "react-konva";
 import Konva from "konva";
 import { KonvaEventObject } from "konva/lib/Node";
 import { MarkImageType, useMarkStore } from "../../stores/markStore";
-import { Colors } from "../../types/colors";
 import MarkPoint from "./MarkPoint";
 import Mark from "./Mark";
 import { getMiddle } from "@/lib/utils";
 import { useShallow } from "zustand/react/shallow";
-import { Point2DType } from "@/types/types";
+import { Vec2, Colors } from "@/types/types";
 
 function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
     const updateImagePosition = useMarkStore((s) => s.updateImagePosition);
@@ -19,18 +18,17 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
     const marks = useMarkStore(useShallow((s) => s.marks));
 
     const [image] = useImage(imageData.src);
-    const [currentPoints, setCurrentPoints] = useState<Point2DType[]>([]);
-    const imageRef = useRef<Konva.Image | null>(null);
+    const [currentPoints, setCurrentPoints] = useState<Vec2[]>([]);
 
     const addPoint = (e: KonvaEventObject<MouseEvent>) => {
         const pos = e.target.getRelativePointerPosition()!;
 
         const updated = [...currentPoints, { x: pos.x, y: pos.y }];
         if (updated.length === 4) {
-            const c = getMiddle(updated);
+            const center = getMiddle(updated);
             const sortedPoints = updated.sort((a, b) => {
-                const angleA = Math.atan2(c.y - a.y, c.x - a.x);
-                const angleB = Math.atan2(c.y - b.y, c.x - b.x);
+                const angleA = Math.atan2(center.y - a.y, center.x - a.x);
+                const angleB = Math.atan2(center.y - b.y, center.x - b.x);
 
                 return angleA < angleB ? 1 : -1;
             });
@@ -47,7 +45,6 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
         }
     };
 
-    // refactor: should share logic between Mark and Atlas images
     const onDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
         if (e.target.name() !== "master") return;
         updateImagePosition(imageData.id, { x: e.currentTarget.attrs.x, y: e.currentTarget.attrs.y });
@@ -57,7 +54,6 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
         <Group
             id={imageData.id}
             name="master"
-            // refactor: should share logic between Mark and Atlas images
             onTransformEnd={(e) => {
                 const attrs = e.currentTarget.attrs;
                 const scale = { x: attrs.scaleX, y: attrs.scaleY };
@@ -76,7 +72,6 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
                 if (e.evt.button === 2) setCurrentPoints([]);
                 if (e.evt.button === 0 && e.evt.ctrlKey) addPoint(e);
             }}
-            // refactor: should share logic between Mark and Atlas images
             onDragStart={(e) => {
                 if (e.evt.buttons !== 1) {
                     e.target.stopDrag();
@@ -87,11 +82,20 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
             onDragEnd={onDragEnd}
             draggable
         >
-            <Image ref={imageRef} image={image} />
+            <Image image={image} />
 
             {currentPoints.map((m, i) => (
                 <Group key={i}>
-                    <MarkPoint position={{ x: m.x, y: m.y }} />
+                    <MarkPoint
+                        position={{ x: m.x, y: m.y }}
+                        onDragMove={(e) => {
+                            setCurrentPoints((prev) => {
+                                const next = [...prev];
+                                next[i] = { x: e.target.x(), y: e.target.y() };
+                                return next;
+                            });
+                        }}
+                    />
 
                     <Line
                         points={currentPoints.flatMap((p) => [p.x, p.y])}

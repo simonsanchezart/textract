@@ -1,42 +1,34 @@
-import { Point2DType } from "@/types/types";
+import { Vec2, ImageType } from "@/types/types";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
-//refactor: rename to Mark, move to namespace if conflict
 export interface MarkType {
     id: string;
     imageId: string;
-    points: Point2DType[];
-};
+    points: Vec2[];
+}
 
-//refactor: add ImageType for AtlasImageType and MarkImageType
-//refactor: rename to MarkImage, move to namespace if conflict
-export interface MarkImageType {
-    id: string;
-    originalSrc: string;
+export interface MarkImageType extends ImageType {
+    filepath: string;
     src: string;
-    position: Point2DType;
-    scale: Point2DType;
-    rotation: number;
     markIds: string[];
-};
+}
 
 interface MarkStore {
     images: Record<string, MarkImageType>;
     marks: Record<string, MarkType>;
 
-    //refactor: add to actions object
     addImage: (image: MarkImageType) => void;
-    updateImagePosition: (imageId: string, newPos: Point2DType) => void;
-    updateImageScale: (imageId: string, newScale: Point2DType) => void;
+    updateImagePosition: (imageId: string, newPos: Vec2) => void;
+    updateImageScale: (imageId: string, newScale: Vec2) => void;
     updateImageRotation: (imageId: string, newRot: number) => void;
     addMark: (imageId: string, mark: MarkType) => void;
-    updateMark: (markId: string, newPoints: Point2DType[]) => void;
-    updateMarkPoint: (markId: string, pointIdx: number, newPoint: Point2DType) => void;
+    updateMark: (markId: string, newPoints: Vec2[]) => void;
+    updateMarkPoint: (markId: string, pointIdx: number, newPoint: Vec2) => void;
     removeMark: (markId: string) => void;
     removeImage: (imageId: string) => void;
-};
+}
 
 export const useMarkStore = create(
     persist(

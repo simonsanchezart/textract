@@ -1,4 +1,4 @@
-import { CanvasType, Point2DType } from "@/types/types";
+import { CanvasType, Vec2 } from "@/types/types";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
@@ -7,15 +7,14 @@ export interface CanvasState {
     scale: number;
     x: number;
     y: number;
-};
+}
 
 interface CanvasStore {
     canvas: Record<CanvasType, CanvasState>;
 
-    //refactor: extract to actions object
     setCanvasScale: (canvas: CanvasType, scale: number) => void;
-    setCanvasPosition: (canvas: CanvasType, pos: Point2DType) => void;
-};
+    setCanvasPosition: (canvas: CanvasType, pos: Vec2) => void;
+}
 
 export const useCanvasStore = create(
     persist(
@@ -24,7 +23,6 @@ export const useCanvasStore = create(
                 [CanvasType.MARK]: { scale: 1, x: 0, y: 0 },
                 [CanvasType.ATLAS]: { scale: 1, x: 0, y: 0 },
             },
-
             setCanvasScale: (canvas, scale) =>
                 set((state) => {
                     state.canvas[canvas].scale = scale;

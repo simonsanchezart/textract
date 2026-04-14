@@ -1,11 +1,10 @@
 import { Rect } from "react-konva";
 import Konva from "konva";
-import { Colors } from "../../types/colors";
-import { Point2DType } from "@/types/types";
+import { Vec2, Colors } from "@/types/types";
 
 type MarkPointProps = {
-    position: Point2DType;
-    offset?: Point2DType;
+    position: Vec2;
+    offset?: Vec2;
 } & React.ComponentProps<typeof Rect>;
 
 function MarkPoint({ position, offset = { x: 0, y: 0 }, ...props }: MarkPointProps) {
@@ -32,7 +31,7 @@ function MarkPoint({ position, offset = { x: 0, y: 0 }, ...props }: MarkPointPro
                     height: POINT_SIZE * 1.5,
                     offsetX: POINT_SIZE_H * 1.5 - offset.x,
                     offsetY: POINT_SIZE_H * 1.5 - offset.y,
-                    fill: Colors.RED
+                    fill: Colors.RED,
                 }).play();
             }}
             onPointerLeave={(e) => {
@@ -44,7 +43,7 @@ function MarkPoint({ position, offset = { x: 0, y: 0 }, ...props }: MarkPointPro
                     height: POINT_SIZE,
                     offsetX: POINT_SIZE_H - offset.x,
                     offsetY: POINT_SIZE_H - offset.y,
-                    fill: Colors.LIGHT
+                    fill: Colors.LIGHT,
                 }).play();
             }}
             draggable

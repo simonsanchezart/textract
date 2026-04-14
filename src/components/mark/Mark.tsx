@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Line, Group } from "react-konva";
 import Konva from "konva";
 import { MarkType, useMarkStore } from "../../stores/markStore";
-import { Colors } from "../../types/colors";
+import { Colors } from "@/types/types";
 import MarkPoint from "./MarkPoint";
 
 function Mark({ mark }: { mark: MarkType }) {

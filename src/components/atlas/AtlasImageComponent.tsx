@@ -30,7 +30,6 @@ function AtlasImageComponent({ imageData }: { imageData: AtlasImageType }) {
                 const pos = { x: attrs.x, y: attrs.y };
                 const rotation = attrs.rotation;
 
-                console.log(scale)
                 updateImageScale(imageData.id, scale);
                 updateImageRotation(imageData.id, rotation);
                 updateImagePosition(imageData.id, pos);

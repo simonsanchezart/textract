@@ -43,14 +43,15 @@ function MarkCanvas({ className = "" }: { className?: string; chldren?: ReactNod
                             directory: false,
                             filters: [{ name: "Image Files", extensions: ["png", "jpg", "jpeg", "tiff", "bmp"] }],
                         });
+
                         if (!selectedImages) return;
 
-                        selectedImages.forEach((img) => {
+                        for (const img of selectedImages) {
                             const assetUrl = convertFileSrc(img);
                             //research: check how to create some sort of default constructor for this
                             const markImage: MarkImageType = {
                                 id: crypto.randomUUID(),
-                                originalSrc: img,
+                                filepath: img,
                                 src: assetUrl,
                                 position: { x: 0, y: 0 },
                                 rotation: 0,
@@ -59,38 +60,40 @@ function MarkCanvas({ className = "" }: { className?: string; chldren?: ReactNod
                             };
 
                             addMarkImage(markImage);
-                        });
+                        }
                     }}
                 />
 
                 <FaPlay
                     className="size-4 button-icon"
                     onClick={async () => {
-                        Object.values(markImages).map((i) => {
-                            const imageMarks = i.markIds;
+                        await Promise.all(
+                            Object.values(markImages).map(async (i) => {
+                                const markIds = i.markIds;
+                                const markPoints = markIds.flatMap((id) =>
+                                    marks[id].points.flatMap((p) => [Math.round(p.x), Math.round(p.y)])
+                                );
 
-                            //refactor: pass all mark points at once
-                            imageMarks.forEach(async (id) => {
-                                const pointsFlat = marks[id].points.flatMap((p) => [Math.round(p.x), Math.round(p.y)]);
-
-                                const base64: string = await invoke("transform_image", {
-                                    imgUrl: i.originalSrc,
-                                    points: pointsFlat,
+                                const results: string[] = await invoke("transform_image", {
+                                    imgPath: i.filepath,
+                                    points: markPoints,
                                 });
 
-                            //research: check how to create some sort of default constructor for this
-                                const atlasImage: AtlasImageType = {
-                                    id: crypto.randomUUID(),
-                                    base64: base64,
-                                    markId: id,
-                                    position: { x: 0, y: 0 },
-                                    rotation: 0,
-                                    scale: { x: 1, y: 1 },
-                                };
+                                for (const [i, img] of results.entries()) {
+                                    //research: check how to create some sort of default constructor for this
+                                    const atlasImage: AtlasImageType = {
+                                        id: crypto.randomUUID(),
+                                        base64: img,
+                                        markId: markIds[i],
+                                        position: { x: 0, y: 0 },
+                                        rotation: 0,
+                                        scale: { x: 1, y: 1 },
+                                    };
 
-                                addAtlasImage(atlasImage);
-                            });
-                        });
+                                    addAtlasImage(atlasImage);
+                                }
+                            })
+                        );
                     }}
                 />
             </div>

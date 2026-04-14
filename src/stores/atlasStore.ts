@@ -1,30 +1,22 @@
-import { Point2DType } from "@/types/types";
+import { Vec2, ImageType } from "@/types/types";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
-//refactor: add ImageType for AtlasImageType and MarkImageType
-//refactor: rename to AtlasImage,  move to namespace if conflict
-export interface AtlasImageType {
-    id: string;
+export interface AtlasImageType extends ImageType {
     markId: string;
     base64: string;
-    position: Point2DType;
-    scale: Point2DType;
-    rotation: number;
-};
+}
 
-// refactor: make a parent Store for behavior shader with MarkStore
 interface AtlasStore {
     images: Record<string, AtlasImageType>;
 
-    //refactor: add to actions object
     addImage: (image: AtlasImageType) => void;
     removeImage: (imageId: string) => void;
-    updateImagePosition: (imageId: string, newPos: Point2DType) => void;
-    updateImageScale: (imageId: string, newScale: Point2DType) => void;
+    updateImagePosition: (imageId: string, newPos: Vec2) => void;
+    updateImageScale: (imageId: string, newScale: Vec2) => void;
     updateImageRotation: (imageId: string, newRot: number) => void;
-};
+}
 
 export const useAtlasStore = create(
     persist(
@@ -46,7 +38,6 @@ export const useAtlasStore = create(
                 set((state) => {
                     if (!state.images[imageId]) return;
                     state.images[imageId].scale = newScale;
-                    console.log(newScale);
                 }),
 
             updateImageRotation: (imageId, newRot) =>
