@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import useImage from "use-image";
 import { Image, Line, Group } from "react-konva";
 import Konva from "konva";
@@ -19,6 +19,7 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
 
     const [image] = useImage(imageData.src);
     const [currentPoints, setCurrentPoints] = useState<Vec2[]>([]);
+    const currentPointsFlat = useMemo(() => currentPoints.flatMap((p) => [p.x, p.y]), [currentPoints]);
 
     const addPoint = (e: KonvaEventObject<MouseEvent>) => {
         const pos = e.target.getRelativePointerPosition()!;
@@ -98,7 +99,7 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
                     />
 
                     <Line
-                        points={currentPoints.flatMap((p) => [p.x, p.y])}
+                        points={currentPointsFlat}
                         fill={Colors.GREEN + "22"}
                         stroke={Colors.LIGHT}
                         strokeWidth={1}

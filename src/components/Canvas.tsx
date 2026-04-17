@@ -1,6 +1,6 @@
 import Konva from "konva";
 import { KonvaPointerEvent } from "konva/lib/PointerEvents";
-import React, { ReactNode, useEffect, useRef, useState } from "react";
+import React, { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { Layer, Shape, Stage, Transformer } from "react-konva";
 import PopupConfirm from "./PopupConfirm";
 import { CanvasType } from "@/types/types";
@@ -77,7 +77,7 @@ function Canvas({ canvasType, className, children, ...props }: CanvasProps) {
     };
 
     //refactor: extract into hook or custom element
-    const dragGrid = (ctx: Konva.Context, shape: Konva.Shape) => {
+    const dragGrid = useCallback((ctx: Konva.Context, shape: Konva.Shape) => {
         const stage = stageRef.current;
         if (!stage) return;
 
@@ -109,7 +109,7 @@ function Canvas({ canvasType, className, children, ...props }: CanvasProps) {
         }
 
         ctx.fillStrokeShape(shape);
-    };
+    }, []);
 
     const handleShortcuts = async (e: React.KeyboardEvent<HTMLDivElement>) => {
         switch (e.code) {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Line, Group } from "react-konva";
 import Konva from "konva";
 import { MarkType, useMarkStore } from "../../stores/markStore";
@@ -12,11 +12,12 @@ function Mark({ mark }: { mark: MarkType }) {
 
     const [markOffset, setMarkOffset] = useState({ x: 0, y: 0 });
     const [points, setPoints] = useState(mark.points);
+    const pointsFlat = useMemo(() => points.flatMap((p) => [p.x, p.y]), [points]);
 
     return (
         <Group draggable>
             <Line
-                points={points.flatMap((p) => [p.x, p.y])}
+                points={pointsFlat}
                 fill={Colors.GREEN + "11"}
                 stroke={Colors.LIGHT}
                 strokeWidth={4.0}

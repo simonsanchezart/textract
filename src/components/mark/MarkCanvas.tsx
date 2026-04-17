@@ -6,13 +6,11 @@ import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { MarkImageType, useMarkStore } from "../../stores/markStore";
 import MarkImage from "./MarkImage";
 import { CanvasType } from "@/types/types";
-import { useShallow } from "zustand/react/shallow";
 import { AtlasImageType, useAtlasStore } from "@/stores/atlasStore";
 
 //todo: test every image format
 
 function MarkCanvas({ className = "" }: { className?: string }) {
-    const marks = useMarkStore(useShallow((state) => state.marks));
     const markImages = useMarkStore((state) => state.images);
     const addMarkImage = useMarkStore((state) => state.addImage);
     const removeMarkImage = useMarkStore((state) => state.removeImage);
@@ -66,6 +64,8 @@ function MarkCanvas({ className = "" }: { className?: string }) {
                 <FaPlay
                     className="size-4 button-icon"
                     onClick={async () => {
+                        const marks = useMarkStore.getState().marks;
+
                         await Promise.all(
                             Object.values(markImages).map(async (i) => {
                                 const markIds = i.markIds;
