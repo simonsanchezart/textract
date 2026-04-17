@@ -2,7 +2,7 @@ import { Group as ResizableGroup, Panel, Separator, useDefaultLayout, usePanelRe
 import MarkCanvas from "./mark/MarkCanvas";
 import AtlasCanvas from "./atlas/AtlasCanvas";
 
-function CanvasSplitter({ className }: { className?: string }) {
+const CanvasSplitter = ({ className }: { className?: string }) => {
     const { defaultLayout, onLayoutChanged } = useDefaultLayout({
         id: "default",
         storage: localStorage,

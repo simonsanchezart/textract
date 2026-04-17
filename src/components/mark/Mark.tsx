@@ -1,11 +1,10 @@
 import { useMemo, useState } from "react";
 import { Line, Group } from "react-konva";
-import Konva from "konva";
 import { MarkType, useMarkStore } from "../../stores/markStore";
 import { Colors } from "@/types/types";
 import MarkPoint from "./MarkPoint";
 
-function Mark({ mark }: { mark: MarkType }) {
+const Mark = ({ mark }: { mark: MarkType }) => {
     const updateMark = useMarkStore((s) => s.updateMark);
     const updateMarkPoint = useMarkStore((s) => s.updateMarkPoint);
     const removeMark = useMarkStore((s) => s.removeMark);
@@ -43,28 +42,13 @@ function Mark({ mark }: { mark: MarkType }) {
                 }}
                 onPointerMove={(e) => {
                     if (e.evt.altKey) {
-                        //refactor: also cache?
-                        new Konva.Tween({
-                            node: e.target,
-                            duration: 0.02,
-                            fill: Colors.RED + "22",
-                        }).play();
+                        e.target.to({ fill: Colors.RED + "22", duration: 0.02 });
                     } else {
-                        //refactor: also cache?
-                        new Konva.Tween({
-                            node: e.target,
-                            duration: 0.02,
-                            fill: Colors.BLUE + "22",
-                        }).play();
+                        e.target.to({ fill: Colors.BLUE + "22", duration: 0.02 });
                     }
                 }}
                 onPointerLeave={(e) => {
-                    //refactor: also cache?
-                    new Konva.Tween({
-                        node: e.target,
-                        duration: 0.02,
-                        fill: Colors.GREEN + "11",
-                    }).play();
+                    e.target.to({ fill: Colors.GREEN + "11", duration: 0.02 });
                 }}
             />
 
@@ -89,6 +73,6 @@ function Mark({ mark }: { mark: MarkType }) {
             })}
         </Group>
     );
-}
+};
 
 export default Mark;

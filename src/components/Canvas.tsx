@@ -15,7 +15,7 @@ type CanvasProps = {
     onDelete?: (ids: string[]) => void;
 } & React.ComponentProps<typeof Stage>;
 
-function Canvas({ canvasType, className, children, ...props }: CanvasProps) {
+const Canvas = ({ canvasType, className, children, ...props }: CanvasProps) => {
     const canvasState = useCanvasStore((s) => s.canvas[canvasType]);
     const setCanvasScale = useCanvasStore((s) => s.setCanvasScale);
     const setCanvasPosition = useCanvasStore((s) => s.setCanvasPosition);
@@ -225,5 +225,5 @@ function Canvas({ canvasType, className, children, ...props }: CanvasProps) {
             </small>
         </div>
     );
-}
+};
 export default Canvas;

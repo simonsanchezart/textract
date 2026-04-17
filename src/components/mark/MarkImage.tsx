@@ -10,7 +10,7 @@ import { getMiddle } from "@/lib/utils";
 import { useShallow } from "zustand/react/shallow";
 import { Vec2, Colors } from "@/types/types";
 
-function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
+const MarkImageComponent = ({ imageData }: { imageData: MarkImageType }) => {
     const updateImagePosition = useMarkStore((s) => s.updateImagePosition);
     const updateImageScale = useMarkStore((s) => s.updateImageScale);
     const updateImageRotation = useMarkStore((s) => s.updateImageRotation);
@@ -113,6 +113,6 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
             {imageData.markIds.map((id) => marks[id] && <Mark key={id} mark={marks[id]} />)}
         </Group>
     );
-}
+};
 
 export default MarkImageComponent;

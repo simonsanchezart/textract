@@ -2,7 +2,7 @@ import "./App.css";
 import Navbar from "./components/Navbar";
 import Textract from "./components/Textract";
 
-function App() {
+const App = () => {
     // document.addEventListener("keydown", (e) => {
     //     if (e.key === "F5" || (e.ctrlKey && e.key === "r") || (e.metaKey && e.key === "r")) {
     //         e.preventDefault();
@@ -15,6 +15,6 @@ function App() {
             <Textract />
         </main>
     );
-}
+};
 
 export default App;

@@ -1,7 +1,7 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { CgMinimizeAlt, CgMaximizeAlt, CgClose } from "react-icons/cg";
 
-function Navbar() {
+const Navbar = () => {
     const appWindow = getCurrentWindow();
 
     return (
@@ -28,5 +28,5 @@ function Navbar() {
             </div>
         </nav>
     );
-}
+};
 export default Navbar;

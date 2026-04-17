@@ -20,9 +20,9 @@ interface PopupProps {
     confirmLabel?: string;
     confirmStyling?: string;
     onConfirm?: () => void;
-};
+}
 
-function PopupConfirm({
+const PopupConfirm = ({
     open,
     setOpen,
     title = "Title",
@@ -31,7 +31,7 @@ function PopupConfirm({
     confirmLabel = "Confirm",
     confirmStyling = "bg-red",
     onConfirm,
-}: PopupProps) {
+}: PopupProps) => {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent>
@@ -58,5 +58,5 @@ function PopupConfirm({
             </DialogContent>
         </Dialog>
     );
-}
+};
 export default PopupConfirm;

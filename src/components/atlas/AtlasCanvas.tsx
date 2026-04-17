@@ -3,7 +3,7 @@ import Canvas from "../Canvas";
 import { useAtlasStore } from "@/stores/atlasStore";
 import AtlasImageComponent from "./AtlasImageComponent";
 
-function AtlasCanvas({ className }: { className?: string }) {
+const AtlasCanvas = ({ className }: { className?: string }) => {
     const atlasImages = useAtlasStore((state) => state.images);
     const removeAtlasImage = useAtlasStore((state) => state.removeImage);
 
@@ -21,5 +21,5 @@ function AtlasCanvas({ className }: { className?: string }) {
             </Canvas>
         </div>
     );
-}
+};
 export default AtlasCanvas;
