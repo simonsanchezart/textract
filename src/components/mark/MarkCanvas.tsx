@@ -1,4 +1,3 @@
-import { ReactNode } from "react";
 import { CgAdd } from "react-icons/cg";
 import { FaPlay } from "react-icons/fa";
 import { open } from "@tauri-apps/plugin-dialog";
@@ -12,7 +11,7 @@ import { AtlasImageType, useAtlasStore } from "@/stores/atlasStore";
 
 //todo: test every image format
 
-function MarkCanvas({ className = "" }: { className?: string; chldren?: ReactNode }) {
+function MarkCanvas({ className = "" }: { className?: string }) {
     const marks = useMarkStore(useShallow((state) => state.marks));
     const markImages = useMarkStore((state) => state.images);
     const addMarkImage = useMarkStore((state) => state.addImage);
