@@ -7,6 +7,7 @@ import { CanvasType } from "@/types/types";
 import { useCanvasStore } from "@/stores/canvasStore";
 import { NodeConfig, Node } from "konva/lib/Node";
 import { Box } from "konva/lib/shapes/Transformer";
+import { snap } from "@/lib/utils";
 
 type CanvasProps = {
     canvasType: CanvasType;
@@ -26,7 +27,7 @@ const Canvas = ({ canvasType, className, children, ...props }: CanvasProps) => {
     const STAGE_SIZE = 2048;
     const DOT_SPACING = 64;
     const DOT_SIZE = 2;
-    const SNAP = 16;
+    const SNAP_SIZE = 16;
 
     const transformerRef = useRef<Konva.Transformer | null>(null);
     const [selectedNodes, setSelectedNodes] = useState<Node<NodeConfig>[]>([]);
@@ -42,13 +43,12 @@ const Canvas = ({ canvasType, className, children, ...props }: CanvasProps) => {
         const target = e.target;
         if (target.name() !== "master") return;
 
-        const x = Math.round(target.x() / SNAP) * SNAP;
-        const y = Math.round(target.y() / SNAP) * SNAP;
+        const x = snap(target.x(), SNAP_SIZE);
+        const y = snap(target.y(), SNAP_SIZE);
 
         target.position({ x, y });
     };
 
-    //refactor: can this be extracted into a hook?
     const handleZoom = (e: Konva.KonvaEventObject<WheelEvent>) => {
         e.evt.preventDefault();
         const stage = stageRef.current;
@@ -76,7 +76,6 @@ const Canvas = ({ canvasType, className, children, ...props }: CanvasProps) => {
         setCanvasScale(canvasType, newScale);
     };
 
-    //refactor: extract into hook or custom element
     const dragGrid = useCallback((ctx: Konva.Context, shape: Konva.Shape) => {
         const stage = stageRef.current;
         if (!stage) return;
@@ -143,17 +142,16 @@ const Canvas = ({ canvasType, className, children, ...props }: CanvasProps) => {
         const stageX = stage.x();
         const stageY = stage.y();
 
-        //refactor: extract snap to increment util
-        const newX = Math.round((newBox.x - stageX) / scale / SNAP) * SNAP;
-        const newY = Math.round((newBox.y - stageY) / scale / SNAP) * SNAP;
-        const newW = Math.round(newBox.width / scale / SNAP) * SNAP;
-        const newH = Math.round(newBox.height / scale / SNAP) * SNAP;
+        const newX = snap((newBox.x - stageX) / scale, SNAP_SIZE);
+        const newY = snap((newBox.y - stageY) / scale, SNAP_SIZE);
+        const newW = snap(newBox.width / scale, SNAP_SIZE);
+        const newH = snap(newBox.height / scale, SNAP_SIZE);
 
         return {
             x: newX * scale + stageX,
             y: newY * scale + stageY,
-            width: Math.max(newW * scale, scale * SNAP),
-            height: Math.max(newH * scale, scale * SNAP),
+            width: Math.max(newW * scale, scale * SNAP_SIZE),
+            height: Math.max(newH * scale, scale * SNAP_SIZE),
             rotation: newBox.rotation,
         };
     };

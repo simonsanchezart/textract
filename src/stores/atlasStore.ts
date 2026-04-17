@@ -1,7 +1,8 @@
 import { Vec2, ImageType } from "@/types/types";
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
+import { get, set, del } from "idb-keyval";
 
 export interface AtlasImageType extends ImageType {
     markId: string;
@@ -17,6 +18,18 @@ interface AtlasStore {
     updateImageScale: (imageId: string, newScale: Vec2) => void;
     updateImageRotation: (imageId: string, newRot: number) => void;
 }
+
+const indexedDBStorage = {
+    getItem: async (name: string) => {
+        return (await get(name)) ?? null;
+    },
+    setItem: async (name: string, value: string) => {
+        await set(name, value);
+    },
+    removeItem: async (name: string) => {
+        await del(name);
+    },
+};
 
 export const useAtlasStore = create(
     persist(
@@ -54,6 +67,6 @@ export const useAtlasStore = create(
                     delete state.images[imageId];
                 }),
         })),
-        { name: "atlas-storage" }
+        { name: "atlas-storage", storage: createJSONStorage(() => indexedDBStorage) }
     )
 );

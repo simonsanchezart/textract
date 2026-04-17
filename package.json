@@ -21,6 +21,7 @@
     "@tauri-apps/plugin-opener": "^2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "idb-keyval": "^6.2.2",
     "immer": "^11.1.4",
     "konva": "^10.2.0",
     "lucide-react": "^0.577.0",

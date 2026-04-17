@@ -15,3 +15,7 @@ export const getMiddle = (v: Vec2[]) => {
     average.y /= v.length;
     return average;
 };
+
+export const snap = (x: number, increment: number) => {
+    return Math.round(x / increment) * increment;
+};

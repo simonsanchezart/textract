@@ -1,7 +1,7 @@
 use base64::{engine::general_purpose, Engine};
 use image::{open, GenericImage, RgbaImage};
 use imageproc::geometric_transformations::{warp, Interpolation, Projection};
-use std::{io::Cursor};
+use std::io::Cursor;
 
 fn get_quad_dimensions(points: &[(f32, f32); 4]) -> (f32, f32) {
     let dist = |a: (f32, f32), b: (f32, f32)| ((a.0 - b.0).powi(2) + (a.1 - b.1).powi(2)).sqrt();
@@ -41,7 +41,6 @@ pub async fn transform_image(img_path: String, points: Vec<f32>) -> Result<Vec<S
             .write_to(&mut Cursor::new(&mut crop_buffer), image::ImageFormat::Png)
             .unwrap();
 
-        // research: is there a better way to pass this data to the front-end other than base-64?
         let base64 = format!(
             "data:image/png;base64,{}",
             general_purpose::STANDARD.encode(crop_buffer)
