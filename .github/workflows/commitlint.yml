@@ -1,4 +1,4 @@
-name: CI
+name: CommitLint
 
 on: [push, pull_request]
 
