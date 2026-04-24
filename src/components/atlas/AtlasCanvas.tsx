@@ -1,25 +1,25 @@
+import { useAtlasStore } from "@/stores/atlas-store";
 import { CanvasType } from "@/types/types";
 import Canvas from "../Canvas";
-import { useAtlasStore } from "@/stores/atlasStore";
 import AtlasImageComponent from "./AtlasImageComponent";
 
-const AtlasCanvas = ({ className }: { className?: string }) => {
-    const atlasImages = useAtlasStore((state) => state.images);
-    const removeAtlasImage = useAtlasStore((state) => state.removeImage);
+function AtlasCanvas({ className }: { className?: string }) {
+  const atlasImages = useAtlasStore(state => state.images);
+  const removeAtlasImage = useAtlasStore(state => state.removeImage);
 
-    return (
-        <div className={`relative h-full ${className}`}>
-            <Canvas
-                onDelete={async (ids) => {
-                    for (const id of ids) removeAtlasImage(id);
-                }}
-                canvasType={CanvasType.ATLAS}
-            >
-                {Object.values(atlasImages).map((i) => {
-                    return <AtlasImageComponent key={i.id} imageData={i} />;
-                })}
-            </Canvas>
-        </div>
-    );
-};
+  return (
+    <div className={`relative h-full ${className}`}>
+      <Canvas
+        onDelete={async (ids) => {
+          for (const id of ids) removeAtlasImage(id);
+        }}
+        canvasType={CanvasType.ATLAS}
+      >
+        {Object.values(atlasImages).map((i) => {
+          return <AtlasImageComponent key={i.id} imageData={i} />;
+        })}
+      </Canvas>
+    </div>
+  );
+}
 export default AtlasCanvas;

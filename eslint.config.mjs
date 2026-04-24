@@ -22,6 +22,7 @@ export default antfu(
       "node/no-process-env": ["error"],
       "perfectionist/sort-imports": ["error"],
       "style/jsx-pascal-case": ["error"],
+      "react-refresh/only-export-components": ["off"],
 
       "unicorn/filename-case": [
         "error",
