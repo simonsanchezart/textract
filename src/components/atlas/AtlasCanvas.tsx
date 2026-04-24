@@ -1,4 +1,4 @@
-import { useAtlasStore } from "@/stores/atlasStore";
+import { useAtlasStore } from "@/stores/atlas-store";
 import { CanvasType } from "@/types/types";
 import Canvas from "../Canvas";
 import AtlasImageComponent from "./AtlasImageComponent";

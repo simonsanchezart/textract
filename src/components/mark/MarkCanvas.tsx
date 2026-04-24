@@ -1,12 +1,12 @@
-import type { MarkImageType } from "../../stores/markStore";
-import type { AtlasImageType } from "@/stores/atlasStore";
+import type { MarkImageType } from "../../stores/mark-store";
+import type { AtlasImageType } from "@/stores/atlas-store";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { CgAdd } from "react-icons/cg";
 import { FaPlay } from "react-icons/fa";
-import { useAtlasStore } from "@/stores/atlasStore";
+import { useAtlasStore } from "@/stores/atlas-store";
 import { CanvasType } from "@/types/types";
-import { useMarkStore } from "../../stores/markStore";
+import { useMarkStore } from "../../stores/mark-store";
 import Canvas from "../Canvas";
 import { Toolbar, ToolbarAction } from "../Toolbar";
 import MarkImage from "./MarkImage";

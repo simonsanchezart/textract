@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
-import { Button } from "./ui/button";
+import { Button } from "./ui/Button";
 import {
   Dialog,
   DialogClose,
@@ -8,7 +8,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "./ui/dialog";
+} from "./ui/Dialog";
 
 type PopupProps = {
   open: boolean;

@@ -1,8 +1,8 @@
-import type { MarkType } from "../../stores/markStore";
+import type { MarkType } from "../../stores/mark-store";
 import { useMemo, useState } from "react";
 import { Group, Line } from "react-konva";
 import { Colors } from "@/types/types";
-import { useMarkStore } from "../../stores/markStore";
+import { useMarkStore } from "../../stores/mark-store";
 import MarkPoint from "./MarkPoint";
 
 function Mark({ mark }: { mark: MarkType }) {
@@ -57,7 +57,9 @@ function Mark({ mark }: { mark: MarkType }) {
 
       {points.map((p, id) => {
         return (
+
           <MarkPoint
+            // eslint-disable-next-line react/no-array-index-key
             key={id}
             position={p}
             offset={markOffset}

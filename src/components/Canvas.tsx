@@ -7,7 +7,7 @@ import * as React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Layer, Shape, Stage, Transformer } from "react-konva";
 import { snap } from "@/lib/utils";
-import { useCanvasStore } from "@/stores/canvasStore";
+import { useCanvasStore } from "@/stores/canvas-store";
 import { CanvasType } from "@/types/types";
 import PopupConfirm from "./PopupConfirm";
 
@@ -119,10 +119,11 @@ function Canvas({ canvasType, className, children, ...props }: CanvasProps) {
 
   const handleShortcuts = async (e: React.KeyboardEvent<HTMLDivElement>) => {
     switch (e.code) {
-      case "Delete":
+      case "Delete":{
         const selected = transformerRef.current?.nodes() ?? [];
         if (selected.length !== 0)
           setOpenConfirmation(true);
+      }
     }
   };
 

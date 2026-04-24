@@ -1,6 +1,6 @@
 import type Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
-import type { MarkImageType } from "../../stores/markStore";
+import type { MarkImageType } from "../../stores/mark-store";
 import type { Vec2 } from "@/types/types";
 import { useMemo, useState } from "react";
 import { Group, Image, Line } from "react-konva";
@@ -8,7 +8,7 @@ import useImage from "use-image";
 import { useShallow } from "zustand/react/shallow";
 import { getMiddle } from "@/lib/utils";
 import { Colors } from "@/types/types";
-import { useMarkStore } from "../../stores/markStore";
+import { useMarkStore } from "../../stores/mark-store";
 import Mark from "./Mark";
 import MarkPoint from "./MarkPoint";
 
@@ -92,14 +92,15 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
     >
       <Image image={image} />
 
-      {currentPoints.map((m, i) => (
-        <Group key={i}>
+      {currentPoints.map((m, id) => (
+        // eslint-disable-next-line react/no-array-index-key
+        <Group key={id}>
           <MarkPoint
             position={{ x: m.x, y: m.y }}
             onDragMove={(e) => {
               setCurrentPoints((prev) => {
                 const next = [...prev];
-                next[i] = { x: e.target.x(), y: e.target.y() };
+                next[id] = { x: e.target.x(), y: e.target.y() };
                 return next;
               });
             }}
