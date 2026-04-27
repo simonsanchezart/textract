@@ -1,100 +1,100 @@
-name: "publish"
+name: publish
 
 on:
-    push:
-        tags:
-            - "v*"
+  push:
+    tags:
+      - "v*"
 
 concurrency:
-    group: release-${{ github.ref }}
-    cancel-in-progress: true
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-    make-changelog:
-        runs-on: ubuntu-latest
+  make-changelog:
+    runs-on: ubuntu-latest
 
-        permissions:
-            contents: write
+    permissions:
+      contents: write
 
-        outputs:
-            releaseId: ${{steps.make-release.outputs.id}}
+    outputs:
+      releaseId: ${{steps.make-release.outputs.id}}
 
-        steps:
-            - name: Checkout Code (FIXED)
-              uses: actions/checkout@v5
-              with:
-                  ref: main
-                  fetch-depth: 0
+    steps:
+      - name: Checkout Code (FIXED)
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
 
-            - name: Update CHANGELOG
-              id: changelog
-              uses: requarks/changelog-action@v1
-              with:
-                  token: ${{ github.token }}
-                  tag: ${{ github.ref_name }}
+      - name: Update CHANGELOG
+        id: changelog
+        uses: requarks/changelog-action@v1
+        with:
+          token: ${{ github.token }}
+          tag: ${{ github.ref_name }}
 
-            - name: Stage CHANGELOG
-              run: git add CHANGELOG.md
+      - name: Stage CHANGELOG
+        run: git add CHANGELOG.md
 
-            - name: Create Release
-              id: make-release
-              uses: ncipollo/release-action@v1.20.0
-              with:
-                  allowUpdates: true
-                  draft: true
-                  makeLatest: true
-                  name: ${{ github.ref_name }}
-                  body: ${{ steps.changelog.outputs.changes }}
-                  token: ${{ github.token }}
+      - name: Create Release
+        id: make-release
+        uses: ncipollo/release-action@v1.20.0
+        with:
+          allowUpdates: true
+          draft: true
+          makeLatest: true
+          name: ${{ github.ref_name }}
+          body: ${{ steps.changelog.outputs.changes }}
+          token: ${{ github.token }}
 
-            - name: Commit CHANGELOG.md
-              uses: stefanzweifel/git-auto-commit-action@v7
-              with:
-                  commit_message: "docs: update CHANGELOG.md for ${{ github.ref_name }} [skip ci]"
-                  file_pattern: CHANGELOG.md
+      - name: Commit CHANGELOG.md
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "docs: update CHANGELOG.md for ${{ github.ref_name }} [skip ci]"
+          file_pattern: CHANGELOG.md
 
-    publish-tauri:
-        needs: make-changelog
-        permissions:
-            contents: write
-        strategy:
-            fail-fast: false
-            matrix:
-                include:
-                    - platform: "ubuntu-22.04"
-                      args: ""
-                    - platform: "windows-latest"
-                      args: ""
+  publish-tauri:
+    needs: make-changelog
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: ubuntu-22.04
+            args: ""
+          - platform: windows-latest
+            args: ""
 
-        runs-on: ${{ matrix.platform }}
-        steps:
-            - uses: actions/checkout@v5
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v5
 
-            - name: setup node
-              uses: actions/setup-node@v5
-              with:
-                  node-version: lts/*
+      - name: setup node
+        uses: actions/setup-node@v5
+        with:
+          node-version: lts/*
 
-            - name: install Rust stable
-              uses: dtolnay/rust-toolchain@stable
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
 
-            - name: Rust cache
-              uses: swatinem/rust-cache@v2
-              with:
-                  workspaces: src-tauri
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
 
-            - name: install dependencies (ubuntu only)
-              if: matrix.platform == 'ubuntu-22.04'
-              run: |
-                  sudo apt-get update
-                  sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - name: install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
-            - name: install frontend dependencies
-              run: npm install
+      - name: install frontend dependencies
+        run: npm install
 
-            - uses: tauri-apps/tauri-action@v0.6.2
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                  releaseId: ${{ needs.make-changelog.outputs.releaseId }}
-                  args: ${{ matrix.args }}
+      - uses: tauri-apps/tauri-action@v0.6.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          releaseId: ${{ needs.make-changelog.outputs.releaseId }}
+          args: ${{ matrix.args }}
