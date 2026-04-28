@@ -20,3 +20,7 @@ export function getMiddle(v: Vec2[]) {
 export function snap(x: number, increment: number) {
   return Math.round(x / increment) * increment;
 }
+
+export function clamp(x: number, min: number, max: number) {
+  return Math.max(Math.min(x, max), min);
+}
