@@ -1,12 +1,11 @@
 import type Konva from "konva";
-import type { Node, NodeConfig } from "konva/lib/Node";
-import type { KonvaPointerEvent } from "konva/lib/PointerEvents";
-import type { Box } from "konva/lib/shapes/Transformer";
 import type { ReactNode } from "react";
-import * as React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Layer, Shape, Stage, Transformer } from "react-konva";
-import { snap } from "@/lib/utils";
+import useCanvasGrid from "@/hooks/use-canvas-grid";
+import useCanvasSelection from "@/hooks/use-canvas-selection";
+import useTransformSnapping from "@/hooks/use-canvas-snapping";
+import useCanvasZoom from "@/hooks/use-canvas-zoom";
 import { useCanvasStore } from "@/stores/canvas-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { CanvasType } from "@/types/types";
@@ -20,154 +19,28 @@ type CanvasProps = {
 } & React.ComponentProps<typeof Stage>;
 
 function Canvas({ canvasType, className, children, ...props }: CanvasProps) {
-  const canvasState = useCanvasStore(s => s.canvas[canvasType]);
-  const setCanvasScale = useCanvasStore(s => s.setCanvasScale);
-  const setCanvasPosition = useCanvasStore(s => s.setCanvasPosition);
-  const snapSize = useSettingsStore(s => s.snap);
-
-  const ZOOM_MULTIPLIER = 1.1;
-  const MIN_ZOOM = 0.1;
-  const MAX_ZOOM = 100;
   const STAGE_SIZE = 2048;
-  const DOT_SPACING = 64;
-  const DOT_SIZE = 2;
 
-  const transformerRef = useRef<Konva.Transformer | null>(null);
-  const [selectedNodes, setSelectedNodes] = useState<Node<NodeConfig>[]>([]);
+  const snapSize = useSettingsStore(s => s.snap);
+  const canvasState = useCanvasStore(s => s.canvas[canvasType]);
 
   const stageRef = useRef<Konva.Stage>(null);
+  const transformerRef = useRef<Konva.Transformer | null>(null);
+
+  const drawGrid = useCanvasGrid({ dotSize: 1, dotSpacing: snapSize }, stageRef);
+  const handleZoom = useCanvasZoom({ stageRef, canvasType });
+  const handleSelection = useCanvasSelection({ transformerRef });
+  const [handleDragMove, handleTransformSnapping] = useTransformSnapping({ stageRef, snapSize });
   const [openConfirmation, setOpenConfirmation] = useState(false);
-
-  useEffect(() => {
-    transformerRef.current?.nodes(selectedNodes);
-  }, [selectedNodes]);
-
-  const handleDragMove = (e: Konva.KonvaEventObject<DragEvent>) => {
-    const target = e.target;
-    if (target.name() !== "master")
-      return;
-
-    const x = snap(target.x(), snapSize);
-    const y = snap(target.y(), snapSize);
-
-    target.position({ x, y });
-  };
-
-  const handleZoom = (e: Konva.KonvaEventObject<WheelEvent>) => {
-    e.evt.preventDefault();
-    const stage = stageRef.current;
-    if (!stage)
-      return;
-
-    const oldScale = stage.scaleX();
-    const pointer = stage.getPointerPosition()!;
-    const mousePointTo = {
-      x: (pointer.x - stage.x()) / oldScale,
-      y: (pointer.y - stage.y()) / oldScale,
-    };
-
-    const direction = e.evt.deltaY > 0 ? -1 : 1;
-
-    let newScale = direction > 0 ? oldScale * ZOOM_MULTIPLIER : oldScale / ZOOM_MULTIPLIER;
-    newScale = Math.max(Math.min(MAX_ZOOM, newScale), MIN_ZOOM);
-    if (Math.abs(newScale - 1.0) < 0.05)
-      newScale = 1;
-
-    const newPos = {
-      x: pointer.x - mousePointTo.x * newScale,
-      y: pointer.y - mousePointTo.y * newScale,
-    };
-
-    setCanvasPosition(canvasType, newPos);
-    setCanvasScale(canvasType, newScale);
-  };
-
-  const dragGrid = useCallback((ctx: Konva.Context, shape: Konva.Shape) => {
-    const stage = stageRef.current;
-    if (!stage)
-      return;
-
-    const scale = stage.scaleX();
-    const stagePos = stage.getPosition();
-
-    // don't draw grid if zoom < 35%
-    if (scale < 0.35)
-      return;
-
-    const viewWidth = stage.width() / scale;
-    const viewHeight = stage.height() / scale;
-
-    const startX = -stagePos.x / scale;
-    const startY = -stagePos.y / scale;
-    const endX = startX + viewWidth;
-    const endY = startY + viewHeight;
-
-    const firstX = Math.floor(startX / DOT_SPACING) * DOT_SPACING;
-    const firstY = Math.floor(startY / DOT_SPACING) * DOT_SPACING;
-
-    ctx.fillStyle = "#3e3e3e";
-    for (let x = firstX; x < endX; x += DOT_SPACING) {
-      for (let y = firstY; y < endY; y += DOT_SPACING) {
-        ctx.beginPath();
-        ctx.arc(x, y, DOT_SIZE, 0, Math.PI * 2, false);
-        ctx.closePath();
-        ctx.fill();
-      }
-    }
-
-    ctx.fillStrokeShape(shape);
-  }, []);
 
   const handleShortcuts = async (e: React.KeyboardEvent<HTMLDivElement>) => {
     switch (e.code) {
-      case "Delete":{
+      case "Delete": {
         const selected = transformerRef.current?.nodes() ?? [];
         if (selected.length !== 0)
           setOpenConfirmation(true);
       }
     }
-  };
-
-  const handleSelection = (e: KonvaPointerEvent) => {
-    if (e.target === e.target.getStage()) {
-      setSelectedNodes([]);
-      return;
-    }
-
-    const group = e.target.findAncestor(".master", false);
-    if (!group)
-      return;
-
-    setSelectedNodes((prev) => {
-      if (!e.evt.shiftKey)
-        return [group];
-      if (selectedNodes.includes(group))
-        return prev.filter(i => i !== group);
-      return [...prev, group];
-    });
-  };
-
-  const handleTransformSnapping = (_oldBox: Box, newBox: Box) => {
-    const stage = stageRef.current;
-    if (!stage)
-      return newBox;
-
-    const scale = stage.scaleX();
-    const stageX = stage.x();
-    const stageY = stage.y();
-
-    const newX = snap((newBox.x - stageX) / scale, snapSize);
-    const newY = snap((newBox.y - stageY) / scale, snapSize);
-    const newW = snap(newBox.width / scale, snapSize);
-    const newH = snap(newBox.height / scale, snapSize);
-
-    return {
-      x: newX * scale + stageX,
-      y: newY * scale + stageY,
-      width: Math.max(newW * scale, scale * snapSize),
-      height: Math.max(newH * scale, scale * snapSize),
-      rotation: newBox.rotation,
-    };
   };
 
   return (
@@ -205,7 +78,7 @@ function Canvas({ canvasType, className, children, ...props }: CanvasProps) {
         {...props}
       >
         <Layer listening={false}>
-          <Shape sceneFunc={dragGrid} />
+          <Shape sceneFunc={drawGrid} />
         </Layer>
         <Layer>
           {children}
