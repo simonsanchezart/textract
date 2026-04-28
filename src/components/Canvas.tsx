@@ -4,8 +4,9 @@ import type { KonvaPointerEvent } from "konva/lib/PointerEvents";
 import type { Box } from "konva/lib/shapes/Transformer";
 import type { ReactNode } from "react";
 import * as React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Layer, Shape, Stage, Transformer } from "react-konva";
+import useCanvasGrid from "@/hooks/use-canvas-grid";
 import useCanvasZoom from "@/hooks/use-canvas-zoom";
 import { snap } from "@/lib/utils";
 import { useCanvasStore } from "@/stores/canvas-store";
@@ -20,56 +21,19 @@ type CanvasProps = {
 } & React.ComponentProps<typeof Stage>;
 
 function Canvas({ canvasType, className, children, ...props }: CanvasProps) {
+  const STAGE_SIZE = 2048;
+  const SNAP_SIZE = 32;
+
   const stageRef = useRef<Konva.Stage>(null);
   const canvasState = useCanvasStore(s => s.canvas[canvasType]);
+
   const handleZoom = useCanvasZoom({ stageRef, canvasType });
+  const drawGrid = useCanvasGrid({ dotSize: 1, dotSpacing: SNAP_SIZE }, stageRef);
 
   const transformerRef = useRef<Konva.Transformer | null>(null);
   const [selectedNodes, setSelectedNodes] = useState<Node<NodeConfig>[]>([]);
 
   const [openConfirmation, setOpenConfirmation] = useState(false);
-
-  const STAGE_SIZE = 2048;
-  const DOT_SPACING = 64;
-  const DOT_SIZE = 2;
-  const SNAP_SIZE = 16;
-
-  // refactor: extract to hook
-  const dragGrid = useCallback((ctx: Konva.Context, shape: Konva.Shape) => {
-    const stage = stageRef.current;
-    if (!stage)
-      return;
-
-    const scale = stage.scaleX();
-    const stagePos = stage.getPosition();
-
-    // don't draw grid if zoom < 35%
-    if (scale < 0.35)
-      return;
-
-    const viewWidth = stage.width() / scale;
-    const viewHeight = stage.height() / scale;
-
-    const startX = -stagePos.x / scale;
-    const startY = -stagePos.y / scale;
-    const endX = startX + viewWidth;
-    const endY = startY + viewHeight;
-
-    const firstX = Math.floor(startX / DOT_SPACING) * DOT_SPACING;
-    const firstY = Math.floor(startY / DOT_SPACING) * DOT_SPACING;
-
-    ctx.fillStyle = "#3e3e3e";
-    for (let x = firstX; x < endX; x += DOT_SPACING) {
-      for (let y = firstY; y < endY; y += DOT_SPACING) {
-        ctx.beginPath();
-        ctx.arc(x, y, DOT_SIZE, 0, Math.PI * 2, false);
-        ctx.closePath();
-        ctx.fill();
-      }
-    }
-
-    ctx.fillStrokeShape(shape);
-  }, []);
 
   const handleShortcuts = async (e: React.KeyboardEvent<HTMLDivElement>) => {
     switch (e.code) {
@@ -176,7 +140,7 @@ function Canvas({ canvasType, className, children, ...props }: CanvasProps) {
         {...props}
       >
         <Layer listening={false}>
-          <Shape sceneFunc={dragGrid} />
+          <Shape sceneFunc={drawGrid} />
         </Layer>
         <Layer>
           {children}
