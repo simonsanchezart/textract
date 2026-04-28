@@ -13,7 +13,7 @@ export default function Footer() {
           value={snap}
           setValue={setSnap}
           unit="px"
-          min={1}
+          min={2}
           max={96}
           increment={8}
         />
