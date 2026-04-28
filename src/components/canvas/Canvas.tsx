@@ -2,14 +2,14 @@ import type Konva from "konva";
 import type { ReactNode } from "react";
 import { useRef, useState } from "react";
 import { Layer, Shape, Stage, Transformer } from "react-konva";
-import useCanvasGrid from "@/hooks/use-canvas-grid";
-import useCanvasSelection from "@/hooks/use-canvas-selection";
-import useTransformSnapping from "@/hooks/use-canvas-snapping";
-import useCanvasZoom from "@/hooks/use-canvas-zoom";
+import useCanvasGrid from "@/components/canvas/hooks/use-canvas-grid";
+import useCanvasSelection from "@/components/canvas/hooks/use-canvas-selection";
+import useTransformSnapping from "@/components/canvas/hooks/use-canvas-snapping";
+import useCanvasZoom from "@/components/canvas/hooks/use-canvas-zoom";
 import { useCanvasStore } from "@/stores/canvas-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { CanvasType } from "@/types/types";
-import PopupConfirm from "./PopupConfirm";
+import PopupConfirm from "../PopupConfirm";
 
 type CanvasProps = {
   canvasType: CanvasType;

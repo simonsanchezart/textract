@@ -1,4 +1,4 @@
-import CanvasSplitter from "./CanvasSplitter";
+import CanvasSplitter from "./canvas/CanvasSplitter";
 
 function Textract() {
   return (

@@ -1,14 +1,14 @@
 import type Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
-import type { MarkImageType } from "../../stores/mark-store";
+import type { MarkImageType } from "@/stores/mark-store";
 import type { Vec2 } from "@/types/types";
 import { useMemo, useState } from "react";
 import { Group, Image, Line } from "react-konva";
 import useImage from "use-image";
 import { useShallow } from "zustand/react/shallow";
-import { getMiddle } from "@/lib/utils";
+import { useMarkStore } from "@/stores/mark-store";
 import { Colors } from "@/types/types";
-import { useMarkStore } from "../../stores/mark-store";
+import { getMiddle } from "@/utils/utils";
 import Mark from "./Mark";
 import MarkPoint from "./MarkPoint";
 
