@@ -34,21 +34,7 @@ function Canvas({ canvasType, className, children, ...props }: CanvasProps) {
   const DOT_SIZE = 2;
   const SNAP_SIZE = 16;
 
-  useEffect(() => {
-    transformerRef.current?.nodes(selectedNodes);
-  }, [selectedNodes]);
-
-  const handleDragMove = (e: Konva.KonvaEventObject<DragEvent>) => {
-    const target = e.target;
-    if (target.name() !== "master")
-      return;
-
-    const x = snap(target.x(), SNAP_SIZE);
-    const y = snap(target.y(), SNAP_SIZE);
-
-    target.position({ x, y });
-  };
-
+  // refactor: extract to hook
   const dragGrid = useCallback((ctx: Konva.Context, shape: Konva.Shape) => {
     const stage = stageRef.current;
     if (!stage)
@@ -95,6 +81,11 @@ function Canvas({ canvasType, className, children, ...props }: CanvasProps) {
     }
   };
 
+  useEffect(() => {
+    transformerRef.current?.nodes(selectedNodes);
+  }, [selectedNodes]);
+
+  // refactor: extract to hook (with above useEffect)
   const handleSelection = (e: KonvaPointerEvent) => {
     if (e.target === e.target.getStage()) {
       setSelectedNodes([]);
@@ -114,6 +105,19 @@ function Canvas({ canvasType, className, children, ...props }: CanvasProps) {
     });
   };
 
+  // refactor: extract to hook
+  const handleDragMove = (e: Konva.KonvaEventObject<DragEvent>) => {
+    const target = e.target;
+    if (target.name() !== "master")
+      return;
+
+    const x = snap(target.x(), SNAP_SIZE);
+    const y = snap(target.y(), SNAP_SIZE);
+
+    target.position({ x, y });
+  };
+
+  // refactor: extract to hook (with handleDragMove)
   const handleTransformSnapping = (_oldBox: Box, newBox: Box) => {
     const stage = stageRef.current;
     if (!stage)
