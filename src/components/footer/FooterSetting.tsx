@@ -1,4 +1,4 @@
-import type { ChangeEvent, Dispatch, SetStateAction } from "react";
+import type { ChangeEvent } from "react";
 import { useEffect, useState } from "react";
 import { clamp } from "@/lib/utils";
 import { Button } from "../ui/Button";
@@ -9,7 +9,7 @@ type FooterSettingProps = {
   title: string;
   unit?: string;
   value: number;
-  setValue: Dispatch<SetStateAction<number>>;
+  setValue: (x: number) => void;
   min?: number;
   max?: number;
   increment?: number;
@@ -65,7 +65,7 @@ export default function FooterNumberSetting(props: FooterSettingProps) {
             value={inputValue}
             onChange={handleChange}
             onBlur={handleBlur}
-            className={`w-14 h-6 pr-${unit ? 5 : 0} text-center rounded-none border-x-0 border border-primary/50 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+            className="w-14 h-6 text-center rounded-none border-x-0 border border-primary/50 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           />
 
           {unit
@@ -75,12 +75,12 @@ export default function FooterNumberSetting(props: FooterSettingProps) {
                 </span>
               )
             : <></>}
-
         </div>
 
         <Button variant="outline" size="icon-xs" onClick={() => handleSetValue(value + increment)}>
           +
         </Button>
+
       </ButtonGroup>
     </div>
   );
