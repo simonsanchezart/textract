@@ -1,6 +1,6 @@
 import type { ChangeEvent } from "react";
 import { useState } from "react";
-import { clamp } from "@/lib/utils";
+import { clamp } from "@/utils/utils";
 import { Button } from "../ui/Button";
 import { ButtonGroup } from "../ui/ButtonGroup";
 import { Input } from "../ui/Input";

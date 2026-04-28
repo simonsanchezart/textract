@@ -1,15 +1,16 @@
 import type Konva from "konva";
 import type { Box } from "konva/lib/shapes/Transformer";
-import * as React from "react";
-import { snap } from "@/lib/utils";
+import type { RefObject } from "react";
+import { useCallback } from "react";
+import { snap } from "@/utils/utils";
 
 type TransformSnappingProps = {
-  stageRef: React.RefObject<Konva.Stage | null>;
+  stageRef: RefObject<Konva.Stage | null>;
   snapSize: number;
 };
 
 export default function useTransformSnapping({ stageRef, snapSize }: TransformSnappingProps) {
-  const handleDragMove = React.useCallback((e: Konva.KonvaEventObject<DragEvent>) => {
+  const handleDragMove = useCallback((e: Konva.KonvaEventObject<DragEvent>) => {
     const target = e.target;
     if (target.name() !== "master")
       return;
@@ -20,7 +21,7 @@ export default function useTransformSnapping({ stageRef, snapSize }: TransformSn
     target.position({ x, y });
   }, [snapSize]);
 
-  const handleTransformSnapping = React.useCallback((_oldBox: Box, newBox: Box) => {
+  const handleTransformSnapping = useCallback((_oldBox: Box, newBox: Box) => {
     const stage = stageRef.current;
     if (!stage)
       return newBox;
