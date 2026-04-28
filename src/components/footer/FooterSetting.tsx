@@ -1,8 +1,8 @@
 import type { ChangeEvent } from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { clamp } from "@/lib/utils";
 import { Button } from "../ui/Button";
-import { ButtonGroup } from "../ui/button-group";
+import { ButtonGroup } from "../ui/ButtonGroup";
 import { Input } from "../ui/Input";
 
 type FooterSettingProps = {
@@ -17,11 +17,13 @@ type FooterSettingProps = {
 
 export default function FooterNumberSetting(props: FooterSettingProps) {
   const { title, value, setValue, unit, min = Number.MIN_VALUE, max = Number.MAX_VALUE, increment = 1 } = props;
+  const [prevValue, setPrevValue] = useState(value);
   const [inputValue, setInputValue] = useState(String(value));
 
-  useEffect(() => {
+  if (value !== prevValue) {
+    setPrevValue(value);
     setInputValue(String(value));
-  }, [value]);
+  }
 
   const handleSetValue = (targetValue: number) => {
     const clampedNumber = clamp(targetValue, min, max);
