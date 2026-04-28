@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import * as React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Layer, Shape, Stage, Transformer } from "react-konva";
+import useCanvasZoom from "@/hooks/use-canvas-zoom";
 import { snap } from "@/lib/utils";
 import { useCanvasStore } from "@/stores/canvas-store";
 import { CanvasType } from "@/types/types";
@@ -19,23 +20,19 @@ type CanvasProps = {
 } & React.ComponentProps<typeof Stage>;
 
 function Canvas({ canvasType, className, children, ...props }: CanvasProps) {
+  const stageRef = useRef<Konva.Stage>(null);
   const canvasState = useCanvasStore(s => s.canvas[canvasType]);
-  const setCanvasScale = useCanvasStore(s => s.setCanvasScale);
-  const setCanvasPosition = useCanvasStore(s => s.setCanvasPosition);
-
-  const ZOOM_MULTIPLIER = 1.1;
-  const MIN_ZOOM = 0.1;
-  const MAX_ZOOM = 100;
-  const STAGE_SIZE = 2048;
-  const DOT_SPACING = 64;
-  const DOT_SIZE = 2;
-  const SNAP_SIZE = 16;
+  const handleZoom = useCanvasZoom({ stageRef, canvasType });
 
   const transformerRef = useRef<Konva.Transformer | null>(null);
   const [selectedNodes, setSelectedNodes] = useState<Node<NodeConfig>[]>([]);
 
-  const stageRef = useRef<Konva.Stage>(null);
   const [openConfirmation, setOpenConfirmation] = useState(false);
+
+  const STAGE_SIZE = 2048;
+  const DOT_SPACING = 64;
+  const DOT_SIZE = 2;
+  const SNAP_SIZE = 16;
 
   useEffect(() => {
     transformerRef.current?.nodes(selectedNodes);
@@ -50,35 +47,6 @@ function Canvas({ canvasType, className, children, ...props }: CanvasProps) {
     const y = snap(target.y(), SNAP_SIZE);
 
     target.position({ x, y });
-  };
-
-  const handleZoom = (e: Konva.KonvaEventObject<WheelEvent>) => {
-    e.evt.preventDefault();
-    const stage = stageRef.current;
-    if (!stage)
-      return;
-
-    const oldScale = stage.scaleX();
-    const pointer = stage.getPointerPosition()!;
-    const mousePointTo = {
-      x: (pointer.x - stage.x()) / oldScale,
-      y: (pointer.y - stage.y()) / oldScale,
-    };
-
-    const direction = e.evt.deltaY > 0 ? -1 : 1;
-
-    let newScale = direction > 0 ? oldScale * ZOOM_MULTIPLIER : oldScale / ZOOM_MULTIPLIER;
-    newScale = Math.max(Math.min(MAX_ZOOM, newScale), MIN_ZOOM);
-    if (Math.abs(newScale - 1.0) < 0.05)
-      newScale = 1;
-
-    const newPos = {
-      x: pointer.x - mousePointTo.x * newScale,
-      y: pointer.y - mousePointTo.y * newScale,
-    };
-
-    setCanvasPosition(canvasType, newPos);
-    setCanvasScale(canvasType, newScale);
   };
 
   const dragGrid = useCallback((ctx: Konva.Context, shape: Konva.Shape) => {
