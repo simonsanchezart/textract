@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "vite",
+    "release": "tauri dev -- --release",
     "build": "tsc && vite build",
     "lint": "eslint src",
     "fix": "eslint src --fix",

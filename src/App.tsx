@@ -1,3 +1,4 @@
+import Footer from "./components/footer/Footer";
 import Navbar from "./components/Navbar";
 import Textract from "./components/Textract";
 import "./App.css";
@@ -13,6 +14,7 @@ function App() {
     <main className="flex flex-col h-screen text-light-main dark">
       <Navbar />
       <Textract />
+      <Footer />
     </main>
   );
 }

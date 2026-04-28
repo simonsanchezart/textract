@@ -10,6 +10,7 @@ import useCanvasGrid from "@/hooks/use-canvas-grid";
 import useCanvasZoom from "@/hooks/use-canvas-zoom";
 import { snap } from "@/lib/utils";
 import { useCanvasStore } from "@/stores/canvas-store";
+import { useSettingsStore } from "@/stores/settings-store";
 import { CanvasType } from "@/types/types";
 import PopupConfirm from "./PopupConfirm";
 
@@ -22,13 +23,13 @@ type CanvasProps = {
 
 function Canvas({ canvasType, className, children, ...props }: CanvasProps) {
   const STAGE_SIZE = 2048;
-  const SNAP_SIZE = 32;
+  const snapSize = useSettingsStore(s => s.snap);
 
   const stageRef = useRef<Konva.Stage>(null);
   const canvasState = useCanvasStore(s => s.canvas[canvasType]);
 
   const handleZoom = useCanvasZoom({ stageRef, canvasType });
-  const drawGrid = useCanvasGrid({ dotSize: 1, dotSpacing: SNAP_SIZE }, stageRef);
+  const drawGrid = useCanvasGrid({ dotSize: 1, dotSpacing: snapSize }, stageRef);
 
   const transformerRef = useRef<Konva.Transformer | null>(null);
   const [selectedNodes, setSelectedNodes] = useState<Node<NodeConfig>[]>([]);
@@ -75,8 +76,8 @@ function Canvas({ canvasType, className, children, ...props }: CanvasProps) {
     if (target.name() !== "master")
       return;
 
-    const x = snap(target.x(), SNAP_SIZE);
-    const y = snap(target.y(), SNAP_SIZE);
+    const x = snap(target.x(), snapSize);
+    const y = snap(target.y(), snapSize);
 
     target.position({ x, y });
   };
@@ -91,16 +92,16 @@ function Canvas({ canvasType, className, children, ...props }: CanvasProps) {
     const stageX = stage.x();
     const stageY = stage.y();
 
-    const newX = snap((newBox.x - stageX) / scale, SNAP_SIZE);
-    const newY = snap((newBox.y - stageY) / scale, SNAP_SIZE);
-    const newW = snap(newBox.width / scale, SNAP_SIZE);
-    const newH = snap(newBox.height / scale, SNAP_SIZE);
+    const newX = snap((newBox.x - stageX) / scale, snapSize);
+    const newY = snap((newBox.y - stageY) / scale, snapSize);
+    const newW = snap(newBox.width / scale, snapSize);
+    const newH = snap(newBox.height / scale, snapSize);
 
     return {
       x: newX * scale + stageX,
       y: newY * scale + stageY,
-      width: Math.max(newW * scale, scale * SNAP_SIZE),
-      height: Math.max(newH * scale, scale * SNAP_SIZE),
+      width: Math.max(newW * scale, scale * snapSize),
+      height: Math.max(newH * scale, scale * snapSize),
       rotation: newBox.rotation,
     };
   };
