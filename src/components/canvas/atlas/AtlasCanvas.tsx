@@ -3,7 +3,7 @@ import { save } from "@tauri-apps/plugin-dialog";
 import { writeFile } from "@tauri-apps/plugin-fs";
 import { useRef, useState } from "react";
 import { BiSolidFileExport } from "react-icons/bi";
-import { Group, Rect } from "react-konva";
+import { Group, Rect, Text } from "react-konva";
 import { Toolbar, ToolbarAction } from "@/components/Toolbar";
 import { useAtlasStore } from "@/stores/atlas-store";
 import { CanvasType } from "@/types/types";
@@ -16,17 +16,20 @@ function AtlasCanvas({ className }: { className?: string }) {
 
   // todo: move to zustand
   const [atlasSize, setAtlasSize] = useState(1024);
-  const [transparentBg, setTransparentBg] = useState(false);
+  const [transparentBg, setTransparentBg] = useState(true);
 
   const groupRef = useRef<Konva.Group>(null);
-  const bgRef = useRef<Konva.Rect>(null);
 
   const exportCanvas = async () => {
     if (!groupRef.current)
       return;
 
-    if (transparentBg)
-      bgRef.current?.hide();
+    const bgShapes = groupRef.current.find(".bg");
+    if (transparentBg) {
+      for (const shape of bgShapes)
+        shape.hide();
+    }
+
     const clone = groupRef.current.clone();
     const dataUrl = clone.toDataURL({
       x: 0,
@@ -36,7 +39,9 @@ function AtlasCanvas({ className }: { className?: string }) {
       pixelRatio: 1,
     });
     clone.destroy();
-    bgRef.current?.show();
+
+    for (const shape of bgShapes)
+      shape.show();
 
     const response = await fetch(dataUrl);
     const buffer = await response.arrayBuffer();
@@ -62,11 +67,25 @@ function AtlasCanvas({ className }: { className?: string }) {
         }}
       >
         <Group ref={groupRef}>
-          <Rect width={atlasSize} height={atlasSize} fill="white" ref={bgRef} />
+          <Rect name="bg" width={atlasSize} height={atlasSize} fill="#999999" listening={false} />
 
           {Object.values(atlasImages).map((i) => {
             return <AtlasImageComponent key={i.id} imageData={i} />;
           })}
+
+          <Rect name="bg" x={1} y={1} width={atlasSize - 2} height={atlasSize - 2} stroke="#999999" listening={false} dash={[4, 8]} />
+
+          <Text
+            text={`${atlasSize}px`}
+            x={0}
+            y={atlasSize + 8}
+            fontSize={14}
+            fontFamily="Calibri"
+            fontStyle="100"
+            fill="white"
+            opacity={0.5}
+            listening={false}
+          />
         </Group>
       </Canvas>
 
