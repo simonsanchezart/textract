@@ -15,6 +15,7 @@
     "core:window:allow-close",
     "core:window:allow-start-dragging",
     "fs:allow-read",
+    "fs:write-all",
     {
       "identifier": "fs:scope",
       "allow": [

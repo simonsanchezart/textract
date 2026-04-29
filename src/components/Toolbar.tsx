@@ -12,7 +12,7 @@ export function ToolbarAction({ Icon, onClick, size = 6 }: ToolbarActionProps) {
 
 export function Toolbar({ children }: { children: ReactNode }) {
   return (
-    <div className="flex text-center items-center absolute top-0 left-0 bg-dark-main-darker p-2 rounded-br-xl gap-2">
+    <div className="flex text-center items-center absolute top-0 left-0 bg-dark-main-darker p-2 rounded-b-xl gap-2">
       {children}
     </div>
   );
