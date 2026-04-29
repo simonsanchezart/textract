@@ -67,19 +67,39 @@ function AtlasCanvas({ className }: { className?: string }) {
         }}
       >
         <Group ref={groupRef}>
-          <Rect name="bg" width={atlasSize} height={atlasSize} fill="#999999" listening={false} />
+          <Rect
+            name="bg"
+            width={atlasSize}
+            height={atlasSize}
+            fill="#999999"
+            listening={false}
+            shadowEnabled
+            shadowBlur={50}
+            shadowOffsetX={10}
+            shadowOffsetY={10}
+            shadowOpacity={0.5}
+          />
 
           {Object.values(atlasImages).map((i) => {
             return <AtlasImageComponent key={i.id} imageData={i} />;
           })}
 
-          <Rect name="bg" x={1} y={1} width={atlasSize - 2} height={atlasSize - 2} stroke="#999999" listening={false} dash={[4, 8]} />
+          <Rect
+            name="bg"
+            x={-1}
+            y={-1}
+            width={atlasSize + 2}
+            height={atlasSize + 2}
+            stroke="#999999"
+            listening={false}
+            dash={[4, 8]}
+          />
 
           <Text
             text={`${atlasSize}px`}
             x={0}
             y={atlasSize + 8}
-            fontSize={14}
+            fontSize={32}
             fontFamily="Calibri"
             fontStyle="100"
             fill="white"
