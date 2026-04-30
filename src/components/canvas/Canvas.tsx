@@ -1,6 +1,6 @@
 import type Konva from "konva";
 import type { ReactNode } from "react";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Layer, Shape, Stage, Transformer } from "react-konva";
 import useCanvasGrid from "@/components/canvas/hooks/use-canvas-grid";
 import useCanvasSelection from "@/components/canvas/hooks/use-canvas-selection";
@@ -18,7 +18,7 @@ type CanvasProps = {
   onDelete?: (ids: string[]) => void;
 } & React.ComponentProps<typeof Stage>;
 
-function Canvas({ canvasType, className, children, ...props }: CanvasProps) {
+function Canvas({ canvasType, className, children, onDelete, ...props }: CanvasProps) {
   const STAGE_SIZE = 2048;
 
   const snapSize = useSettingsStore(s => s.snap);
@@ -43,6 +43,13 @@ function Canvas({ canvasType, className, children, ...props }: CanvasProps) {
     }
   };
 
+  const onConfirmDeletion = useCallback(() => {
+    const selected = transformerRef.current?.nodes() ?? [];
+    const selectedIds = selected.map(node => node.id());
+    onDelete?.(selectedIds);
+    transformerRef.current?.nodes([]);
+  }, [onDelete]);
+
   return (
     <div className="h-full" tabIndex={-1} onKeyDown={handleShortcuts}>
       <PopupConfirm
@@ -51,12 +58,7 @@ function Canvas({ canvasType, className, children, ...props }: CanvasProps) {
         confirmLabel="Delete"
         open={openConfirmation}
         setOpen={setOpenConfirmation}
-        onConfirm={() => {
-          const selected = transformerRef.current?.nodes() ?? [];
-          const selectedIds = selected.map(node => node.id());
-          props.onDelete?.(selectedIds);
-          transformerRef.current?.nodes([]);
-        }}
+        onConfirm={onConfirmDeletion}
       />
 
       <Stage
