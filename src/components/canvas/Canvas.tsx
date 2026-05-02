@@ -1,5 +1,6 @@
 import type Konva from "konva";
 import type { ReactNode } from "react";
+import { debug } from "@tauri-apps/plugin-log";
 import { useCallback, useRef, useState } from "react";
 import { Layer, Shape, Stage, Transformer } from "react-konva";
 import useCanvasGrid from "@/components/canvas/hooks/use-canvas-grid";
@@ -46,6 +47,8 @@ function Canvas({ canvasType, className, children, onDelete, ...props }: CanvasP
   const onConfirmDeletion = useCallback(() => {
     const selected = transformerRef.current?.nodes() ?? [];
     const selectedIds = selected.map(node => node.id());
+    debug(`Removing following images: ${selectedIds}`);
+
     onDelete?.(selectedIds);
     transformerRef.current?.nodes([]);
   }, [onDelete]);

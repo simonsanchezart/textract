@@ -2,6 +2,7 @@ import type { AtlasImageType } from "@/stores/atlas-store";
 import type { MarkImageType } from "@/stores/mark-store";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
+import { info } from "@tauri-apps/plugin-log";
 import { CgAdd } from "react-icons/cg";
 import { FaPlay } from "react-icons/fa";
 import { Toolbar, ToolbarAction } from "@/components/Toolbar";
@@ -25,10 +26,14 @@ function MarkCanvas({ className = "" }: { className?: string }) {
       filters: [{ name: "Image Files", extensions: ["png", "jpg", "jpeg", "bmp"] }],
     });
 
-    if (!selectedImages)
+    if (!selectedImages) {
+      info("No images were selected");
       return;
+    }
 
     for (const img of selectedImages) {
+      info(`Loading ${img}`);
+
       const assetUrl = convertFileSrc(img);
       const markImage: MarkImageType = {
         id: crypto.randomUUID(),
