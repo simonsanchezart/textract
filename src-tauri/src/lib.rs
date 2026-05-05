@@ -6,7 +6,7 @@ pub fn run() {
         .plugin(
             tauri_plugin_log::Builder::new()
                 .level(log::LevelFilter::Debug)
-                .level_for("tao::platform_impl:", log::LevelFilter::Error)
+                .level_for("tao::platform_impl", log::LevelFilter::Error)
                 .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
                 .build(),
         )
