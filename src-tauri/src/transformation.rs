@@ -5,7 +5,21 @@ use rayon::{
     iter::{IndexedParallelIterator, ParallelIterator},
     slice::ParallelSlice,
 };
-use std::{io::Cursor, path::Path};
+use serde::Serialize;
+use std::{
+    io::Cursor,
+    path::Path,
+    sync::atomic::{AtomicUsize, Ordering},
+};
+use tauri::{AppHandle, Emitter};
+
+#[derive(Clone, Serialize)]
+struct ConversionProgress {
+    img_name: String,
+    idx: usize,
+    mark_count: usize,
+    progress: usize,
+}
 
 fn get_quad_dimensions(points: &[(f32, f32); 4]) -> (f32, f32) {
     let dist = |a: (f32, f32), b: (f32, f32)| ((a.0 - b.0).powi(2) + (a.1 - b.1).powi(2)).sqrt();
@@ -16,8 +30,13 @@ fn get_quad_dimensions(points: &[(f32, f32); 4]) -> (f32, f32) {
 }
 
 #[tauri::command]
-pub async fn transform_image(img_path: String, points: Vec<f32>) -> Result<Vec<String>, String> {
+pub async fn transform_image(
+    app: AppHandle,
+    img_path: String,
+    points: Vec<f32>,
+) -> Result<Vec<String>, String> {
     let mark_count = points.len() / 8;
+    let progress = AtomicUsize::new(0);
     log::info!("Processing {mark_count} marks for {img_path}");
 
     let img = open(&img_path).unwrap().to_rgba8();
@@ -63,6 +82,19 @@ pub async fn transform_image(img_path: String, points: Vec<f32>) -> Result<Vec<S
             );
 
             log::info!("Finished processing mark #{} for {}", (i + 1), img_name);
+
+            progress.fetch_add(1, Ordering::Relaxed);
+            app.emit(
+                "conversion-progress",
+                ConversionProgress {
+                    img_name: img_name.to_string(),
+                    idx: i,
+                    mark_count,
+                    progress: (progress.load(Ordering::Relaxed) * 100) / mark_count,
+                },
+            )
+            .map_err(|e| e.to_string())?;
+
             Ok(base64)
         })
         .collect();
