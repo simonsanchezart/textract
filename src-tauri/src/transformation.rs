@@ -40,6 +40,7 @@ pub async fn transform_image(
     log::info!("Processing {mark_count} marks for {img_path}");
 
     let img = open(&img_path).unwrap().to_rgba8();
+    //refactor: xfunc get file name or invalid
     let img_name = Path::new(&img_path)
         .file_name()
         .and_then(|n| n.to_str())
@@ -62,6 +63,7 @@ pub async fn transform_image(
             let proj = Projection::from_control_points(src, dst)
                 .ok_or_else(|| "Failed projection".to_string())?;
 
+            //refactor: xfunc warp image
             let mut result = RgbaImage::new(width as u32, height as u32);
             warp_into(
                 &img,
@@ -71,15 +73,17 @@ pub async fn transform_image(
                 &mut result,
             );
 
-            let mut crop_buffer: Vec<u8> = Vec::new();
+            //refactor: xfunc encode base64
+            let mut buffer: Vec<u8> = Vec::new();
             result
-                .write_to(&mut Cursor::new(&mut crop_buffer), image::ImageFormat::Png)
+                .write_to(&mut Cursor::new(&mut buffer), image::ImageFormat::Png)
                 .map_err(|e| e.to_string())?;
 
             let base64 = format!(
                 "data:image/png;base64,{}",
-                general_purpose::STANDARD.encode(crop_buffer)
+                general_purpose::STANDARD.encode(buffer)
             );
+            //refactor: xfunc encode base64
 
             log::info!("Finished processing mark #{} for {}", (i + 1), img_name);
 
