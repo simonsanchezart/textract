@@ -52,7 +52,7 @@ pub async fn transform_image(
             let tr = (chunk[0], chunk[1]);
             let tl = (chunk[2], chunk[3]);
             let bl = (chunk[4], chunk[5]);
-            let br = (chunk[6], points[7]);
+            let br = (chunk[6], chunk[7]);
 
             let src = [tl, tr, br, bl];
             let (width, height) = get_quad_dimensions(&src);
