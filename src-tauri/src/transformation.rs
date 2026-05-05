@@ -17,12 +17,12 @@ fn get_quad_dimensions(points: &[(f32, f32); 4]) -> (f32, f32) {
 
 #[tauri::command]
 pub async fn transform_image(img_path: String, points: Vec<f32>) -> Result<Vec<String>, String> {
-    let mark_count = points.len() / 8 ;
+    let mark_count = points.len() / 8;
     log::info!("Processing {mark_count} marks for {img_path}");
 
     let img = open(&img_path).unwrap().to_rgba8();
     let img_name = Path::new(&img_path)
-    .file_name()
+        .file_name()
         .and_then(|n| n.to_str())
         .unwrap_or("invalid");
 
