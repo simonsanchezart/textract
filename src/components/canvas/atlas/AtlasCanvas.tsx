@@ -94,6 +94,10 @@ function AtlasCanvas({ className }: { className?: string }) {
             stroke="#999999"
             listening={false}
             dash={[4, 8]}
+            shadowEnabled
+            shadowOffsetX={0.5}
+            shadowOffsetY={0.5}
+            shadowOpacity={0.5}
           />
 
           <Text
