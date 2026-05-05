@@ -1,5 +1,5 @@
 import type { ChangeEvent } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { clamp } from "@/utils/utils";
 import { Button } from "../ui/Button";
 import { ButtonGroup } from "../ui/ButtonGroup";
@@ -10,44 +10,47 @@ type FooterSettingProps = {
   unit?: string;
   value: number;
   setValue: (x: number) => void;
+  onDecrement?: (x: number) => number;
+  onIncrement?: (x: number) => number;
+  postProcess?: (x: number) => number;
   min?: number;
   max?: number;
-  increment?: number;
+  className?: string;
 };
 
-export default function FooterNumberSetting(props: FooterSettingProps) {
-  const { title, value, setValue, unit, min = Number.MIN_VALUE, max = Number.MAX_VALUE, increment = 1 } = props;
-  const [prevValue, setPrevValue] = useState(value);
+export default function FooterNumberSetting({
+  title,
+  value,
+  setValue,
+  unit,
+  min = Number.MIN_SAFE_INTEGER,
+  max = Number.MAX_SAFE_INTEGER,
+  onDecrement = x => x - 1,
+  onIncrement = x => x + 1,
+  postProcess = x => x,
+  className,
+}: FooterSettingProps) {
   const [inputValue, setInputValue] = useState(String(value));
 
-  if (value !== prevValue) {
-    setPrevValue(value);
+  useEffect(() => {
     setInputValue(String(value));
-  }
+  }, [value]);
 
-  const handleSetValue = (targetValue: number) => {
-    const clampedNumber = clamp(targetValue, min, max);
-    setInputValue(String(clampedNumber));
-    setValue(clampedNumber);
+  const commit = (raw: number) => {
+    const processed = postProcess(clamp(raw, min, max));
+    setValue(processed);
+    setInputValue(String(processed));
   };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const x = e.target.value;
-    if (x === "") {
-      setInputValue("");
-      return;
-    }
-
-    const num = Number(x);
-    if (!Number.isNaN(num)) {
-      handleSetValue(num);
-    }
+    setInputValue(e.target.value);
   };
 
   const handleBlur = () => {
-    if (inputValue === "") {
-      setInputValue(String(value));
-    }
+    const num = Number(inputValue);
+    if (!Number.isNaN(num))
+      commit(num);
+    else setInputValue(String(value));
   };
 
   return (
@@ -57,7 +60,7 @@ export default function FooterNumberSetting(props: FooterSettingProps) {
       </div>
 
       <ButtonGroup aria-label="Snapping Controls">
-        <Button variant="outline" size="icon-xs" onClick={() => handleSetValue(value - increment)}>
+        <Button variant="outline" size="icon-xs" onClick={() => commit(onDecrement(value))}>
           -
         </Button>
 
@@ -67,7 +70,11 @@ export default function FooterNumberSetting(props: FooterSettingProps) {
             value={inputValue}
             onChange={handleChange}
             onBlur={handleBlur}
-            className="w-14 h-6 text-center rounded-none border-x-0 border border-primary/50 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            onKeyDown={(e) => {
+              if (e.key === "Enter")
+                handleBlur();
+            }}
+            className={`w-14 h-6 text-center rounded-none border-x-0 border border-primary/50 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${className}`}
           />
 
           {unit
@@ -79,10 +86,9 @@ export default function FooterNumberSetting(props: FooterSettingProps) {
             : <></>}
         </div>
 
-        <Button variant="outline" size="icon-xs" onClick={() => handleSetValue(value + increment)}>
+        <Button variant="outline" size="icon-xs" onClick={() => commit(onIncrement(value))}>
           +
         </Button>
-
       </ButtonGroup>
     </div>
   );

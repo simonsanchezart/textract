@@ -6,6 +6,7 @@ import { BiSolidFileExport } from "react-icons/bi";
 import { Group, Rect, Text } from "react-konva";
 import { Toolbar, ToolbarAction } from "@/components/Toolbar";
 import { useAtlasStore } from "@/stores/atlas-store";
+import { useSettingsStore } from "@/stores/settings-store";
 import { CanvasType } from "@/types/types";
 import Canvas from "../Canvas";
 import AtlasImageComponent from "./AtlasImageComponent";
@@ -15,8 +16,8 @@ function AtlasCanvas({ className }: { className?: string }) {
   const removeAtlasImage = useAtlasStore(state => state.removeImage);
 
   // todo: move to zustand
-  const [atlasSize, setAtlasSize] = useState(1024);
   const [transparentBg, setTransparentBg] = useState(true);
+  const atlasResolution = useSettingsStore(s => s.atlasResolution);
 
   const groupRef = useRef<Konva.Group>(null);
 
@@ -34,8 +35,8 @@ function AtlasCanvas({ className }: { className?: string }) {
     const dataUrl = clone.toDataURL({
       x: 0,
       y: 0,
-      width: atlasSize,
-      height: atlasSize,
+      width: atlasResolution,
+      height: atlasResolution,
       pixelRatio: 1,
     });
     clone.destroy();
@@ -69,8 +70,8 @@ function AtlasCanvas({ className }: { className?: string }) {
         <Group ref={groupRef}>
           <Rect
             name="bg"
-            width={atlasSize}
-            height={atlasSize}
+            width={atlasResolution}
+            height={atlasResolution}
             fill="#999999"
             listening={false}
             shadowEnabled
@@ -88,17 +89,17 @@ function AtlasCanvas({ className }: { className?: string }) {
             name="bg"
             x={-1}
             y={-1}
-            width={atlasSize + 2}
-            height={atlasSize + 2}
+            width={atlasResolution + 2}
+            height={atlasResolution + 2}
             stroke="#999999"
             listening={false}
             dash={[4, 8]}
           />
 
           <Text
-            text={`${atlasSize}px`}
+            text={`${atlasResolution}px`}
             x={0}
-            y={atlasSize + 8}
+            y={atlasResolution + 8}
             fontSize={32}
             fontFamily="Calibri"
             fontStyle="100"

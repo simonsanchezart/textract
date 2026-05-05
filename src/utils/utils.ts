@@ -21,6 +21,12 @@ export function snap(x: number, increment: number) {
   return Math.round(x / increment) * increment;
 }
 
+export function snapPowerOfTwo(x: number) {
+  if (x <= 0)
+    return 1;
+  return 2 ** Math.round(Math.log2(x));
+}
+
 export function clamp(x: number, min: number, max: number) {
   return Math.max(Math.min(x, max), min);
 }
