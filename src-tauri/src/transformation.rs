@@ -8,7 +8,6 @@ use rayon::{
 use serde::Serialize;
 use std::{
     io::Cursor,
-    path::Path,
     sync::atomic::{AtomicUsize, Ordering},
 };
 use tauri::{AppHandle, Emitter};
@@ -19,14 +18,6 @@ struct ConversionProgress {
     idx: usize,
     mark_count: usize,
     progress: usize,
-}
-
-fn get_quad_dimensions(points: &[(f32, f32); 4]) -> (f32, f32) {
-    let dist = |a: (f32, f32), b: (f32, f32)| ((a.0 - b.0).powi(2) + (a.1 - b.1).powi(2)).sqrt();
-    let width = (dist(points[0], points[1]) + dist(points[2], points[3])) * 0.5;
-    let height = (dist(points[1], points[2]) + dist(points[3], points[0])) * 0.5;
-
-    (width, height)
 }
 
 #[tauri::command]
@@ -40,11 +31,7 @@ pub async fn transform_image(
     log::info!("Processing {mark_count} marks for {img_path}");
 
     let img = open(&img_path).unwrap().to_rgba8();
-    //refactor: xfunc get file name or invalid
-    let img_name = Path::new(&img_path)
-        .file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("invalid");
+    let img_name = crate::utils::get_filename_or_invalid(&img_path);
 
     let buffers: Result<Vec<String>, String> = points
         .par_chunks(8)
@@ -63,7 +50,6 @@ pub async fn transform_image(
             let proj = Projection::from_control_points(src, dst)
                 .ok_or_else(|| "Failed projection".to_string())?;
 
-            //refactor: xfunc warp image
             let mut result = RgbaImage::new(width as u32, height as u32);
             warp_into(
                 &img,
@@ -73,20 +59,7 @@ pub async fn transform_image(
                 &mut result,
             );
 
-            //refactor: xfunc encode base64
-            let mut buffer: Vec<u8> = Vec::new();
-            result
-                .write_to(&mut Cursor::new(&mut buffer), image::ImageFormat::Png)
-                .map_err(|e| e.to_string())?;
-
-            let base64 = format!(
-                "data:image/png;base64,{}",
-                general_purpose::STANDARD.encode(buffer)
-            );
-            //refactor: xfunc encode base64
-
             log::info!("Finished processing mark #{} for {}", (i + 1), img_name);
-
             progress.fetch_add(1, Ordering::Relaxed);
             app.emit(
                 "conversion-progress",
@@ -99,10 +72,31 @@ pub async fn transform_image(
             )
             .map_err(|e| e.to_string())?;
 
+            let base64 = image_to_base_64(&result)?;
             Ok(base64)
         })
         .collect();
 
     log::info!("Finished processing all marks for {}", img_name);
     buffers
+}
+
+fn get_quad_dimensions(points: &[(f32, f32); 4]) -> (f32, f32) {
+    let dist = |a: (f32, f32), b: (f32, f32)| ((a.0 - b.0).powi(2) + (a.1 - b.1).powi(2)).sqrt();
+    let width = (dist(points[0], points[1]) + dist(points[2], points[3])) * 0.5;
+    let height = (dist(points[1], points[2]) + dist(points[3], points[0])) * 0.5;
+
+    (width, height)
+}
+
+fn image_to_base_64(image: &RgbaImage) -> Result<String, String> {
+    let mut buffer: Vec<u8> = Vec::new();
+    image
+        .write_to(&mut Cursor::new(&mut buffer), image::ImageFormat::Png)
+        .map_err(|e| e.to_string())?;
+
+    Ok(format!(
+        "data:image/png;base64,{}",
+        general_purpose::STANDARD.encode(buffer)
+    ))
 }

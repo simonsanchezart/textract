@@ -1,3 +1,4 @@
+mod utils;
 mod transformation;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
