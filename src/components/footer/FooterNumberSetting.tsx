@@ -33,6 +33,7 @@ export default function FooterNumberSetting({
   const [inputValue, setInputValue] = useState(String(value));
 
   useEffect(() => {
+    // eslint-disable-next-line react/set-state-in-effect
     setInputValue(String(value));
   }, [value]);
 
