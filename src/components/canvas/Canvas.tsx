@@ -1,6 +1,7 @@
 import type Konva from "konva";
 import type { ReactNode } from "react";
-import { useRef, useState } from "react";
+import { debug } from "@tauri-apps/plugin-log";
+import { useCallback, useRef, useState } from "react";
 import { Layer, Shape, Stage, Transformer } from "react-konva";
 import useCanvasGrid from "@/components/canvas/hooks/use-canvas-grid";
 import useCanvasSelection from "@/components/canvas/hooks/use-canvas-selection";
@@ -13,19 +14,19 @@ import PopupConfirm from "../PopupConfirm";
 
 type CanvasProps = {
   canvasType: CanvasType;
-  className?: string;
-  children?: ReactNode;
   onDelete?: (ids: string[]) => void;
+  transformerRef: React.RefObject<Konva.Transformer | null>;
+  children?: ReactNode;
+  className?: string;
 } & React.ComponentProps<typeof Stage>;
 
-function Canvas({ canvasType, className, children, ...props }: CanvasProps) {
+function Canvas({ canvasType, onDelete, transformerRef, children, className, ...props }: CanvasProps) {
   const STAGE_SIZE = 2048;
 
   const snapSize = useSettingsStore(s => s.snap);
   const canvasState = useCanvasStore(s => s.canvas[canvasType]);
 
   const stageRef = useRef<Konva.Stage>(null);
-  const transformerRef = useRef<Konva.Transformer | null>(null);
 
   const drawGrid = useCanvasGrid({ dotSize: 1, dotSpacing: snapSize }, stageRef);
   const handleZoom = useCanvasZoom({ stageRef, canvasType });
@@ -43,6 +44,15 @@ function Canvas({ canvasType, className, children, ...props }: CanvasProps) {
     }
   };
 
+  const onConfirmDeletion = useCallback(() => {
+    const selected = transformerRef.current?.nodes() ?? [];
+    const selectedIds = selected.map(node => node.id());
+    debug(`Removing following images: ${selectedIds}`);
+
+    onDelete?.(selectedIds);
+    transformerRef.current?.nodes([]);
+  }, [onDelete, transformerRef]);
+
   return (
     <div className="h-full" tabIndex={-1} onKeyDown={handleShortcuts}>
       <PopupConfirm
@@ -51,12 +61,7 @@ function Canvas({ canvasType, className, children, ...props }: CanvasProps) {
         confirmLabel="Delete"
         open={openConfirmation}
         setOpen={setOpenConfirmation}
-        onConfirm={() => {
-          const selected = transformerRef.current?.nodes() ?? [];
-          const selectedIds = selected.map(node => node.id());
-          props.onDelete?.(selectedIds);
-          transformerRef.current?.nodes([]);
-        }}
+        onConfirm={onConfirmDeletion}
       />
 
       <Stage

@@ -1,7 +1,85 @@
 use base64::{engine::general_purpose, Engine};
-use image::{open, GenericImage, RgbaImage};
-use imageproc::geometric_transformations::{warp, Interpolation, Projection};
-use std::io::Cursor;
+use image::{open, RgbaImage};
+use imageproc::geometric_transformations::{warp_into, Interpolation, Projection};
+use rayon::{
+    iter::{IndexedParallelIterator, ParallelIterator},
+    slice::ParallelSlice,
+};
+use serde::Serialize;
+use std::{
+    io::Cursor,
+    sync::atomic::{AtomicUsize, Ordering},
+};
+use tauri::{AppHandle, Emitter};
+
+#[derive(Clone, Serialize)]
+struct ConversionProgress {
+    img_name: String,
+    idx: usize,
+    mark_count: usize,
+    progress: usize,
+}
+
+#[tauri::command]
+pub async fn transform_image(
+    app: AppHandle,
+    img_path: String,
+    points: Vec<f32>,
+) -> Result<Vec<String>, String> {
+    let mark_count = points.len() / 8;
+    let progress = AtomicUsize::new(0);
+    log::info!("Processing {mark_count} marks for {img_path}");
+
+    let img = open(&img_path).unwrap().to_rgba8();
+    let img_name = crate::utils::get_filename_or_invalid(&img_path);
+
+    let buffers: Result<Vec<String>, String> = points
+        .par_chunks(8)
+        .enumerate()
+        .map(|(i, chunk)| {
+            let tr = (chunk[0], chunk[1]);
+            let tl = (chunk[2], chunk[3]);
+            let bl = (chunk[4], chunk[5]);
+            let br = (chunk[6], chunk[7]);
+
+            let src = [tl, tr, br, bl];
+            let (width, height) = get_quad_dimensions(&src);
+            let dst = [(0.0, 0.0), (width, 0.0), (width, height), (0.0, height)];
+            log::debug!("\n\tSource: {:?}\n\tDestination: {:?}", src, dst);
+
+            let proj = Projection::from_control_points(src, dst)
+                .ok_or_else(|| "Failed projection".to_string())?;
+
+            let mut result = RgbaImage::new(width as u32, height as u32);
+            warp_into(
+                &img,
+                &proj,
+                Interpolation::Bilinear, // todo: pass interpolation as parameter
+                image::Rgba([0, 0, 0, 0]),
+                &mut result,
+            );
+
+            log::info!("Finished processing mark #{} for {}", (i + 1), img_name);
+            progress.fetch_add(1, Ordering::Relaxed);
+            app.emit(
+                "conversion-progress",
+                ConversionProgress {
+                    img_name: img_name.to_string(),
+                    idx: i,
+                    mark_count,
+                    progress: (progress.load(Ordering::Relaxed) * 100) / mark_count,
+                },
+            )
+            .map_err(|e| e.to_string())?;
+
+            let base64 = image_to_base_64(&result)?;
+            Ok(base64)
+        })
+        .collect();
+
+    log::info!("Finished processing all marks for {}", img_name);
+    buffers
+}
 
 fn get_quad_dimensions(points: &[(f32, f32); 4]) -> (f32, f32) {
     let dist = |a: (f32, f32), b: (f32, f32)| ((a.0 - b.0).powi(2) + (a.1 - b.1).powi(2)).sqrt();
@@ -11,43 +89,14 @@ fn get_quad_dimensions(points: &[(f32, f32); 4]) -> (f32, f32) {
     (width, height)
 }
 
-#[tauri::command]
-pub async fn transform_image(img_path: String, points: Vec<f32>) -> Result<Vec<String>, String> {
-    let mut buffers: Vec<String> = Vec::new();
-    let img = open(&img_path).unwrap().to_rgba8();
+fn image_to_base_64(image: &RgbaImage) -> Result<String, String> {
+    let mut buffer: Vec<u8> = Vec::new();
+    image
+        .write_to(&mut Cursor::new(&mut buffer), image::ImageFormat::Png)
+        .map_err(|e| e.to_string())?;
 
-    for i in (0..points.len()).step_by(8) {
-        let tr = (points[i], points[i + 1]);
-        let tl = (points[i + 2], points[i + 3]);
-        let bl = (points[i + 4], points[i + 5]);
-        let br = (points[i + 6], points[i + 7]);
-
-        let src = [tl, tr, br, bl];
-        let (width, height) = get_quad_dimensions(&src);
-        let dst = [(0.0, 0.0), (width, 0.0), (width, height), (0.0, height)];
-
-        let proj = Projection::from_control_points(src, dst).unwrap();
-        let mut result: RgbaImage = warp(
-            &img,
-            &proj,
-            Interpolation::Bilinear, // todo: pass interpolation as parameter
-            image::Rgba([0, 0, 0, 0]),
-        );
-
-        let crop_result = result.sub_image(0, 0, width as u32, height as u32);
-        let mut crop_buffer: Vec<u8> = Vec::new();
-        crop_result
-            .to_image()
-            .write_to(&mut Cursor::new(&mut crop_buffer), image::ImageFormat::Png)
-            .unwrap();
-
-        let base64 = format!(
-            "data:image/png;base64,{}",
-            general_purpose::STANDARD.encode(crop_buffer)
-        );
-
-        buffers.push(base64);
-    }
-
-    Ok(buffers)
+    Ok(format!(
+        "data:image/png;base64,{}",
+        general_purpose::STANDARD.encode(buffer)
+    ))
 }

@@ -1,7 +1,10 @@
+import type Konva from "konva";
 import type { AtlasImageType } from "@/stores/atlas-store";
 import type { MarkImageType } from "@/stores/mark-store";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
+import { info } from "@tauri-apps/plugin-log";
+import { useRef } from "react";
 import { CgAdd } from "react-icons/cg";
 import { FaPlay } from "react-icons/fa";
 import { Toolbar, ToolbarAction } from "@/components/Toolbar";
@@ -17,6 +20,8 @@ function MarkCanvas({ className = "" }: { className?: string }) {
   const removeMarkImage = useMarkStore(state => state.removeImage);
   const addAtlasImage = useAtlasStore(state => state.addImage);
 
+  const transformerRef = useRef<Konva.Transformer>(null);
+
   const loadImages = async () => {
     const selectedImages = await open({
       title: "Select image/s to open",
@@ -25,10 +30,14 @@ function MarkCanvas({ className = "" }: { className?: string }) {
       filters: [{ name: "Image Files", extensions: ["png", "jpg", "jpeg", "bmp"] }],
     });
 
-    if (!selectedImages)
+    if (!selectedImages) {
+      info("No images were selected");
       return;
+    }
 
     for (const img of selectedImages) {
+      info(`Loading ${img}`);
+
       const assetUrl = convertFileSrc(img);
       const markImage: MarkImageType = {
         id: crypto.randomUUID(),
@@ -78,6 +87,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
   return (
     <div className={`relative h-full ${className}`}>
       <Canvas
+        transformerRef={transformerRef}
         onDelete={async (ids) => {
           for (const id of ids) removeMarkImage(id);
         }}
