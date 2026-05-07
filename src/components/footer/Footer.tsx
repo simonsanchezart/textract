@@ -1,7 +1,8 @@
 import { useShallow } from "zustand/react/shallow";
 import { useSettingsStore } from "@/stores/settings-store";
 import { snap as snapFn, snapPowerOfTwo } from "@/utils/utils";
-import FooterNumberSetting from "./FooterSetting";
+import FooterBooleanSetting from "./FooterBooleanSetting";
+import FooterNumberSetting from "./FooterNumberSetting";
 
 export default function Footer() {
   const { snap, setSnap, atlasResolution, setAtlasResolution, atlasAlpha, setAtlasAlpha }
@@ -18,7 +19,7 @@ export default function Footer() {
 
   return (
     <div className="bg-dark-main-darker/80 p-1.5 px-3 flex gap-6 items-center justify-between ring-1 ring-primary/25 z-10">
-      <div className="flex gap-4">
+      <div className="flex gap-2">
         <FooterNumberSetting
           title="Snap"
           value={snap}
@@ -32,7 +33,7 @@ export default function Footer() {
         />
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex gap-2">
         <FooterNumberSetting
           title="Resolution"
           value={atlasResolution}
@@ -45,6 +46,8 @@ export default function Footer() {
           postProcess={x => snapPowerOfTwo(x)}
           className="w-18"
         />
+
+        <FooterBooleanSetting value={atlasAlpha} setValue={setAtlasAlpha} name="Transparent Background" />
       </div>
     </div>
   );

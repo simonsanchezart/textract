@@ -16,7 +16,7 @@ function AtlasCanvas({ className }: { className?: string }) {
   const removeAtlasImage = useAtlasStore(state => state.removeImage);
 
   // todo: move to zustand
-  const [transparentBg, setTransparentBg] = useState(true);
+  const atlasAlpha = useSettingsStore(s => s.atlasAlpha);
   const atlasResolution = useSettingsStore(s => s.atlasResolution);
 
   const groupRef = useRef<Konva.Group>(null);
@@ -26,7 +26,7 @@ function AtlasCanvas({ className }: { className?: string }) {
       return;
 
     const bgShapes = groupRef.current.find(".bg");
-    if (transparentBg) {
+    if (atlasAlpha) {
       for (const shape of bgShapes)
         shape.hide();
     }
@@ -72,7 +72,7 @@ function AtlasCanvas({ className }: { className?: string }) {
             name="bg"
             width={atlasResolution}
             height={atlasResolution}
-            fill="#999999"
+            fill={atlasAlpha ? "#00000022" : "#999999"}
             listening={false}
             shadowEnabled
             shadowBlur={50}

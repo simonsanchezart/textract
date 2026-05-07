@@ -5,7 +5,7 @@ import { Button } from "../ui/Button";
 import { ButtonGroup } from "../ui/ButtonGroup";
 import { Input } from "../ui/Input";
 
-type FooterSettingProps = {
+type FooterNumberSettingProps = {
   title: string;
   unit?: string;
   value: number;
@@ -29,7 +29,7 @@ export default function FooterNumberSetting({
   onIncrement = x => x + 1,
   postProcess = x => x,
   className,
-}: FooterSettingProps) {
+}: FooterNumberSettingProps) {
   const [inputValue, setInputValue] = useState(String(value));
 
   useEffect(() => {
@@ -55,7 +55,7 @@ export default function FooterNumberSetting({
 
   return (
     <div className="flex gap-3 items-center">
-      <div className="select-none font-light tracking-widest text-">
+      <div className="select-none font-light tracking-widest">
         {title}
       </div>
 
