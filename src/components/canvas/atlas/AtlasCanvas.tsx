@@ -1,6 +1,5 @@
 import type Konva from "konva";
-import { join } from "@tauri-apps/api/path";
-import { open, save } from "@tauri-apps/plugin-dialog";
+import { save } from "@tauri-apps/plugin-dialog";
 import { writeFile } from "@tauri-apps/plugin-fs";
 import { info } from "@tauri-apps/plugin-log";
 import { useRef } from "react";
@@ -21,7 +20,7 @@ function AtlasCanvas({ className }: { className?: string }) {
   const atlasResolution = useSettingsStore(s => s.atlasResolution);
 
   const masterGroupRef = useRef<Konva.Group>(null);
-  const imagesGroupRef = useRef<Konva.Group>(null);
+  const transformerRef = useRef<Konva.Transformer>(null);
 
   const exportCanvas = async () => {
     const exportPath = await save({
@@ -60,8 +59,16 @@ function AtlasCanvas({ className }: { className?: string }) {
     info(`Exported canvas to ${exportPath}`);
   };
 
-  // todo: this currently exports all images, make it work only on selected images
   const exportSelected = async () => {
+    if (!transformerRef.current)
+      return;
+    const transformer = transformerRef.current;
+
+    if (!transformer.getNodes().length) {
+      info("No selected images to export");
+      return;
+    }
+
     const exportDir = await save(
       {
         title: "Export Selected",
@@ -69,11 +76,11 @@ function AtlasCanvas({ className }: { className?: string }) {
       },
     );
 
-    if (!imagesGroupRef.current || !exportDir)
+    if (!exportDir)
       return;
 
-    const allImages = imagesGroupRef.current.find(".atlasImage");
-    for (const img of allImages) {
+    const selectedImages = transformer.getNodes();
+    for (const img of selectedImages) {
       const dataUrl = img.toDataURL({
         pixelRatio: 1,
       });
@@ -92,6 +99,7 @@ function AtlasCanvas({ className }: { className?: string }) {
     <div className={`relative h-full ${className}`}>
       <Canvas
         canvasType={CanvasType.ATLAS}
+        transformerRef={transformerRef}
         onDelete={async (ids) => {
           for (const id of ids) removeAtlasImage(id);
         }}
@@ -110,11 +118,9 @@ function AtlasCanvas({ className }: { className?: string }) {
             shadowOpacity={0.5}
           />
 
-          <Group ref={imagesGroupRef} name="images">
-            {Object.values(atlasImages).map((i) => {
-              return <AtlasImageComponent key={i.id} imageData={i} />;
-            })}
-          </Group>
+          {Object.values(atlasImages).map((i) => {
+            return <AtlasImageComponent key={i.id} imageData={i} />;
+          })}
 
           <Rect
             name="background"

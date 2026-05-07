@@ -14,19 +14,19 @@ import PopupConfirm from "../PopupConfirm";
 
 type CanvasProps = {
   canvasType: CanvasType;
-  className?: string;
-  children?: ReactNode;
   onDelete?: (ids: string[]) => void;
+  transformerRef: React.RefObject<Konva.Transformer | null>;
+  children?: ReactNode;
+  className?: string;
 } & React.ComponentProps<typeof Stage>;
 
-function Canvas({ canvasType, className, children, onDelete, ...props }: CanvasProps) {
+function Canvas({ canvasType, onDelete, transformerRef, children, className, ...props }: CanvasProps) {
   const STAGE_SIZE = 2048;
 
   const snapSize = useSettingsStore(s => s.snap);
   const canvasState = useCanvasStore(s => s.canvas[canvasType]);
 
   const stageRef = useRef<Konva.Stage>(null);
-  const transformerRef = useRef<Konva.Transformer | null>(null);
 
   const drawGrid = useCanvasGrid({ dotSize: 1, dotSpacing: snapSize }, stageRef);
   const handleZoom = useCanvasZoom({ stageRef, canvasType });
@@ -51,7 +51,7 @@ function Canvas({ canvasType, className, children, onDelete, ...props }: CanvasP
 
     onDelete?.(selectedIds);
     transformerRef.current?.nodes([]);
-  }, [onDelete]);
+  }, [onDelete, transformerRef]);
 
   return (
     <div className="h-full" tabIndex={-1} onKeyDown={handleShortcuts}>
