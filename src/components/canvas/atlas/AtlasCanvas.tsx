@@ -62,11 +62,12 @@ function AtlasCanvas({ className }: { className?: string }) {
 
   // todo: this currently exports all images, make it work only on selected images
   const exportSelected = async () => {
-    const exportDir = await open({
-      title: "Export Selected",
-      directory: true,
-      multiple: false,
-    });
+    const exportDir = await save(
+      {
+        title: "Export Selected",
+        defaultPath: "texture",
+      },
+    );
 
     if (!imagesGroupRef.current || !exportDir)
       return;
@@ -81,8 +82,8 @@ function AtlasCanvas({ className }: { className?: string }) {
       const buffer = await response.arrayBuffer();
       const imageArray = new Uint8Array(buffer);
 
-      const exportPath = await join(exportDir, `${img._id}.png`);
-      await writeFile(exportPath, imageArray);
+      const exportPath = `${exportDir}${img._id}.png`;
+      await writeFile(exportPath, imageArray, { createNew: true });
       info(`Exported image with id ${img._id} to ${exportPath}`);
     }
   };
@@ -145,6 +146,7 @@ function AtlasCanvas({ className }: { className?: string }) {
       </Canvas>
 
       <Toolbar>
+        {/* todo: find better icons */}
         <ToolbarAction Icon={BiSolidFileExport} onClick={exportCanvas} />
         <ToolbarAction Icon={BiExport} onClick={exportSelected} />
       </Toolbar>
