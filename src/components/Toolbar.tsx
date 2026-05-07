@@ -3,11 +3,18 @@ import type { ReactNode } from "react";
 type ToolbarActionProps = {
   Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   size?: number;
+  disabled?: boolean;
   onClick?: () => void | Promise<void>;
 };
 
-export function ToolbarAction({ Icon, onClick, size = 6 }: ToolbarActionProps) {
-  return <Icon className={`size-${size} button-icon`} onClick={onClick} />;
+export function ToolbarAction({ Icon, onClick, disabled = false, size = 6 }: ToolbarActionProps) {
+  return (
+    <Icon
+      className={`size-${size} ${disabled ? "opacity-20 pointer-events-none" : "button-icon"
+      }`}
+      onClick={disabled ? undefined : onClick}
+    />
+  );
 }
 
 export function Toolbar({ children }: { children: ReactNode }) {
