@@ -45,7 +45,7 @@ function AtlasImageComponent({ imageData }: { imageData: AtlasImageType }) {
       onDragEnd={onDragEnd}
       draggable
     >
-      <Image image={image} />
+      <Image name="atlasImage" image={image} />
     </Group>
   );
 }

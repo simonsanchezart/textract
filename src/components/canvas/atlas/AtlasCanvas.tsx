@@ -1,8 +1,10 @@
 import type Konva from "konva";
-import { save } from "@tauri-apps/plugin-dialog";
+import { join } from "@tauri-apps/api/path";
+import { open, save } from "@tauri-apps/plugin-dialog";
 import { writeFile } from "@tauri-apps/plugin-fs";
-import { useRef, useState } from "react";
-import { BiSolidFileExport } from "react-icons/bi";
+import { info } from "@tauri-apps/plugin-log";
+import { useRef } from "react";
+import { BiExport, BiSolidFileExport } from "react-icons/bi";
 import { Group, Rect, Text } from "react-konva";
 import { Toolbar, ToolbarAction } from "@/components/Toolbar";
 import { useAtlasStore } from "@/stores/atlas-store";
@@ -15,23 +17,29 @@ function AtlasCanvas({ className }: { className?: string }) {
   const atlasImages = useAtlasStore(state => state.images);
   const removeAtlasImage = useAtlasStore(state => state.removeImage);
 
-  // todo: move to zustand
   const atlasAlpha = useSettingsStore(s => s.atlasAlpha);
   const atlasResolution = useSettingsStore(s => s.atlasResolution);
 
-  const groupRef = useRef<Konva.Group>(null);
+  const masterGroupRef = useRef<Konva.Group>(null);
+  const imagesGroupRef = useRef<Konva.Group>(null);
 
   const exportCanvas = async () => {
-    if (!groupRef.current)
+    const exportPath = await save({
+      title: "Export Canvas",
+      filters: [{ name: "Image", extensions: ["png"] }],
+      defaultPath: "stage.png",
+    });
+
+    if (!masterGroupRef.current || !exportPath)
       return;
 
-    const bgShapes = groupRef.current.find(".bg");
+    const backgroundShapes = masterGroupRef.current.find(".background");
     if (atlasAlpha) {
-      for (const shape of bgShapes)
+      for (const shape of backgroundShapes)
         shape.hide();
     }
 
-    const clone = groupRef.current.clone();
+    const clone = masterGroupRef.current.clone();
     const dataUrl = clone.toDataURL({
       x: 0,
       y: 0,
@@ -41,21 +49,41 @@ function AtlasCanvas({ className }: { className?: string }) {
     });
     clone.destroy();
 
-    for (const shape of bgShapes)
+    for (const shape of backgroundShapes)
       shape.show();
 
     const response = await fetch(dataUrl);
     const buffer = await response.arrayBuffer();
     const imageArray = new Uint8Array(buffer);
 
-    const savePath = await save({
-      title: "Save Canvas",
-      filters: [{ name: "Image", extensions: ["png"] }],
-      defaultPath: "stage.png",
+    await writeFile(exportPath, imageArray);
+    info(`Exported canvas to ${exportPath}`);
+  };
+
+  // todo: this currently exports all images, make it work only on selected images
+  const exportSelected = async () => {
+    const exportDir = await open({
+      title: "Export Selected",
+      directory: true,
+      multiple: false,
     });
 
-    if (savePath) {
-      await writeFile(savePath, imageArray);
+    if (!imagesGroupRef.current || !exportDir)
+      return;
+
+    const allImages = imagesGroupRef.current.find(".atlasImage");
+    for (const img of allImages) {
+      const dataUrl = img.toDataURL({
+        pixelRatio: 1,
+      });
+
+      const response = await fetch(dataUrl);
+      const buffer = await response.arrayBuffer();
+      const imageArray = new Uint8Array(buffer);
+
+      const exportPath = await join(exportDir, `${img._id}.png`);
+      await writeFile(exportPath, imageArray);
+      info(`Exported image with id ${img._id} to ${exportPath}`);
     }
   };
 
@@ -67,9 +95,9 @@ function AtlasCanvas({ className }: { className?: string }) {
           for (const id of ids) removeAtlasImage(id);
         }}
       >
-        <Group ref={groupRef}>
+        <Group ref={masterGroupRef}>
           <Rect
-            name="bg"
+            name="background"
             width={atlasResolution}
             height={atlasResolution}
             fill={atlasAlpha ? "#00000022" : "#999999"}
@@ -81,12 +109,14 @@ function AtlasCanvas({ className }: { className?: string }) {
             shadowOpacity={0.5}
           />
 
-          {Object.values(atlasImages).map((i) => {
-            return <AtlasImageComponent key={i.id} imageData={i} />;
-          })}
+          <Group ref={imagesGroupRef} name="images">
+            {Object.values(atlasImages).map((i) => {
+              return <AtlasImageComponent key={i.id} imageData={i} />;
+            })}
+          </Group>
 
           <Rect
-            name="bg"
+            name="background"
             x={-1}
             y={-1}
             width={atlasResolution + 2}
@@ -116,6 +146,7 @@ function AtlasCanvas({ className }: { className?: string }) {
 
       <Toolbar>
         <ToolbarAction Icon={BiSolidFileExport} onClick={exportCanvas} />
+        <ToolbarAction Icon={BiExport} onClick={exportSelected} />
       </Toolbar>
     </div>
   );
