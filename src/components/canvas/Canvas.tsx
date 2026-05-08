@@ -1,9 +1,12 @@
-import type Konva from "konva";
 import type { KonvaPointerEvent } from "konva/lib/PointerEvents";
 import type { ReactNode } from "react";
 import { debug, warn } from "@tauri-apps/plugin-log";
+import Konva from "konva";
 import { EyeIcon, TrashIcon } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
+import { BiExport, BiSolidFileExport } from "react-icons/bi";
+import { CgAdd } from "react-icons/cg";
+import { FaPlay } from "react-icons/fa";
 import { IoIosResize } from "react-icons/io";
 import { Layer, Shape, Stage, Transformer } from "react-konva";
 import useCanvasGrid from "@/components/canvas/hooks/use-canvas-grid";
@@ -14,7 +17,7 @@ import { useCanvasStore } from "@/stores/canvas-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { CanvasType } from "@/types/types";
 import PopupConfirm from "../PopupConfirm";
-import { ContextMenu, ContextMenuContent, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from "../ui/ContextMenu";
+import { ContextMenu, ContextMenuCheckboxItem, ContextMenuContent, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuShortcut, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger } from "../ui/ContextMenu";
 
 type CanvasProps = {
   canvasType: CanvasType;
@@ -127,20 +130,98 @@ function Canvas({ canvasType, onDelete, transformerRef, children, className, ...
         </ContextMenuTrigger>
 
         <ContextMenuContent>
+          {/* refactor: Context menu for specific menu type should be passed from that specific Canvas file (AtlasCanvas - MarkCanvas) */}
           <ContextMenuGroup>
-            <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
-              <EyeIcon />
-              {" "}
-              Reset View
-            </ContextMenuItem>
+            {canvasType === CanvasType.MARK
+              ? (
+                  <>
+                    <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
+                      <CgAdd />
+                      Add Images
+                    </ContextMenuItem>
+
+                    <ContextMenuSub>
+                      <ContextMenuSubTrigger>
+                        <FaPlay />
+                        <span className="mx-2">
+                          Convert
+                        </span>
+                      </ContextMenuSubTrigger>
+
+                      <ContextMenuSubContent>
+                        <ContextMenuGroup>
+                          {(currentHoverShape && currentHoverShape instanceof Konva.Line)
+                            ? (
+                                <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
+                                  Hovered
+                                </ContextMenuItem>
+                              )
+                            : <></>}
+
+                          {/* todo: show only if there are marks */}
+                          {selectedNodes.length > 0
+                            ? (
+                                <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
+                                  Selected Images
+                                </ContextMenuItem>
+                              )
+                            : <></>}
+
+                          {/* todo: show only if there are marks */}
+                          <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
+                            All
+                          </ContextMenuItem>
+                        </ContextMenuGroup>
+                      </ContextMenuSubContent>
+                    </ContextMenuSub>
+
+                    {(currentHoverShape && currentHoverShape instanceof Konva.Line)
+                      ? (
+                          <>
+                            <ContextMenuGroup>
+                              <ContextMenuItem variant="destructive" onClick={() => warn("TO IMPLEMENT")}>
+                                <TrashIcon />
+                                Remove Mark
+                                <ContextMenuShortcut>
+                                  <span className="flex">
+                                    Alt+LClick
+                                  </span>
+                                </ContextMenuShortcut>
+                              </ContextMenuItem>
+                            </ContextMenuGroup>
+                          </>
+                        )
+                      : <></>}
+                  </>
+                )
+              : (
+                  <>
+                    <ContextMenuGroup>
+                      <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
+                        <BiSolidFileExport />
+                        {" "}
+                        Export Canvas
+                      </ContextMenuItem>
+                      <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
+                        <BiExport />
+                        Export Selected
+                      </ContextMenuItem>
+
+                      <ContextMenuCheckboxItem checked={true}>
+                        Transparent Background
+                      </ContextMenuCheckboxItem>
+                    </ContextMenuGroup>
+                  </>
+                )}
           </ContextMenuGroup>
 
           {/* todo: shouldn't always showup */}
-          <ContextMenuSeparator />
 
           {selectedNodes.length > 0
             ? (
                 <>
+                  <ContextMenuSeparator />
+
                   <ContextMenuGroup>
                     <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
                       <IoIosResize />
@@ -149,36 +230,26 @@ function Canvas({ canvasType, onDelete, transformerRef, children, className, ...
 
                     <ContextMenuItem variant="destructive" onClick={() => warn("TO IMPLEMENT")}>
                       <TrashIcon />
-                      Delete Image
+                      Delete Images
+                      <ContextMenuShortcut>Del</ContextMenuShortcut>
                     </ContextMenuItem>
                   </ContextMenuGroup>
                 </>
               )
             : <></>}
 
+          <ContextMenuSeparator />
+
           <ContextMenuGroup>
-            {canvasType === CanvasType.MARK
-              ? (
-                  <>
-                    {currentHoverShape
-                      ? (
-                    // todo: should only showup when a mark is under the cursor
-                    // todo: should add a way of accesing the store mark from the Konva line shape
-                          <ContextMenuItem variant="destructive" onClick={() => warn("TO IMPLEMENT")}>
-                            <TrashIcon />
-                            Remove Mark
-                          </ContextMenuItem>
-                        )
-                      : <> </>}
-                  </>
-                )
-              : (
-                  <>
-                  </>
-                )}
+            <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
+              <EyeIcon />
+              {" "}
+              Reset View
+            </ContextMenuItem>
           </ContextMenuGroup>
         </ContextMenuContent>
       </ContextMenu>
+
       <small className="opacity-50 text-sm select-none absolute bottom-0 right-0 m-2">
         {Math.round(canvasState.scale * 100)}
         %
