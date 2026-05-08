@@ -33,5 +33,5 @@ export default function useCanvasSelection({ transformerRef }: CanvasSelectionPr
     });
   };
 
-  return handleSelection;
+  return { selectedNodes, handleSelection };
 }

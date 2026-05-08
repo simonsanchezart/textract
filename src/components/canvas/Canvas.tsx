@@ -1,7 +1,10 @@
 import type Konva from "konva";
+import type { KonvaPointerEvent } from "konva/lib/PointerEvents";
 import type { ReactNode } from "react";
-import { debug } from "@tauri-apps/plugin-log";
+import { debug, warn } from "@tauri-apps/plugin-log";
+import { EyeIcon, TrashIcon } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
+import { IoIosResize } from "react-icons/io";
 import { Layer, Shape, Stage, Transformer } from "react-konva";
 import useCanvasGrid from "@/components/canvas/hooks/use-canvas-grid";
 import useCanvasSelection from "@/components/canvas/hooks/use-canvas-selection";
@@ -11,6 +14,7 @@ import { useCanvasStore } from "@/stores/canvas-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { CanvasType } from "@/types/types";
 import PopupConfirm from "../PopupConfirm";
+import { ContextMenu, ContextMenuContent, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from "../ui/ContextMenu";
 
 type CanvasProps = {
   canvasType: CanvasType;
@@ -27,10 +31,11 @@ function Canvas({ canvasType, onDelete, transformerRef, children, className, ...
   const canvasState = useCanvasStore(s => s.canvas[canvasType]);
 
   const stageRef = useRef<Konva.Stage>(null);
+  const [currentHoverShape, setCurrentHoverShape] = useState<Konva.Shape | null>(null);
 
   const drawGrid = useCanvasGrid({ dotSize: 1, dotSpacing: snapSize }, stageRef);
   const handleZoom = useCanvasZoom({ stageRef, canvasType });
-  const handleSelection = useCanvasSelection({ transformerRef });
+  const { selectedNodes, handleSelection } = useCanvasSelection({ transformerRef });
   const [handleDragMove, handleTransformSnapping] = useTransformSnapping({ stageRef, snapSize });
   const [openConfirmation, setOpenConfirmation] = useState(false);
 
@@ -64,52 +69,116 @@ function Canvas({ canvasType, onDelete, transformerRef, children, className, ...
         onConfirm={onConfirmDeletion}
       />
 
-      <Stage
-        width={STAGE_SIZE}
-        height={STAGE_SIZE}
-        scale={{ x: canvasState.scale, y: canvasState.scale }}
-        x={canvasState.x}
-        y={canvasState.y}
-        draggable
-        className={`h-0 ${className}`}
-        ref={stageRef}
-        onWheel={handleZoom}
-        onDragMove={handleDragMove}
-        onClick={handleSelection}
-        onContextMenu={(e) => {
-          // todo: add context menu
-          e.evt.preventDefault();
-        }}
-        {...props}
-      >
-        <Layer listening={false}>
-          <Shape sceneFunc={drawGrid} />
-        </Layer>
-        <Layer>
-          {children}
-          <Transformer
-            ref={transformerRef}
-            rotationSnaps={[0, 90, 180, 270]}
-            rotationSnapTolerance={45}
-            keepRatio={canvasType === CanvasType.MARK}
-            boundBoxFunc={handleTransformSnapping}
-            enabledAnchors={
-              canvasType === CanvasType.MARK
-                ? ["top-left", "top-right", "bottom-left", "bottom-right"]
-                : [
-                    "top-left",
-                    "top-right",
-                    "bottom-left",
-                    "bottom-right",
-                    "middle-left",
-                    "middle-right",
-                    "top-center",
-                    "bottom-center",
-                  ]
-            }
-          />
-        </Layer>
-      </Stage>
+      <ContextMenu>
+        <ContextMenuTrigger>
+          <Stage
+            width={STAGE_SIZE}
+            height={STAGE_SIZE}
+            scale={{ x: canvasState.scale, y: canvasState.scale }}
+            x={canvasState.x}
+            y={canvasState.y}
+            draggable
+            className={`h-0 ${className}`}
+            ref={stageRef}
+            onWheel={handleZoom}
+            onDragMove={handleDragMove}
+            onClick={(e) => {
+              if (e.evt.button === 0)
+                handleSelection(e as KonvaPointerEvent);
+            }}
+            onContextMenu={() => {
+              if (!stageRef.current)
+                return;
+
+              const stage = stageRef.current;
+              const shape = stage.getIntersection(stage.getPointerPosition()!);
+              setCurrentHoverShape(shape);
+            }}
+            {...props}
+          >
+            <Layer listening={false}>
+              <Shape sceneFunc={drawGrid} />
+            </Layer>
+            <Layer>
+              {children}
+              <Transformer
+                ref={transformerRef}
+                rotationSnaps={[0, 90, 180, 270]}
+                rotationSnapTolerance={45}
+                keepRatio={canvasType === CanvasType.MARK}
+                boundBoxFunc={handleTransformSnapping}
+                enabledAnchors={
+                  canvasType === CanvasType.MARK
+                    ? ["top-left", "top-right", "bottom-left", "bottom-right"]
+                    : [
+                        "top-left",
+                        "top-right",
+                        "bottom-left",
+                        "bottom-right",
+                        "middle-left",
+                        "middle-right",
+                        "top-center",
+                        "bottom-center",
+                      ]
+                }
+              />
+            </Layer>
+          </Stage>
+        </ContextMenuTrigger>
+
+        <ContextMenuContent>
+          <ContextMenuGroup>
+            <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
+              <EyeIcon />
+              {" "}
+              Reset View
+            </ContextMenuItem>
+          </ContextMenuGroup>
+
+          {/* todo: shouldn't always showup */}
+          <ContextMenuSeparator />
+
+          {selectedNodes.length > 0
+            ? (
+                <>
+                  <ContextMenuGroup>
+                    <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
+                      <IoIosResize />
+                      Reset Scale
+                    </ContextMenuItem>
+
+                    <ContextMenuItem variant="destructive" onClick={() => warn("TO IMPLEMENT")}>
+                      <TrashIcon />
+                      Delete Image
+                    </ContextMenuItem>
+                  </ContextMenuGroup>
+                </>
+              )
+            : <></>}
+
+          <ContextMenuGroup>
+            {canvasType === CanvasType.MARK
+              ? (
+                  <>
+                    {currentHoverShape
+                      ? (
+                    // todo: should only showup when a mark is under the cursor
+                    // todo: should add a way of accesing the store mark from the Konva line shape
+                          <ContextMenuItem variant="destructive" onClick={() => warn("TO IMPLEMENT")}>
+                            <TrashIcon />
+                            Remove Mark
+                          </ContextMenuItem>
+                        )
+                      : <> </>}
+                  </>
+                )
+              : (
+                  <>
+                  </>
+                )}
+          </ContextMenuGroup>
+        </ContextMenuContent>
+      </ContextMenu>
       <small className="opacity-50 text-sm select-none absolute bottom-0 right-0 m-2">
         {Math.round(canvasState.scale * 100)}
         %
