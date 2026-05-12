@@ -1,12 +1,9 @@
+import type Konva from "konva";
 import type { KonvaPointerEvent } from "konva/lib/PointerEvents";
 import type { ReactNode } from "react";
 import { debug, warn } from "@tauri-apps/plugin-log";
-import Konva from "konva";
 import { EyeIcon, TrashIcon } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
-import { BiExport, BiSolidFileExport } from "react-icons/bi";
-import { CgAdd } from "react-icons/cg";
-import { FaPlay } from "react-icons/fa";
 import { IoIosResize } from "react-icons/io";
 import { Layer, Shape, Stage, Transformer } from "react-konva";
 import useCanvasGrid from "@/components/canvas/hooks/use-canvas-grid";
@@ -17,28 +14,28 @@ import { useCanvasStore } from "@/stores/canvas-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { CanvasType } from "@/types/types";
 import PopupConfirm from "../PopupConfirm";
-import { ContextMenu, ContextMenuCheckboxItem, ContextMenuContent, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuShortcut, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger } from "../ui/ContextMenu";
+import { ContextMenu, ContextMenuContent, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuShortcut, ContextMenuTrigger } from "../ui/ContextMenu";
 
 type CanvasProps = {
   canvasType: CanvasType;
   onDelete?: (ids: string[]) => void;
   transformerRef: React.RefObject<Konva.Transformer | null>;
+  contextMenu?: ReactNode;
   children?: ReactNode;
   className?: string;
 } & React.ComponentProps<typeof Stage>;
 
-function Canvas({ canvasType, onDelete, transformerRef, children, className, ...props }: CanvasProps) {
+function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, className, ...props }: CanvasProps) {
   const STAGE_SIZE = 2048;
+  const stageRef = useRef<Konva.Stage>(null);
 
   const snapSize = useSettingsStore(s => s.snap);
   const canvasState = useCanvasStore(s => s.canvas[canvasType]);
-
-  const stageRef = useRef<Konva.Stage>(null);
-  const [currentHoverShape, setCurrentHoverShape] = useState<Konva.Shape | null>(null);
+  const setHoverShape = useCanvasStore(s => s.setHoverShape);
 
   const drawGrid = useCanvasGrid({ dotSize: 1, dotSpacing: snapSize }, stageRef);
   const handleZoom = useCanvasZoom({ stageRef, canvasType });
-  const { selectedNodes, handleSelection } = useCanvasSelection({ transformerRef });
+  const { selectedNodes, handleSelection } = useCanvasSelection({ canvasType, transformerRef });
   const [handleDragMove, handleTransformSnapping] = useTransformSnapping({ stageRef, snapSize });
   const [openConfirmation, setOpenConfirmation] = useState(false);
 
@@ -95,7 +92,7 @@ function Canvas({ canvasType, onDelete, transformerRef, children, className, ...
 
               const stage = stageRef.current;
               const shape = stage.getIntersection(stage.getPointerPosition()!);
-              setCurrentHoverShape(shape);
+              setHoverShape(canvasType, shape);
             }}
             {...props}
           >
@@ -130,117 +127,31 @@ function Canvas({ canvasType, onDelete, transformerRef, children, className, ...
         </ContextMenuTrigger>
 
         <ContextMenuContent>
-          {/* refactor: Context menu for specific menu type should be passed from that specific Canvas file (AtlasCanvas - MarkCanvas) */}
-          <ContextMenuGroup>
-            {canvasType === CanvasType.MARK
-              ? (
-                  <>
-                    <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
-                      <CgAdd />
-                      Add Images
-                    </ContextMenuItem>
-
-                    <ContextMenuSub>
-                      <ContextMenuSubTrigger>
-                        <FaPlay />
-                        <span className="mx-2">
-                          Convert
-                        </span>
-                      </ContextMenuSubTrigger>
-
-                      <ContextMenuSubContent>
-                        <ContextMenuGroup>
-                          {(currentHoverShape && currentHoverShape instanceof Konva.Line)
-                            ? (
-                                <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
-                                  Hovered
-                                </ContextMenuItem>
-                              )
-                            : <></>}
-
-                          {/* todo: show only if there are marks */}
-                          {selectedNodes.length > 0
-                            ? (
-                                <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
-                                  Selected Images
-                                </ContextMenuItem>
-                              )
-                            : <></>}
-
-                          {/* todo: show only if there are marks */}
-                          <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
-                            All
-                          </ContextMenuItem>
-                        </ContextMenuGroup>
-                      </ContextMenuSubContent>
-                    </ContextMenuSub>
-
-                    {(currentHoverShape && currentHoverShape instanceof Konva.Line)
-                      ? (
-                          <>
-                            <ContextMenuGroup>
-                              <ContextMenuItem variant="destructive" onClick={() => warn("TO IMPLEMENT")}>
-                                <TrashIcon />
-                                Remove Mark
-                                <ContextMenuShortcut>
-                                  <span className="flex">
-                                    Alt+LClick
-                                  </span>
-                                </ContextMenuShortcut>
-                              </ContextMenuItem>
-                            </ContextMenuGroup>
-                          </>
-                        )
-                      : <></>}
-                  </>
-                )
-              : (
-                  <>
-                    <ContextMenuGroup>
-                      <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
-                        <BiSolidFileExport />
-                        {" "}
-                        Export Canvas
-                      </ContextMenuItem>
-                      <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
-                        <BiExport />
-                        Export Selected
-                      </ContextMenuItem>
-
-                      <ContextMenuCheckboxItem checked={true}>
-                        Transparent Background
-                      </ContextMenuCheckboxItem>
-                    </ContextMenuGroup>
-                  </>
-                )}
-          </ContextMenuGroup>
-
-          {/* todo: shouldn't always showup */}
+          {contextMenu}
 
           {selectedNodes.length > 0
-            ? (
-                <>
-                  <ContextMenuSeparator />
+            && (
+              <>
+                <ContextMenuGroup>
+                  {/* todo: */}
+                  <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
+                    <IoIosResize />
+                    Reset Scale
+                  </ContextMenuItem>
 
-                  <ContextMenuGroup>
-                    <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
-                      <IoIosResize />
-                      Reset Scale
-                    </ContextMenuItem>
-
-                    <ContextMenuItem variant="destructive" onClick={() => warn("TO IMPLEMENT")}>
-                      <TrashIcon />
-                      Delete Images
-                      <ContextMenuShortcut>Del</ContextMenuShortcut>
-                    </ContextMenuItem>
-                  </ContextMenuGroup>
-                </>
-              )
-            : <></>}
-
-          <ContextMenuSeparator />
+                  {/* todo: */}
+                  <ContextMenuItem variant="destructive" onClick={() => warn("TO IMPLEMENT")}>
+                    <TrashIcon />
+                    Delete Images
+                    <ContextMenuShortcut>Del</ContextMenuShortcut>
+                  </ContextMenuItem>
+                </ContextMenuGroup>
+                <ContextMenuSeparator />
+              </>
+            )}
 
           <ContextMenuGroup>
+            {/* todo: */}
             <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
               <EyeIcon />
               {" "}

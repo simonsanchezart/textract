@@ -1,3 +1,5 @@
+import type Konva from "konva";
+import type { Node, NodeConfig } from "konva/lib/Node";
 import type { Vec2 } from "@/types/types";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -10,11 +12,21 @@ export type CanvasState = {
   y: number;
 };
 
+export type TransientCanvasState = {
+  hoverShape: Konva.Shape | null;
+  selectedNodes: Node<NodeConfig>[];
+};
+
 type CanvasStore = {
   canvas: Record<CanvasType, CanvasState>;
+  transientCanvas: Record<CanvasType, TransientCanvasState>;
 
   setCanvasScale: (canvas: CanvasType, scale: number) => void;
   setCanvasPosition: (canvas: CanvasType, pos: Vec2) => void;
+
+  // todo: set these in Canvas.tsx
+  setSelectedNodes: (canvas: CanvasType, nodes: Node<NodeConfig>[]) => void;
+  setHoverShape: (canvas: CanvasType, shape: Konva.Shape | null) => void;
 };
 
 export const useCanvasStore = create(
@@ -23,6 +35,10 @@ export const useCanvasStore = create(
       canvas: {
         [CanvasType.MARK]: { scale: 1, x: 0, y: 0 },
         [CanvasType.ATLAS]: { scale: 1, x: 0, y: 0 },
+      },
+      transientCanvas: {
+        [CanvasType.MARK]: { hoverShape: null, selectedNodes: [] },
+        [CanvasType.ATLAS]: { hoverShape: null, selectedNodes: [] },
       },
       setCanvasScale: (canvas, scale) =>
         set((state) => {
@@ -33,7 +49,18 @@ export const useCanvasStore = create(
           state.canvas[canvas].x = pos.x;
           state.canvas[canvas].y = pos.y;
         }),
+      setSelectedNodes: (canvas, nodes) =>
+        set((state) => {
+          state.transientCanvas[canvas].selectedNodes = nodes;
+        }),
+      setHoverShape: (canvas, shape) =>
+        set((state) => {
+          state.transientCanvas[canvas].hoverShape = shape;
+        }),
     })),
-    { name: "canvas-storage" },
+    {
+      name: "canvas-storage",
+      partialize: state => ({ canvas: state.canvas }),
+    },
   ),
 );
