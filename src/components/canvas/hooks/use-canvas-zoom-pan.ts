@@ -10,11 +10,11 @@ type CanvasZoomSettings = {
   maxZoom?: number;
 };
 
-export default function useCanvasZoom({ stageRef, zoomMultiplier = 1.1, minZoom = 0.1, maxZoom = 100, ...props }: CanvasZoomSettings) {
+export default function useCanvasZoomPan({ stageRef, zoomMultiplier = 1.1, minZoom = 0.1, maxZoom = 100, ...props }: CanvasZoomSettings) {
   const setCanvasScale = useCanvasStore(s => s.setCanvasScale);
   const setCanvasPosition = useCanvasStore(s => s.setCanvasPosition);
 
-  const handleZoom = (e: Konva.KonvaEventObject<WheelEvent>) => {
+  const handleZoomPan = (e: Konva.KonvaEventObject<WheelEvent>) => {
     e.evt.preventDefault();
     const stage = stageRef.current;
 
@@ -44,5 +44,5 @@ export default function useCanvasZoom({ stageRef, zoomMultiplier = 1.1, minZoom 
     setCanvasScale(props.canvasType, newScale);
   };
 
-  return handleZoom;
+  return handleZoomPan;
 }

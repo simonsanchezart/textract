@@ -9,7 +9,7 @@ import { Layer, Shape, Stage, Transformer } from "react-konva";
 import useCanvasGrid from "@/components/canvas/hooks/use-canvas-grid";
 import useCanvasSelection from "@/components/canvas/hooks/use-canvas-selection";
 import useTransformSnapping from "@/components/canvas/hooks/use-canvas-snapping";
-import useCanvasZoom from "@/components/canvas/hooks/use-canvas-zoom";
+import useCanvasZoomPan from "@/components/canvas/hooks/use-canvas-zoom-pan";
 import { useCanvasStore } from "@/stores/canvas-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { CanvasType } from "@/types/types";
@@ -34,7 +34,7 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
   const setHoverShape = useCanvasStore(s => s.setHoverShape);
 
   const drawGrid = useCanvasGrid({ dotSize: 1, dotSpacing: snapSize }, stageRef);
-  const handleZoom = useCanvasZoom({ stageRef, canvasType });
+  const handleZoomPan = useCanvasZoomPan({ stageRef, canvasType });
   const { selectedNodes, handleSelection } = useCanvasSelection({ canvasType, transformerRef });
   const [handleDragMove, handleTransformSnapping] = useTransformSnapping({ stageRef, snapSize });
   const [openConfirmation, setOpenConfirmation] = useState(false);
@@ -80,7 +80,7 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
             draggable
             className={`h-0 ${className}`}
             ref={stageRef}
-            onWheel={handleZoom}
+            onWheel={handleZoomPan}
             onDragMove={handleDragMove}
             onClick={(e) => {
               if (e.evt.button === 0)
