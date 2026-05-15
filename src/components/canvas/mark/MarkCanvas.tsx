@@ -8,6 +8,7 @@ import { TrashIcon } from "lucide-react";
 import { useRef } from "react";
 import { CgAdd } from "react-icons/cg";
 import { FaPlay } from "react-icons/fa";
+import { Line } from "react-konva";
 import { Toolbar, ToolbarAction } from "@/components/Toolbar";
 import { ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuShortcut, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger } from "@/components/ui/ContextMenu";
 import { useAtlasStore } from "@/stores/atlas-store";
@@ -164,6 +165,9 @@ function MarkCanvas({ className = "" }: { className?: string }) {
         contextMenu={contextMenu()}
         canvasType={CanvasType.MARK}
       >
+        <Line points={[0, -10e10, 0, 10e10]} stroke="green" strokeWidth={2} listening={false} />
+        <Line points={[-10e10, 0, 10e10, 0]} stroke="red" strokeWidth={2} listening={false} />
+
         {Object.values(markImages).map((i) => {
           return <MarkImage key={i.id} imageData={i} />;
         })}

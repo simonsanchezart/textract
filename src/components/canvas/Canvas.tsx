@@ -9,12 +9,13 @@ import { Layer, Shape, Stage, Transformer } from "react-konva";
 import useCanvasGrid from "@/components/canvas/hooks/use-canvas-grid";
 import useCanvasSelection from "@/components/canvas/hooks/use-canvas-selection";
 import useTransformSnapping from "@/components/canvas/hooks/use-canvas-snapping";
-import useCanvasZoomPan from "@/components/canvas/hooks/use-canvas-zoom-pan";
+import useCanvasZoom from "@/components/canvas/hooks/use-canvas-zoom";
 import { useCanvasStore } from "@/stores/canvas-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { CanvasType } from "@/types/types";
 import PopupConfirm from "../PopupConfirm";
 import { ContextMenu, ContextMenuContent, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuShortcut, ContextMenuTrigger } from "../ui/ContextMenu";
+import useCanvasPanning from "./hooks/use-canvas-panning";
 
 type CanvasProps = {
   canvasType: CanvasType;
@@ -28,15 +29,17 @@ type CanvasProps = {
 function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, className, ...props }: CanvasProps) {
   const STAGE_SIZE = 2048;
   const stageRef = useRef<Konva.Stage>(null);
+  const contentLayerRef = useRef<Konva.Layer>(null);
 
   const snapSize = useSettingsStore(s => s.snap);
   const canvasState = useCanvasStore(s => s.canvas[canvasType]);
   const setHoverShape = useCanvasStore(s => s.setHoverShape);
 
   const drawGrid = useCanvasGrid({ dotSize: 1, dotSpacing: snapSize }, stageRef);
-  const handleZoomPan = useCanvasZoomPan({ stageRef, canvasType });
+  const handleZoom = useCanvasZoom({ stageRef, canvasType });
+  const { handlePan, resetPan } = useCanvasPanning({ stageRef, layerRef: contentLayerRef, canvasType });
   const { selectedNodes, handleSelection } = useCanvasSelection({ canvasType, transformerRef });
-  const [handleDragMove, handleTransformSnapping] = useTransformSnapping({ stageRef, snapSize });
+  const { handleTransformDragMove, handleTransformSnapping } = useTransformSnapping({ stageRef, snapSize });
   const [openConfirmation, setOpenConfirmation] = useState(false);
 
   const handleShortcuts = async (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -80,8 +83,9 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
             draggable
             className={`h-0 ${className}`}
             ref={stageRef}
-            onWheel={handleZoomPan}
-            onDragMove={handleDragMove}
+            onWheel={handleZoom}
+            onDragMove={handleTransformDragMove}
+            onDragEnd={handlePan}
             onClick={(e) => {
               if (e.evt.button === 0)
                 handleSelection(e as KonvaPointerEvent);
@@ -99,7 +103,8 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
             <Layer listening={false}>
               <Shape sceneFunc={drawGrid} />
             </Layer>
-            <Layer>
+
+            <Layer ref={contentLayerRef}>
               {children}
               <Transformer
                 ref={transformerRef}
@@ -152,7 +157,7 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
 
           <ContextMenuGroup>
             {/* todo: */}
-            <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
+            <ContextMenuItem onClick={resetPan}>
               <EyeIcon />
               {" "}
               Reset View

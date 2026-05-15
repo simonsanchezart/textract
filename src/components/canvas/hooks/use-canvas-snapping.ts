@@ -10,7 +10,7 @@ type TransformSnappingProps = {
 };
 
 export default function useTransformSnapping({ stageRef, snapSize }: TransformSnappingProps) {
-  const handleDragMove = useCallback((e: Konva.KonvaEventObject<DragEvent>) => {
+  const handleTransformDragMove = useCallback((e: Konva.KonvaEventObject<DragEvent>) => {
     const target = e.target;
     if (target.name() !== "master")
       return;
@@ -44,5 +44,5 @@ export default function useTransformSnapping({ stageRef, snapSize }: TransformSn
     };
   }, [stageRef, snapSize]);
 
-  return [handleDragMove, handleTransformSnapping] as const;
+  return { handleTransformDragMove, handleTransformSnapping };
 }
