@@ -4,12 +4,10 @@ import { useCanvasStore } from "@/stores/canvas-store";
 
 type CanvasPanSettings = {
   stageRef: React.RefObject<Konva.Stage | null>;
-  layerRef: React.RefObject<Konva.Layer | null>;
   canvasType: CanvasType;
 };
 
-export default function useCanvasPanning({ stageRef, layerRef, canvasType }: CanvasPanSettings) {
-  const setCanvasScale = useCanvasStore(s => s.setCanvasScale);
+export default function useCanvasPanning({ stageRef, canvasType }: CanvasPanSettings) {
   const setCanvasPosition = useCanvasStore(s => s.setCanvasPosition);
 
   const handlePan = () => {
@@ -22,13 +20,20 @@ export default function useCanvasPanning({ stageRef, layerRef, canvasType }: Can
     setCanvasPosition(canvasType, { x, y });
   };
 
-  // todo: check for a better way of resetting this
   const resetPan = () => {
-    if (!layerRef.current || !stageRef.current)
+    if (!stageRef.current)
       return;
 
-    setCanvasPosition(canvasType, { x: 0, y: 0 });
-    // setCanvasScale(canvasType, 1.0);
+    const stage = stageRef.current;
+    const container = stage.container();
+
+    const stageWidth = container.offsetWidth;
+    const stageHeight = window.innerHeight; // container height is 0
+
+    setCanvasPosition(canvasType, {
+      x: stageWidth / 2,
+      y: stageHeight / 2,
+    });
   };
 
   return { handlePan, resetPan };

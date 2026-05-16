@@ -29,7 +29,6 @@ type CanvasProps = {
 function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, className, ...props }: CanvasProps) {
   const STAGE_SIZE = 2048;
   const stageRef = useRef<Konva.Stage>(null);
-  const contentLayerRef = useRef<Konva.Layer>(null);
 
   const snapSize = useSettingsStore(s => s.snap);
   const canvasState = useCanvasStore(s => s.canvas[canvasType]);
@@ -37,7 +36,7 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
 
   const drawGrid = useCanvasGrid({ dotSize: 1, dotSpacing: snapSize }, stageRef);
   const handleZoom = useCanvasZoom({ stageRef, canvasType });
-  const { handlePan, resetPan } = useCanvasPanning({ stageRef, layerRef: contentLayerRef, canvasType });
+  const { handlePan, resetPan } = useCanvasPanning({ stageRef, canvasType });
   const { selectedNodes, handleSelection } = useCanvasSelection({ canvasType, transformerRef });
   const { handleTransformDragMove, handleTransformSnapping } = useTransformSnapping({ stageRef, snapSize });
   const [openConfirmation, setOpenConfirmation] = useState(false);
@@ -104,7 +103,7 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
               <Shape sceneFunc={drawGrid} />
             </Layer>
 
-            <Layer ref={contentLayerRef}>
+            <Layer>
               {children}
               <Transformer
                 ref={transformerRef}
