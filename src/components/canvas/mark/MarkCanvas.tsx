@@ -165,8 +165,8 @@ function MarkCanvas({ className = "" }: { className?: string }) {
         contextMenu={contextMenu()}
         canvasType={CanvasType.MARK}
       >
-        <Line points={[0, -10e10, 0, 10e10]} stroke="green" strokeWidth={2} listening={false} />
-        <Line points={[-10e10, 0, 10e10, 0]} stroke="red" strokeWidth={2} listening={false} />
+        <Line points={[0, -10e10, 0, 10e10]} stroke="green" strokeWidth={1} opacity={0.5} listening={false} />
+        <Line points={[-10e10, 0, 10e10, 0]} stroke="red" strokeWidth={1} opacity={0.5} listening={false} />
 
         {Object.values(markImages).map((i) => {
           return <MarkImage key={i.id} imageData={i} />;
