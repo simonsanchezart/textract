@@ -128,6 +128,7 @@ function AtlasCanvas({ className }: { className?: string }) {
         onDelete={async (ids) => {
           for (const id of ids) removeAtlasImage(id);
         }}
+        offset={{ x: atlasResolution / 2, y: atlasResolution / 2 }}
       >
         <Group ref={masterGroupRef}>
           <Rect
