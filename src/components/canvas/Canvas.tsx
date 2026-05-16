@@ -41,14 +41,10 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
   const { handleTransformDragMove, handleTransformSnapping } = useTransformSnapping({ stageRef, snapSize });
   const [openConfirmation, setOpenConfirmation] = useState(false);
 
-  const handleShortcuts = async (e: React.KeyboardEvent<HTMLDivElement>) => {
-    switch (e.code) {
-      case "Delete": {
-        const selected = transformerRef.current?.nodes() ?? [];
-        if (selected.length !== 0)
-          setOpenConfirmation(true);
-      }
-    }
+  const confirmImageDelete = () => {
+    const selected = transformerRef.current?.nodes() ?? [];
+    if (selected.length !== 0)
+      setOpenConfirmation(true);
   };
 
   const onConfirmDeletion = useCallback(() => {
@@ -59,6 +55,14 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
     onDelete?.(selectedIds);
     transformerRef.current?.nodes([]);
   }, [onDelete, transformerRef]);
+
+  const handleShortcuts = async (e: React.KeyboardEvent<HTMLDivElement>) => {
+    switch (e.code) {
+      case "Delete": {
+        confirmImageDelete();
+      }
+    }
+  };
 
   return (
     <div className="h-full" tabIndex={-1} onKeyDown={handleShortcuts}>
@@ -137,14 +141,18 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
             && (
               <>
                 <ContextMenuGroup>
-                  {/* todo: */}
-                  <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
+                  {/* bug: this doesn't save the reset scale to the store */}
+                  <ContextMenuItem onClick={() => {
+                    transformerRef.current?.nodes().forEach((n) => {
+                      n.scale({ x: 1.0, y: 1.0 });
+                    });
+                  }}
+                  >
                     <IoIosResize />
                     Reset Scale
                   </ContextMenuItem>
 
-                  {/* todo: */}
-                  <ContextMenuItem variant="destructive" onClick={() => warn("TO IMPLEMENT")}>
+                  <ContextMenuItem variant="destructive" onClick={confirmImageDelete}>
                     <TrashIcon />
                     Delete Images
                     <ContextMenuShortcut>Del</ContextMenuShortcut>
@@ -155,7 +163,6 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
             )}
 
           <ContextMenuGroup>
-            {/* todo: */}
             <ContextMenuItem onClick={resetPan}>
               <EyeIcon />
               {" "}
