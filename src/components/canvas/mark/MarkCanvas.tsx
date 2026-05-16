@@ -138,8 +138,12 @@ function MarkCanvas({ className = "" }: { className?: string }) {
       {(hoverShape && hoverShape instanceof Konva.Line)
         && (
           <ContextMenuGroup>
-            {/* todo: */}
-            <ContextMenuItem variant="destructive" onClick={() => warn("TO IMPLEMENT")}>
+            <ContextMenuItem
+              variant="destructive"
+              onClick={() => {
+                hoverShape.getAttr("removeMark")?.();
+              }}
+            >
               <TrashIcon />
               Remove Mark
               <ContextMenuShortcut>

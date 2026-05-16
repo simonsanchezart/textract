@@ -11,7 +11,7 @@ import { useAtlasStore } from "@/stores/atlas-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { CanvasType } from "@/types/types";
 import Canvas from "../Canvas";
-import AtlasImageComponent from "./AtlasImageComponent";
+import AtlasImageComponent from "./AtlasImage";
 
 function AtlasCanvas({ className }: { className?: string }) {
   const atlasImages = useAtlasStore(state => state.images);

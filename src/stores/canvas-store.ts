@@ -24,7 +24,6 @@ type CanvasStore = {
   setCanvasScale: (canvas: CanvasType, scale: number) => void;
   setCanvasPosition: (canvas: CanvasType, pos: Vec2) => void;
 
-  // todo: set these in Canvas.tsx
   setSelectedNodes: (canvas: CanvasType, nodes: Node<NodeConfig>[]) => void;
   setHoverShape: (canvas: CanvasType, shape: Konva.Shape | null) => void;
 };

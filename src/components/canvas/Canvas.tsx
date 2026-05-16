@@ -134,17 +134,16 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
           </Stage>
         </ContextMenuTrigger>
 
-        <ContextMenuContent>
+        <ContextMenuContent onContextMenu={e => e.preventDefault()}>
           {contextMenu}
 
           {selectedNodes.length > 0
             && (
               <>
                 <ContextMenuGroup>
-                  {/* bug: this doesn't save the reset scale to the store */}
                   <ContextMenuItem onClick={() => {
                     transformerRef.current?.nodes().forEach((n) => {
-                      n.scale({ x: 1.0, y: 1.0 });
+                      n.getAttr("resetScale")?.();
                     });
                   }}
                   >
