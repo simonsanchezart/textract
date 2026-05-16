@@ -23,9 +23,10 @@ export default function useCanvasZoom({ stageRef, zoomMultiplier = 1.1, minZoom 
 
     const oldScale = stage.scaleX();
     const pointer = stage.getPointerPosition()!;
+    const offset = stage.offset();
     const mousePointTo = {
-      x: (pointer.x - stage.x()) / oldScale,
-      y: (pointer.y - stage.y()) / oldScale,
+      x: (pointer.x - stage.x()) / oldScale + offset.x,
+      y: (pointer.y - stage.y()) / oldScale + offset.y,
     };
 
     const direction = e.evt.deltaY > 0 ? -1 : 1;
@@ -36,8 +37,8 @@ export default function useCanvasZoom({ stageRef, zoomMultiplier = 1.1, minZoom 
       newScale = 1;
 
     const newPos = {
-      x: pointer.x - mousePointTo.x * newScale,
-      y: pointer.y - mousePointTo.y * newScale,
+      x: pointer.x - (mousePointTo.x - offset.x) * newScale,
+      y: pointer.y - (mousePointTo.y - offset.y) * newScale,
     };
 
     setCanvasPosition(props.canvasType, newPos);
