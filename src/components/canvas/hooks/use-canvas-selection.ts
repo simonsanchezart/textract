@@ -1,14 +1,19 @@
 import type Konva from "konva";
-import type { Node, NodeConfig } from "konva/lib/Node";
 import type { KonvaPointerEvent } from "konva/lib/PointerEvents";
-import { useEffect, useState } from "react";
+import type { CanvasType } from "@/types/types";
+import { useEffect } from "react";
+import { useShallow } from "zustand/react/shallow";
+import { useCanvasStore } from "@/stores/canvas-store";
 
 type CanvasSelectionProps = {
+  canvasType: CanvasType;
   transformerRef: React.RefObject<Konva.Transformer | null>;
 };
 
-export default function useCanvasSelection({ transformerRef }: CanvasSelectionProps) {
-  const [selectedNodes, setSelectedNodes] = useState<Node<NodeConfig>[]>([]);
+export default function useCanvasSelection({ canvasType, transformerRef }: CanvasSelectionProps) {
+  const [selectedNodes, setSelectedNodes] = useCanvasStore(useShallow(
+    s => [s.transientCanvas[canvasType].selectedNodes ?? [], s.setSelectedNodes],
+  ));
 
   useEffect(() => {
     transformerRef.current?.nodes(selectedNodes);
@@ -16,7 +21,7 @@ export default function useCanvasSelection({ transformerRef }: CanvasSelectionPr
 
   const handleSelection = (e: KonvaPointerEvent) => {
     if (e.target === e.target.getStage()) {
-      setSelectedNodes([]);
+      setSelectedNodes(canvasType, []);
       return;
     }
 
@@ -24,14 +29,16 @@ export default function useCanvasSelection({ transformerRef }: CanvasSelectionPr
     if (!group)
       return;
 
-    setSelectedNodes((prev) => {
-      if (!e.evt.shiftKey)
-        return [group];
-      if (selectedNodes.includes(group))
-        return prev.filter(i => i !== group);
-      return [...prev, group];
-    });
+    let nodes = [];
+    if (!e.evt.shiftKey)
+      nodes = [group];
+    else if (selectedNodes.includes(group))
+      nodes = selectedNodes.filter(i => i !== group);
+    else
+      nodes = [...selectedNodes, group];
+
+    setSelectedNodes(canvasType, nodes);
   };
 
-  return handleSelection;
+  return { selectedNodes, handleSelection };
 }

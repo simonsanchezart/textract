@@ -73,6 +73,7 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
       y={imageData.position.y}
       rotation={imageData.rotation}
       scale={imageData.scale}
+      resetScale={() => updateImageScale(imageData.id, { x: 1.0, y: 1.0 })}
       onClick={(e) => {
         if (e.evt.button === 2)
           setCurrentPoints([]);

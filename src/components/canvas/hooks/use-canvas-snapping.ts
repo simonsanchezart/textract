@@ -10,7 +10,7 @@ type TransformSnappingProps = {
 };
 
 export default function useTransformSnapping({ stageRef, snapSize }: TransformSnappingProps) {
-  const handleDragMove = useCallback((e: Konva.KonvaEventObject<DragEvent>) => {
+  const handleTransformDragMove = useCallback((e: Konva.KonvaEventObject<DragEvent>) => {
     const target = e.target;
     if (target.name() !== "master")
       return;
@@ -29,20 +29,21 @@ export default function useTransformSnapping({ stageRef, snapSize }: TransformSn
     const scale = stage.scaleX();
     const stageX = stage.x();
     const stageY = stage.y();
+    const offset = stage.offset();
 
-    const newX = snap((newBox.x - stageX) / scale, snapSize);
-    const newY = snap((newBox.y - stageY) / scale, snapSize);
+    const newX = snap((newBox.x - stageX) / scale + offset.x, snapSize);
+    const newY = snap((newBox.y - stageY) / scale + offset.y, snapSize);
     const newW = snap(newBox.width / scale, snapSize);
     const newH = snap(newBox.height / scale, snapSize);
 
     return {
-      x: newX * scale + stageX,
-      y: newY * scale + stageY,
+      x: (newX - offset.x) * scale + stageX,
+      y: (newY - offset.y) * scale + stageY,
       width: Math.max(newW * scale, scale * snapSize),
       height: Math.max(newH * scale, scale * snapSize),
       rotation: newBox.rotation,
     };
   }, [stageRef, snapSize]);
 
-  return [handleDragMove, handleTransformSnapping] as const;
+  return { handleTransformDragMove, handleTransformSnapping };
 }

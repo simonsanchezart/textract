@@ -6,17 +6,19 @@ import { useRef } from "react";
 import { BiExport, BiSolidFileExport } from "react-icons/bi";
 import { Group, Rect, Text } from "react-konva";
 import { Toolbar, ToolbarAction } from "@/components/Toolbar";
+import { ContextMenuCheckboxItem, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator } from "@/components/ui/ContextMenu";
 import { useAtlasStore } from "@/stores/atlas-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { CanvasType } from "@/types/types";
 import Canvas from "../Canvas";
-import AtlasImageComponent from "./AtlasImageComponent";
+import AtlasImageComponent from "./AtlasImage";
 
 function AtlasCanvas({ className }: { className?: string }) {
   const atlasImages = useAtlasStore(state => state.images);
   const removeAtlasImage = useAtlasStore(state => state.removeImage);
 
   const atlasAlpha = useSettingsStore(s => s.atlasAlpha);
+  const setAtlasAlpha = useSettingsStore(s => s.setAtlasAlpha);
   const atlasResolution = useSettingsStore(s => s.atlasResolution);
 
   const masterGroupRef = useRef<Konva.Group>(null);
@@ -95,14 +97,36 @@ function AtlasCanvas({ className }: { className?: string }) {
     }
   };
 
+  const contextMenu = () => (
+    <ContextMenuGroup>
+      <ContextMenuItem onClick={exportCanvas}>
+        <BiSolidFileExport />
+        {" "}
+        Export Canvas
+      </ContextMenuItem>
+
+      <ContextMenuItem onClick={exportSelected}>
+        <BiExport />
+        Export Selected
+      </ContextMenuItem>
+
+      <ContextMenuCheckboxItem checked={atlasAlpha} onClick={() => setAtlasAlpha(!atlasAlpha)}>
+        Transparent Background
+      </ContextMenuCheckboxItem>
+      <ContextMenuSeparator />
+    </ContextMenuGroup>
+  );
+
   return (
     <div className={`relative h-full ${className}`}>
       <Canvas
         canvasType={CanvasType.ATLAS}
         transformerRef={transformerRef}
+        contextMenu={contextMenu()}
         onDelete={async (ids) => {
           for (const id of ids) removeAtlasImage(id);
         }}
+        offset={{ x: atlasResolution / 2, y: atlasResolution / 2 }}
       >
         <Group ref={masterGroupRef}>
           <Rect

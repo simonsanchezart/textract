@@ -1,14 +1,18 @@
-import type Konva from "konva";
 import type { AtlasImageType } from "@/stores/atlas-store";
 import type { MarkImageType } from "@/stores/mark-store";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { info } from "@tauri-apps/plugin-log";
+import Konva from "konva";
+import { TrashIcon } from "lucide-react";
 import { useRef } from "react";
 import { CgAdd } from "react-icons/cg";
 import { FaPlay } from "react-icons/fa";
+import { Line } from "react-konva";
 import { Toolbar, ToolbarAction } from "@/components/Toolbar";
+import { ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuShortcut, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger } from "@/components/ui/ContextMenu";
 import { useAtlasStore } from "@/stores/atlas-store";
+import { useCanvasStore } from "@/stores/canvas-store";
 import { useMarkStore } from "@/stores/mark-store";
 import { CanvasType } from "@/types/types";
 import Canvas from "../Canvas";
@@ -19,6 +23,8 @@ function MarkCanvas({ className = "" }: { className?: string }) {
   const addMarkImage = useMarkStore(state => state.addImage);
   const removeMarkImage = useMarkStore(state => state.removeImage);
   const addAtlasImage = useAtlasStore(state => state.addImage);
+  const selectedNodes = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].selectedNodes);
+  const hoverShape = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].hoverShape);
 
   const transformerRef = useRef<Konva.Transformer>(null);
 
@@ -53,36 +59,139 @@ function MarkCanvas({ className = "" }: { className?: string }) {
     }
   };
 
-  const convertImages = async () => {
+  const convertImages = async (type: "ALL" | "SELECTED" | "HOVERED" = "ALL") => {
     const marks = useMarkStore.getState().marks;
+    const images = Object.values(markImages);
+    let entries: { image: MarkImageType; markIds: string[] }[] = [];
+
+    switch (type) {
+      case "ALL":
+        entries = images.map(image => ({ image, markIds: image.markIds }));
+        break;
+      case "SELECTED": {
+        const selectedIds = transformerRef.current?.nodes().map(n => n.id()) ?? [];
+
+        entries = images.filter(image => selectedIds.includes(image.id))
+          .filter(image => image.markIds.length > 0)
+          .map(image => ({ image, markIds: image.markIds }));
+        break;
+      }
+      case "HOVERED": {
+        // todo: warn
+        if (!hoverShape)
+          return;
+
+        const hoveredMarkId = hoverShape.id();
+        const hoverMark = marks[hoveredMarkId];
+
+        if (!hoverMark)
+          return;
+
+        const image = markImages[hoverMark.imageId];
+        if (!image)
+          return;
+
+        entries = [
+          {
+            image,
+            markIds: [hoveredMarkId],
+          },
+        ];
+
+        break;
+      }
+    }
 
     await Promise.all(
-      Object.values(markImages).map(async (i) => {
-        const markIds = i.markIds;
+      entries.map(async ({ image, markIds }) => {
         const markPoints = markIds.flatMap(id =>
           marks[id].points.flatMap(p => [Math.round(p.x), Math.round(p.y)]),
         );
 
         const results: string[] = await invoke("transform_image", {
-          imgPath: i.filepath,
+          imgPath: image.filepath,
           points: markPoints,
         });
 
-        for (const [i, img] of results.entries()) {
+        results.forEach((base64, idx) => {
           const atlasImage: AtlasImageType = {
             id: crypto.randomUUID(),
-            base64: img,
-            markId: markIds[i],
+            base64,
+            markId: markIds[idx],
             position: { x: 0, y: 0 },
             rotation: 0,
             scale: { x: 1, y: 1 },
           };
 
           addAtlasImage(atlasImage);
-        }
+        });
       }),
     );
   };
+
+  const contextMenu = () => (
+    <ContextMenuGroup>
+      <ContextMenuItem onClick={loadImages}>
+        <CgAdd />
+        Add Images
+      </ContextMenuItem>
+
+      {Object.keys(markImages).length > 0
+        && (
+          <ContextMenuSub>
+            <ContextMenuSubTrigger>
+              <FaPlay />
+              <span className="mx-2">
+                Convert
+              </span>
+            </ContextMenuSubTrigger>
+
+            <ContextMenuSubContent>
+              <ContextMenuGroup>
+                {(hoverShape && hoverShape instanceof Konva.Line)
+                  && (
+                    <ContextMenuItem onClick={() => convertImages("HOVERED")}>
+                      Hovered
+                    </ContextMenuItem>
+                  )}
+                {selectedNodes.length > 0
+                  && (
+                    <ContextMenuItem onClick={() => convertImages("SELECTED")}>
+                      Selected Images
+                    </ContextMenuItem>
+                  )}
+
+                <ContextMenuItem onClick={() => convertImages("ALL")}>
+                  All
+                </ContextMenuItem>
+              </ContextMenuGroup>
+            </ContextMenuSubContent>
+          </ContextMenuSub>
+        )}
+
+      {(hoverShape && hoverShape instanceof Konva.Line)
+        && (
+          <ContextMenuGroup>
+            <ContextMenuItem
+              variant="destructive"
+              onClick={() => {
+                hoverShape.getAttr("removeMark")?.();
+              }}
+            >
+              <TrashIcon />
+              Remove Mark
+              <ContextMenuShortcut>
+                <span className="flex">
+                  Alt+LClick
+                </span>
+              </ContextMenuShortcut>
+            </ContextMenuItem>
+          </ContextMenuGroup>
+        )}
+
+      <ContextMenuSeparator />
+    </ContextMenuGroup>
+  );
 
   return (
     <div className={`relative h-full ${className}`}>
@@ -91,8 +200,12 @@ function MarkCanvas({ className = "" }: { className?: string }) {
         onDelete={async (ids) => {
           for (const id of ids) removeMarkImage(id);
         }}
+        contextMenu={contextMenu()}
         canvasType={CanvasType.MARK}
       >
+        <Line points={[0, -10e10, 0, 10e10]} stroke="green" strokeWidth={1} opacity={0.5} listening={false} />
+        <Line points={[-10e10, 0, 10e10, 0]} stroke="red" strokeWidth={1} opacity={0.5} listening={false} />
+
         {Object.values(markImages).map((i) => {
           return <MarkImage key={i.id} imageData={i} />;
         })}

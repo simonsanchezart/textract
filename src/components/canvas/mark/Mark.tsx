@@ -17,12 +17,14 @@ function Mark({ mark }: { mark: MarkType }) {
   return (
     <Group draggable>
       <Line
+        id={mark.id}
         points={pointsFlat}
         fill={`${Colors.GREEN}11`}
         stroke={Colors.LIGHT}
         strokeWidth={4.0}
         shadowOffset={{ x: 0.5, y: 0.5 }}
         shadowOpacity={1}
+        removeMark={() => removeMark(mark.id)}
         closed
         draggable
         onClick={(e) => {

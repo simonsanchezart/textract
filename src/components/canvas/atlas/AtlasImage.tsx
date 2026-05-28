@@ -24,6 +24,7 @@ function AtlasImageComponent({ imageData }: { imageData: AtlasImageType }) {
       y={imageData.position.y}
       rotation={imageData.rotation}
       scale={imageData.scale}
+      resetScale={() => updateImageScale(imageData.id, { x: 1.0, y: 1.0 })}
       onTransformEnd={(e) => {
         const attrs = e.currentTarget.attrs;
         const scale = { x: attrs.scaleX, y: attrs.scaleY };

@@ -25,8 +25,9 @@ export default function useCanvasGrid(settings: CanvasGridSettings, stageRef: Re
     const viewHeight = stage.height() / scale;
 
     const stagePos = stage.getPosition();
-    const startX = -stagePos.x / scale;
-    const startY = -stagePos.y / scale;
+    const offset = stage.offset();
+    const startX = -stagePos.x / scale + offset.x;
+    const startY = -stagePos.y / scale + offset.y;
     const endX = startX + viewWidth;
     const endY = startY + viewHeight;
 
