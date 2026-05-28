@@ -18,6 +18,7 @@ function AtlasCanvas({ className }: { className?: string }) {
   const removeAtlasImage = useAtlasStore(state => state.removeImage);
 
   const atlasAlpha = useSettingsStore(s => s.atlasAlpha);
+  const setAtlasAlpha = useSettingsStore(s => s.setAtlasAlpha);
   const atlasResolution = useSettingsStore(s => s.atlasResolution);
 
   const masterGroupRef = useRef<Konva.Group>(null);
@@ -98,21 +99,18 @@ function AtlasCanvas({ className }: { className?: string }) {
 
   const contextMenu = () => (
     <ContextMenuGroup>
-      {/* todo: */}
-      <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
+      <ContextMenuItem onClick={exportCanvas}>
         <BiSolidFileExport />
         {" "}
         Export Canvas
       </ContextMenuItem>
 
-      {/* todo: */}
-      <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
+      <ContextMenuItem onClick={exportSelected}>
         <BiExport />
         Export Selected
       </ContextMenuItem>
 
-      {/* todo: */}
-      <ContextMenuCheckboxItem checked={atlasAlpha}>
+      <ContextMenuCheckboxItem checked={atlasAlpha} onClick={() => setAtlasAlpha(!atlasAlpha)}>
         Transparent Background
       </ContextMenuCheckboxItem>
       <ContextMenuSeparator />
