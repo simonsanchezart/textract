@@ -1,6 +1,5 @@
 import type Konva from "konva";
 import type { AtlasImageType } from "@/stores/atlas-store";
-import type { Vec2 } from "@/types/types";
 import { Group, Image } from "react-konva";
 import useImage from "use-image";
 import { useAtlasStore } from "@/stores/atlas-store";

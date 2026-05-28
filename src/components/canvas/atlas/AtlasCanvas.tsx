@@ -1,7 +1,7 @@
 import type Konva from "konva";
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeFile } from "@tauri-apps/plugin-fs";
-import { info, warn } from "@tauri-apps/plugin-log";
+import { info } from "@tauri-apps/plugin-log";
 import { useRef } from "react";
 import { BiExport, BiSolidFileExport } from "react-icons/bi";
 import { Group, Rect, Text } from "react-konva";

@@ -2,7 +2,7 @@ import type { AtlasImageType } from "@/stores/atlas-store";
 import type { MarkImageType } from "@/stores/mark-store";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
-import { info, warn } from "@tauri-apps/plugin-log";
+import { info } from "@tauri-apps/plugin-log";
 import Konva from "konva";
 import { TrashIcon } from "lucide-react";
 import { useRef } from "react";

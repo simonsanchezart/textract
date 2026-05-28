@@ -1,7 +1,7 @@
 import type Konva from "konva";
 import type { KonvaPointerEvent } from "konva/lib/PointerEvents";
 import type { ReactNode } from "react";
-import { debug, warn } from "@tauri-apps/plugin-log";
+import { debug } from "@tauri-apps/plugin-log";
 import { EyeIcon, TrashIcon } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import { IoIosResize } from "react-icons/io";
