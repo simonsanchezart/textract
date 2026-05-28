@@ -17,6 +17,7 @@ function Mark({ mark }: { mark: MarkType }) {
   return (
     <Group draggable>
       <Line
+        id={mark.id}
         points={pointsFlat}
         fill={`${Colors.GREEN}11`}
         stroke={Colors.LIGHT}

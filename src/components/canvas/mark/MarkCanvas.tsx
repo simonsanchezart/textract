@@ -59,33 +59,72 @@ function MarkCanvas({ className = "" }: { className?: string }) {
     }
   };
 
-  const convertImages = async () => {
+  const convertImages = async (type: "ALL" | "SELECTED" | "HOVERED" = "ALL") => {
     const marks = useMarkStore.getState().marks;
+    const images = Object.values(markImages);
+    let entries: { image: MarkImageType; markIds: string[] }[] = [];
+
+    switch (type) {
+      case "ALL":
+        entries = images.map(image => ({ image, markIds: image.markIds }));
+        break;
+      case "SELECTED": {
+        const selectedIds = transformerRef.current?.nodes().map(n => n.id()) ?? [];
+
+        entries = images.filter(image => selectedIds.includes(image.id))
+          .filter(image => image.markIds.length > 0)
+          .map(image => ({ image, markIds: image.markIds }));
+        break;
+      }
+      case "HOVERED": {
+        // todo: warn
+        if (!hoverShape)
+          return;
+
+        const hoveredMarkId = hoverShape.id();
+        const hoverMark = marks[hoveredMarkId];
+
+        if (!hoverMark)
+          return;
+
+        const image = markImages[hoverMark.imageId];
+        if (!image)
+          return;
+
+        entries = [
+          {
+            image,
+            markIds: [hoveredMarkId],
+          },
+        ];
+
+        break;
+      }
+    }
 
     await Promise.all(
-      Object.values(markImages).map(async (i) => {
-        const markIds = i.markIds;
+      entries.map(async ({ image, markIds }) => {
         const markPoints = markIds.flatMap(id =>
           marks[id].points.flatMap(p => [Math.round(p.x), Math.round(p.y)]),
         );
 
         const results: string[] = await invoke("transform_image", {
-          imgPath: i.filepath,
+          imgPath: image.filepath,
           points: markPoints,
         });
 
-        for (const [i, img] of results.entries()) {
+        results.forEach((base64, idx) => {
           const atlasImage: AtlasImageType = {
             id: crypto.randomUUID(),
-            base64: img,
-            markId: markIds[i],
+            base64,
+            markId: markIds[idx],
             position: { x: 0, y: 0 },
             rotation: 0,
             scale: { x: 1, y: 1 },
           };
 
           addAtlasImage(atlasImage);
-        }
+        });
       }),
     );
   };
@@ -113,7 +152,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
                 {(hoverShape && hoverShape instanceof Konva.Line)
                   && (
                     // todo:
-                    <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
+                    <ContextMenuItem onClick={() => convertImages("HOVERED")}>
                       Hovered
                     </ContextMenuItem>
                   )}
@@ -121,13 +160,13 @@ function MarkCanvas({ className = "" }: { className?: string }) {
                 {selectedNodes.length > 0
                   && (
                     // todo:
-                    <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
+                    <ContextMenuItem onClick={() => convertImages("SELECTED")}>
                       Selected Images
                     </ContextMenuItem>
                   )}
 
                 {/* todo: */}
-                <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
+                <ContextMenuItem onClick={() => convertImages("ALL")}>
                   All
                 </ContextMenuItem>
               </ContextMenuGroup>
