@@ -131,8 +131,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
 
   const contextMenu = () => (
     <ContextMenuGroup>
-      {/* todo: */}
-      <ContextMenuItem onClick={() => warn("TO IMPLEMENT")}>
+      <ContextMenuItem onClick={loadImages}>
         <CgAdd />
         Add Images
       </ContextMenuItem>
@@ -151,21 +150,17 @@ function MarkCanvas({ className = "" }: { className?: string }) {
               <ContextMenuGroup>
                 {(hoverShape && hoverShape instanceof Konva.Line)
                   && (
-                    // todo:
                     <ContextMenuItem onClick={() => convertImages("HOVERED")}>
                       Hovered
                     </ContextMenuItem>
                   )}
-                {/* todo: show only if there are marks */}
                 {selectedNodes.length > 0
                   && (
-                    // todo:
                     <ContextMenuItem onClick={() => convertImages("SELECTED")}>
                       Selected Images
                     </ContextMenuItem>
                   )}
 
-                {/* todo: */}
                 <ContextMenuItem onClick={() => convertImages("ALL")}>
                   All
                 </ContextMenuItem>
