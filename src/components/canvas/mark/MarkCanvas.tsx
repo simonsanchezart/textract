@@ -2,10 +2,11 @@ import type { AtlasImageType } from "@/stores/atlas-store";
 import type { MarkImageType } from "@/stores/mark-store";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
-import { info } from "@tauri-apps/plugin-log";
+import { exists } from "@tauri-apps/plugin-fs";
+import { info, warn } from "@tauri-apps/plugin-log";
 import Konva from "konva";
 import { TrashIcon } from "lucide-react";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { CgAdd } from "react-icons/cg";
 import { FaPlay } from "react-icons/fa";
 import { Line } from "react-konva";
@@ -25,6 +26,24 @@ function MarkCanvas({ className = "" }: { className?: string }) {
   const addAtlasImage = useAtlasStore(state => state.addImage);
   const selectedNodes = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].selectedNodes);
   const hoverShape = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].hoverShape);
+
+  useEffect(() => {
+    const removeMissingImages = async () => {
+      const missingImages = [];
+      for (const img of Object.values(markImages)) {
+        if (!(await exists(img.filepath))) {
+          missingImages.push(img.id);
+        }
+      }
+
+      missingImages.forEach((id) => {
+        warn(`Removing missing image: ${markImages[id].filepath}`);
+        removeMarkImage(id);
+      });
+    };
+
+    removeMissingImages();
+  }, [markImages, removeMarkImage]);
 
   const transformerRef = useRef<Konva.Transformer>(null);
 
