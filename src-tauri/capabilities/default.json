@@ -14,6 +14,7 @@
     "core:window:allow-toggle-maximize",
     "core:window:allow-close",
     "core:window:allow-start-dragging",
+    "fs:allow-exists",
     "fs:allow-read",
     "fs:write-all",
     {
