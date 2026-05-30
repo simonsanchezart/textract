@@ -28,6 +28,8 @@ function MarkCanvas({ className = "" }: { className?: string }) {
   const selectedNodes = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].selectedNodes);
   const hoverShape = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].hoverShape);
 
+  const transformerRef = useRef<Konva.Transformer>(null);
+
   useEffect(() => {
     const removeMissingImages = async () => {
       const missingImages = [];
@@ -46,8 +48,6 @@ function MarkCanvas({ className = "" }: { className?: string }) {
     removeMissingImages();
   }, [markImages, removeMarkImage]);
 
-  const transformerRef = useRef<Konva.Transformer>(null);
-
   const loadImages = async () => {
     const selectedImages = await open({
       title: "Select image/s to open",
@@ -61,15 +61,31 @@ function MarkCanvas({ className = "" }: { className?: string }) {
       return;
     }
 
-    for (const img of selectedImages) {
-      info(`Loading ${img}`);
+    const stage = transformerRef.current!.getStage()!;
+    const container = stage.container();
 
-      const assetUrl = convertFileSrc(img);
+    const stageWidth = container.offsetWidth;
+    const stageHeight = window.innerHeight;
+    const scale = stage.scaleX();
+    const offset = stage.offset();
+    const centerX = (stageWidth / 2 - stage.x()) / scale + offset.x;
+    const centerY = (stageHeight / 2 - stage.y()) / scale + offset.y;
+
+    for (const imgPath of selectedImages) {
+      info(`Loading ${imgPath}`);
+
+      const assetUrl = convertFileSrc(imgPath);
+      const img = new Image();
+      img.src = assetUrl;
+
       const markImage: MarkImageType = {
         id: crypto.randomUUID(),
-        filepath: img,
+        filepath: imgPath,
         src: assetUrl,
-        position: { x: 0, y: 0 },
+        position: {
+          x: centerX - img.width / 2,
+          y: centerY - img.height / 2,
+        },
         rotation: 0,
         scale: { x: 1, y: 1 },
         markIds: [],
