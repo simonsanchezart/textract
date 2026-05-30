@@ -21,6 +21,8 @@ import MarkImage from "./MarkImage";
 
 function MarkCanvas({ className = "" }: { className?: string }) {
   const markImages = useMarkStore(state => state.images);
+  const atlasImages = useAtlasStore(state => state.images);
+  const updateImageBase64 = useAtlasStore(state => state.updateImageBase64);
   const addMarkImage = useMarkStore(state => state.addImage);
   const updateMarkDirty = useMarkStore(state => state.updateMarkDirty);
   const removeMarkImage = useMarkStore(state => state.removeImage);
@@ -160,18 +162,25 @@ function MarkCanvas({ className = "" }: { className?: string }) {
         });
 
         results.forEach((base64, idx) => {
-          updateMarkDirty(dirtyIds[idx], false);
+          const markId = dirtyIds[idx];
+          const existingAtlasImage = Object.values(atlasImages).find(image => image.markId === markId);
 
-          const atlasImage: AtlasImageType = {
-            id: crypto.randomUUID(),
-            base64,
-            markId: dirtyIds[idx],
-            position: { x: 0, y: 0 },
-            rotation: 0,
-            scale: { x: 1, y: 1 },
-          };
+          if (existingAtlasImage) {
+            updateImageBase64(existingAtlasImage.id, base64);
+          }
+          else {
+            const atlasImage: AtlasImageType = {
+              id: crypto.randomUUID(),
+              base64,
+              markId,
+              position: { x: 0, y: 0 },
+              rotation: 0,
+              scale: { x: 1, y: 1 },
+            };
 
-          addAtlasImage(atlasImage);
+            addAtlasImage(atlasImage);
+          }
+          updateMarkDirty(markId, false);
         });
       }),
     );

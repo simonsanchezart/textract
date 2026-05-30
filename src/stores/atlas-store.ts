@@ -14,6 +14,7 @@ type AtlasStore = {
 
   addImage: (image: AtlasImageType) => void;
   removeImage: (imageId: string) => void;
+  updateImageBase64: (imageId: string, base64: string) => void;
   updateImagePosition: (imageId: string, newPos: Vec2) => void;
   updateImageScale: (imageId: string, newScale: Vec2) => void;
   updateImageRotation: (imageId: string, newRot: number) => void;
@@ -60,6 +61,13 @@ export const useAtlasStore = create(
           if (!state.images[imageId])
             return;
           state.images[imageId].rotation = newRot;
+        }),
+
+      updateImageBase64: (imageId, base64) =>
+        set((state) => {
+          if (!state.images[imageId])
+            return;
+          state.images[imageId].base64 = base64;
         }),
 
       removeImage: imageId =>
