@@ -8,6 +8,7 @@ import MarkPoint from "./MarkPoint";
 function Mark({ mark }: { mark: MarkType }) {
   const updateMark = useMarkStore(s => s.updateMark);
   const updateMarkPoint = useMarkStore(s => s.updateMarkPoint);
+  const updateMarkDirty = useMarkStore(s => s.updateMarkDirty);
   const removeMark = useMarkStore(s => s.removeMark);
 
   const [markOffset, setMarkOffset] = useState({ x: 0, y: 0 });
@@ -20,7 +21,7 @@ function Mark({ mark }: { mark: MarkType }) {
         id={mark.id}
         points={pointsFlat}
         fill={`${Colors.GREEN}11`}
-        stroke={Colors.LIGHT}
+        stroke={mark.dirty ? Colors.RED : Colors.LIGHT}
         strokeWidth={4.0}
         shadowOffset={{ x: 0.5, y: 0.5 }}
         shadowOpacity={1}
@@ -43,6 +44,7 @@ function Mark({ mark }: { mark: MarkType }) {
           updateMark(mark.id, newPoints);
           e.target.setPosition({ x: 0, y: 0 });
           setMarkOffset({ x: 0, y: 0 });
+          updateMarkDirty(mark.id, true);
         }}
         onPointerMove={(e) => {
           if (e.evt.altKey) {
@@ -59,7 +61,6 @@ function Mark({ mark }: { mark: MarkType }) {
 
       {points.map((p, id) => {
         return (
-
           <MarkPoint
             // eslint-disable-next-line react/no-array-index-key
             key={id}
@@ -74,6 +75,7 @@ function Mark({ mark }: { mark: MarkType }) {
             }}
             onDragEnd={(e) => {
               updateMarkPoint(mark.id, id, { x: e.target.x(), y: e.target.y() });
+              updateMarkDirty(mark.id, true);
             }}
           />
         );

@@ -7,6 +7,7 @@ export type MarkType = {
   id: string;
   imageId: string;
   points: Vec2[];
+  dirty: boolean;
 };
 
 export type MarkImageType = {
@@ -26,6 +27,7 @@ type MarkStore = {
   addMark: (imageId: string, mark: MarkType) => void;
   updateMark: (markId: string, newPoints: Vec2[]) => void;
   updateMarkPoint: (markId: string, pointIdx: number, newPoint: Vec2) => void;
+  updateMarkDirty: (markId: string, dirty: boolean) => void;
   removeMark: (markId: string) => void;
   removeImage: (imageId: string) => void;
 };
@@ -82,6 +84,13 @@ export const useMarkStore = create(
           if (!state.marks[markId])
             return;
           state.marks[markId].points[pointIdx] = newPoint;
+        }),
+
+      updateMarkDirty: (markId, dirty) =>
+        set((state) => {
+          if (!state.marks[markId])
+            return;
+          state.marks[markId].dirty = dirty;
         }),
 
       removeMark: markId =>

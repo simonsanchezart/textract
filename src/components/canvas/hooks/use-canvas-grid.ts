@@ -8,7 +8,7 @@ type CanvasGridSettings = {
 };
 
 export default function useCanvasGrid(settings: CanvasGridSettings, stageRef: React.RefObject<Konva.Stage | null>) {
-  const { dotSpacing = 16, dotSize = 4, zoomLimit = 0.35 } = settings;
+  const { dotSpacing = 16, dotSize = 4, zoomLimit = 0.7 } = settings;
 
   const drawGrid = useCallback((ctx: Konva.Context, shape: Konva.Shape) => {
     const clampedSpacing = Math.max(16, dotSpacing);

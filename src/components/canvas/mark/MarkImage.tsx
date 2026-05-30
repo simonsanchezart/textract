@@ -40,6 +40,7 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
         id: crypto.randomUUID(),
         imageId: imageData.id,
         points: sortedPoints,
+        dirty: true,
       });
 
       setCurrentPoints([]);
