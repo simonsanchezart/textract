@@ -22,6 +22,7 @@ import MarkImage from "./MarkImage";
 function MarkCanvas({ className = "" }: { className?: string }) {
   const markImages = useMarkStore(state => state.images);
   const addMarkImage = useMarkStore(state => state.addImage);
+  const updateMarkDirty = useMarkStore(state => state.updateMarkDirty);
   const removeMarkImage = useMarkStore(state => state.removeImage);
   const addAtlasImage = useAtlasStore(state => state.addImage);
   const selectedNodes = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].selectedNodes);
@@ -106,6 +107,10 @@ function MarkCanvas({ className = "" }: { className?: string }) {
         if (!hoverMark)
           return;
 
+        // todo: warn
+        if (!hoverMark.dirty)
+          return;
+
         const image = markImages[hoverMark.imageId];
         if (!image)
           return;
@@ -123,7 +128,13 @@ function MarkCanvas({ className = "" }: { className?: string }) {
 
     await Promise.all(
       entries.map(async ({ image, markIds }) => {
-        const markPoints = markIds.flatMap(id =>
+        const dirtyIds = markIds.filter(id => marks[id].dirty);
+
+        // todo: warn and popup
+        if (dirtyIds.length === 0)
+          return;
+
+        const markPoints = dirtyIds.flatMap(id =>
           marks[id].points.flatMap(p => [Math.round(p.x), Math.round(p.y)]),
         );
 
@@ -133,10 +144,12 @@ function MarkCanvas({ className = "" }: { className?: string }) {
         });
 
         results.forEach((base64, idx) => {
+          updateMarkDirty(dirtyIds[idx], false);
+
           const atlasImage: AtlasImageType = {
             id: crypto.randomUUID(),
             base64,
-            markId: markIds[idx],
+            markId: dirtyIds[idx],
             position: { x: 0, y: 0 },
             rotation: 0,
             scale: { x: 1, y: 1 },
