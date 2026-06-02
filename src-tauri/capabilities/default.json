@@ -25,7 +25,16 @@
         }
       ]
     },
+    {
+      "identifier": "opener:allow-open-path",
+      "allow": [
+        {
+          "path": "**/*"
+        }
+      ]
+    },
     "dialog:default",
-    "log:default"
+    "log:default",
+    "opener:default"
   ]
 }

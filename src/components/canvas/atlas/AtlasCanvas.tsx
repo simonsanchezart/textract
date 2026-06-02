@@ -1,10 +1,13 @@
 import type Konva from "konva";
+import { dirname } from "@tauri-apps/api/path";
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeFile } from "@tauri-apps/plugin-fs";
 import { info } from "@tauri-apps/plugin-log";
+import { openPath, openUrl, revealItemInDir } from "@tauri-apps/plugin-opener";
 import { useRef } from "react";
 import { BiExport, BiSolidFileExport } from "react-icons/bi";
 import { Group, Rect, Text } from "react-konva";
+import { toast } from "sonner";
 import { Toolbar, ToolbarAction } from "@/components/Toolbar";
 import { ContextMenuCheckboxItem, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator } from "@/components/ui/ContextMenu";
 import { useAtlasStore } from "@/stores/atlas-store";
@@ -56,6 +59,13 @@ function AtlasCanvas({ className }: { className?: string }) {
 
     await writeFile(exportPath, imageArray);
     info(`Exported canvas to ${exportPath}`);
+    // todo: open image/copy path actions?
+    toast.success(`Exported canvas to ${exportPath}`, {
+      action: {
+        label: "Show in Folder",
+        onClick: () => revealItemInDir(exportPath),
+      },
+    });
   };
 
   const exportSelected = async () => {
@@ -65,6 +75,7 @@ function AtlasCanvas({ className }: { className?: string }) {
 
     if (!transformer.getNodes().length) {
       info("No selected images to export");
+      toast.warning("No selected images to export");
       return;
     }
 
@@ -78,6 +89,7 @@ function AtlasCanvas({ className }: { className?: string }) {
     if (!exportDir)
       return;
 
+    const exportBasePath = await dirname(exportDir);
     const selectedImages = transformer.getNodes();
     for (const img of selectedImages) {
       const dataUrl = img.toDataURL({
@@ -90,7 +102,14 @@ function AtlasCanvas({ className }: { className?: string }) {
 
       const exportPath = `${exportDir}${img._id}.png`;
       await writeFile(exportPath, imageArray, { createNew: true });
+
       info(`Exported image with id ${img._id} to ${exportPath}`);
+      toast.success(`Exported image with id ${img._id} to ${exportPath}`, {
+        action: {
+          label: "Open Folder",
+          onClick: () => openPath(exportBasePath),
+        },
+      });
     }
   };
 

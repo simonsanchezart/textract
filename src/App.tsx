@@ -1,3 +1,4 @@
+import { Toaster } from "sonner";
 import Footer from "./components/footer/Footer";
 import Navbar from "./components/Navbar";
 import Textract from "./components/Textract";
@@ -15,6 +16,19 @@ function App() {
       <Navbar />
       <Textract />
       <Footer />
+      <Toaster
+        theme="dark"
+        visibleToasts={6}
+        position="bottom-left"
+        offset={{ bottom: 52, left: 16 }}
+        richColors
+        closeButton
+        swipeDirections={["left"]}
+        toastOptions={{
+          style: { width: "fit-content" },
+        }}
+
+      />
     </main>
   );
 }
