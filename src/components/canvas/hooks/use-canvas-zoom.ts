@@ -1,5 +1,6 @@
 import type Konva from "konva";
 import type { CanvasType } from "@/types/types";
+import { useCallback } from "react";
 import { useCanvasStore } from "@/stores/canvas-store";
 
 type CanvasZoomSettings = {
@@ -11,10 +12,7 @@ type CanvasZoomSettings = {
 };
 
 export default function useCanvasZoom({ stageRef, zoomMultiplier = 1.1, minZoom = 0.1, maxZoom = 100, ...props }: CanvasZoomSettings) {
-  const setCanvasScale = useCanvasStore(s => s.setCanvasScale);
-  const setCanvasPosition = useCanvasStore(s => s.setCanvasPosition);
-
-  const handleZoom = (e: Konva.KonvaEventObject<WheelEvent>) => {
+  const handleZoom = useCallback((e: Konva.KonvaEventObject<WheelEvent>) => {
     e.evt.preventDefault();
     const stage = stageRef.current;
 
@@ -41,9 +39,9 @@ export default function useCanvasZoom({ stageRef, zoomMultiplier = 1.1, minZoom 
       y: pointer.y - (mousePointTo.y - offset.y) * newScale,
     };
 
-    setCanvasPosition(props.canvasType, newPos);
-    setCanvasScale(props.canvasType, newScale);
-  };
+    useCanvasStore.getState().setCanvasPosition(props.canvasType, newPos);
+    useCanvasStore.getState().setCanvasScale(props.canvasType, newScale);
+  }, [maxZoom, minZoom, props.canvasType, stageRef, zoomMultiplier]);
 
   return handleZoom;
 }

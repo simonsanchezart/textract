@@ -5,15 +5,12 @@ import FooterBooleanSetting from "./FooterBooleanSetting";
 import FooterNumberSetting from "./FooterNumberSetting";
 
 export default function Footer() {
-  const { snap, setSnap, atlasResolution, setAtlasResolution, atlasAlpha, setAtlasAlpha }
+  const { snap, atlasResolution, atlasAlpha }
     = useSettingsStore(
       useShallow(s => ({
         snap: s.snap,
-        setSnap: s.setSnap,
         atlasResolution: s.atlasResolution,
-        setAtlasResolution: s.setAtlasResolution,
         atlasAlpha: s.atlasAlpha,
-        setAtlasAlpha: s.setAtlasAlpha,
       })),
     );
 
@@ -23,7 +20,7 @@ export default function Footer() {
         <FooterNumberSetting
           title="Snap"
           value={snap}
-          setValue={setSnap}
+          setValue={useSettingsStore.getState().setSnap}
           unit="px"
           min={2}
           max={96}
@@ -37,7 +34,7 @@ export default function Footer() {
         <FooterNumberSetting
           title="Resolution"
           value={atlasResolution}
-          setValue={setAtlasResolution}
+          setValue={useSettingsStore.getState().setAtlasResolution}
           unit="px"
           min={16}
           max={8192}
@@ -47,7 +44,7 @@ export default function Footer() {
           className="w-18"
         />
 
-        <FooterBooleanSetting value={atlasAlpha} setValue={setAtlasAlpha} name="Transparent Background" />
+        <FooterBooleanSetting value={atlasAlpha} setValue={useSettingsStore.getState().setAtlasAlpha} name="Transparent Background" />
       </div>
     </div>
   );

@@ -22,11 +22,6 @@ import MarkImage from "./MarkImage";
 function MarkCanvas({ className = "" }: { className?: string }) {
   const markImages = useMarkStore(state => state.images);
   const atlasImages = useAtlasStore(state => state.images);
-  const updateImageBase64 = useAtlasStore(state => state.updateImageBase64);
-  const addMarkImage = useMarkStore(state => state.addImage);
-  const updateMarkDirty = useMarkStore(state => state.updateMarkDirty);
-  const removeMarkImage = useMarkStore(state => state.removeImage);
-  const addAtlasImage = useAtlasStore(state => state.addImage);
   const selectedNodes = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].selectedNodes);
   const hoverShape = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].hoverShape);
 
@@ -43,12 +38,12 @@ function MarkCanvas({ className = "" }: { className?: string }) {
 
       missingImages.forEach((id) => {
         warn(`Removing missing image: ${markImages[id].filepath}`);
-        removeMarkImage(id);
+        useMarkStore.getState().removeImage(id);
       });
     };
 
     removeMissingImages();
-  }, [markImages, removeMarkImage]);
+  }, [markImages]);
 
   const loadImages = async () => {
     const selectedImages = await open({
@@ -93,7 +88,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
         markIds: [],
       };
 
-      addMarkImage(markImage);
+      useMarkStore.getState().addImage(markImage);
     }
   };
 
@@ -166,7 +161,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
           const existingAtlasImage = Object.values(atlasImages).find(image => image.markId === markId);
 
           if (existingAtlasImage) {
-            updateImageBase64(existingAtlasImage.id, base64);
+            useAtlasStore.getState().updateImageBase64(existingAtlasImage.id, base64);
           }
           else {
             const atlasImage: AtlasImageType = {
@@ -178,9 +173,9 @@ function MarkCanvas({ className = "" }: { className?: string }) {
               scale: { x: 1, y: 1 },
             };
 
-            addAtlasImage(atlasImage);
+            useAtlasStore.getState().addImage(atlasImage);
           }
-          updateMarkDirty(markId, false);
+          useMarkStore.getState().updateMarkDirty(markId, false);
         });
       }),
     );
@@ -255,7 +250,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
       <Canvas
         transformerRef={transformerRef}
         onDelete={async (ids) => {
-          for (const id of ids) removeMarkImage(id);
+          for (const id of ids) useMarkStore.getState().removeImage(id);
         }}
         contextMenu={contextMenu()}
         canvasType={CanvasType.MARK}

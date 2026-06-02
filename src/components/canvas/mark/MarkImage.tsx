@@ -13,10 +13,6 @@ import Mark from "./Mark";
 import MarkPoint from "./MarkPoint";
 
 function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
-  const updateImagePosition = useMarkStore(s => s.updateImagePosition);
-  const updateImageScale = useMarkStore(s => s.updateImageScale);
-  const updateImageRotation = useMarkStore(s => s.updateImageRotation);
-  const addMark = useMarkStore(s => s.addMark);
   const marks = useMarkStore(useShallow(s => s.marks));
 
   const [image] = useImage(imageData.src);
@@ -36,7 +32,7 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
         return angleA < angleB ? 1 : -1;
       });
 
-      addMark(imageData.id, {
+      useMarkStore.getState().addMark(imageData.id, {
         id: crypto.randomUUID(),
         imageId: imageData.id,
         points: sortedPoints,
@@ -53,7 +49,7 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
   const onDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
     if (e.target.name() !== "master")
       return;
-    updateImagePosition(imageData.id, { x: e.currentTarget.attrs.x, y: e.currentTarget.attrs.y });
+    useMarkStore.getState().updateImagePosition(imageData.id, { x: e.currentTarget.attrs.x, y: e.currentTarget.attrs.y });
   };
 
   return (
@@ -66,15 +62,15 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
         const pos = { x: attrs.x, y: attrs.y };
         const rotation = attrs.rotation;
 
-        updateImageScale(imageData.id, scale);
-        updateImageRotation(imageData.id, rotation);
-        updateImagePosition(imageData.id, pos);
+        useMarkStore.getState().updateImageScale(imageData.id, scale);
+        useMarkStore.getState().updateImageRotation(imageData.id, rotation);
+        useMarkStore.getState().updateImagePosition(imageData.id, pos);
       }}
       x={imageData.position.x}
       y={imageData.position.y}
       rotation={imageData.rotation}
       scale={imageData.scale}
-      resetScale={() => updateImageScale(imageData.id, { x: 1.0, y: 1.0 })}
+      resetScale={() => useMarkStore.getState().updateImageScale(imageData.id, { x: 1.0, y: 1.0 })}
       onClick={(e) => {
         if (e.evt.button === 2)
           setCurrentPoints([]);

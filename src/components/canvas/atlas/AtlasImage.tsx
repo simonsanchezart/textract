@@ -5,15 +5,12 @@ import useImage from "use-image";
 import { useAtlasStore } from "@/stores/atlas-store";
 
 function AtlasImageComponent({ imageData }: { imageData: AtlasImageType }) {
-  const updateImagePosition = useAtlasStore(s => s.updateImagePosition);
-  const updateImageScale = useAtlasStore(s => s.updateImageScale);
-  const updateImageRotation = useAtlasStore(s => s.updateImageRotation);
   const [image] = useImage(imageData.base64);
 
   const onDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
     if (e.target.name() !== "master")
       return;
-    updateImagePosition(imageData.id, { x: e.currentTarget.attrs.x, y: e.currentTarget.attrs.y });
+    useAtlasStore.getState().updateImagePosition(imageData.id, { x: e.currentTarget.attrs.x, y: e.currentTarget.attrs.y });
   };
 
   return (
@@ -24,16 +21,16 @@ function AtlasImageComponent({ imageData }: { imageData: AtlasImageType }) {
       y={imageData.position.y}
       rotation={imageData.rotation}
       scale={imageData.scale}
-      resetScale={() => updateImageScale(imageData.id, { x: 1.0, y: 1.0 })}
+      resetScale={() => useAtlasStore.getState().updateImageScale(imageData.id, { x: 1.0, y: 1.0 })}
       onTransformEnd={(e) => {
         const attrs = e.currentTarget.attrs;
         const scale = { x: attrs.scaleX, y: attrs.scaleY };
         const pos = { x: attrs.x, y: attrs.y };
         const rotation = attrs.rotation;
 
-        updateImageScale(imageData.id, scale);
-        updateImageRotation(imageData.id, rotation);
-        updateImagePosition(imageData.id, pos);
+        useAtlasStore.getState().updateImageScale(imageData.id, scale);
+        useAtlasStore.getState().updateImageRotation(imageData.id, rotation);
+        useAtlasStore.getState().updateImagePosition(imageData.id, pos);
       }}
       onDragStart={(e) => {
         if (e.evt.buttons !== 1) {

@@ -6,11 +6,6 @@ import { Colors } from "@/types/types";
 import MarkPoint from "./MarkPoint";
 
 function Mark({ mark }: { mark: MarkType }) {
-  const updateMark = useMarkStore(s => s.updateMark);
-  const updateMarkPoint = useMarkStore(s => s.updateMarkPoint);
-  const updateMarkDirty = useMarkStore(s => s.updateMarkDirty);
-  const removeMark = useMarkStore(s => s.removeMark);
-
   const [markOffset, setMarkOffset] = useState({ x: 0, y: 0 });
   const [points, setPoints] = useState(mark.points);
   const pointsFlat = useMemo(() => points.flatMap(p => [p.x, p.y]), [points]);
@@ -25,12 +20,12 @@ function Mark({ mark }: { mark: MarkType }) {
         strokeWidth={4.0}
         shadowOffset={{ x: 0.5, y: 0.5 }}
         shadowOpacity={1}
-        removeMark={() => removeMark(mark.id)}
+        removeMark={() => useMarkStore.getState().removeMark(mark.id)}
         closed
         draggable
         onClick={(e) => {
           if (e.evt.altKey)
-            removeMark(mark.id);
+            useMarkStore.getState().removeMark(mark.id);
         }}
         onDragMove={(e) => {
           setMarkOffset({ x: e.target.x(), y: e.target.y() });
@@ -41,10 +36,10 @@ function Mark({ mark }: { mark: MarkType }) {
           const newPoints = points.map(p => ({ x: p.x + dx, y: p.y + dy }));
 
           setPoints(newPoints);
-          updateMark(mark.id, newPoints);
+          useMarkStore.getState().updateMark(mark.id, newPoints);
           e.target.setPosition({ x: 0, y: 0 });
           setMarkOffset({ x: 0, y: 0 });
-          updateMarkDirty(mark.id, true);
+          useMarkStore.getState().updateMarkDirty(mark.id, true);
         }}
         onPointerMove={(e) => {
           if (e.evt.altKey) {
@@ -74,8 +69,8 @@ function Mark({ mark }: { mark: MarkType }) {
               });
             }}
             onDragEnd={(e) => {
-              updateMarkPoint(mark.id, id, { x: e.target.x(), y: e.target.y() });
-              updateMarkDirty(mark.id, true);
+              useMarkStore.getState().updateMarkPoint(mark.id, id, { x: e.target.x(), y: e.target.y() });
+              useMarkStore.getState().updateMarkDirty(mark.id, true);
             }}
           />
         );
