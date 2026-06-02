@@ -15,10 +15,7 @@ import AtlasImageComponent from "./AtlasImage";
 
 function AtlasCanvas({ className }: { className?: string }) {
   const atlasImages = useAtlasStore(state => state.images);
-  const removeAtlasImage = useAtlasStore(state => state.removeImage);
-
   const atlasAlpha = useSettingsStore(s => s.atlasAlpha);
-  const setAtlasAlpha = useSettingsStore(s => s.setAtlasAlpha);
   const atlasResolution = useSettingsStore(s => s.atlasResolution);
 
   const masterGroupRef = useRef<Konva.Group>(null);
@@ -110,7 +107,7 @@ function AtlasCanvas({ className }: { className?: string }) {
         Export Selected
       </ContextMenuItem>
 
-      <ContextMenuCheckboxItem checked={atlasAlpha} onClick={() => setAtlasAlpha(!atlasAlpha)}>
+      <ContextMenuCheckboxItem checked={atlasAlpha} onClick={() => useSettingsStore.getState().setAtlasAlpha(!atlasAlpha)}>
         Transparent Background
       </ContextMenuCheckboxItem>
       <ContextMenuSeparator />
@@ -124,7 +121,7 @@ function AtlasCanvas({ className }: { className?: string }) {
         transformerRef={transformerRef}
         contextMenu={contextMenu()}
         onDelete={async (ids) => {
-          for (const id of ids) removeAtlasImage(id);
+          for (const id of ids) useAtlasStore.getState().removeImage(id);
         }}
         offset={{ x: atlasResolution / 2, y: atlasResolution / 2 }}
       >

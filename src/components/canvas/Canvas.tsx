@@ -32,7 +32,6 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
 
   const snapSize = useSettingsStore(s => s.snap);
   const canvasState = useCanvasStore(s => s.canvas[canvasType]);
-  const setHoverShape = useCanvasStore(s => s.setHoverShape);
 
   const drawGrid = useCanvasGrid({ dotSize: 1, dotSpacing: snapSize }, stageRef);
   const handleZoom = useCanvasZoom({ stageRef, canvasType });
@@ -99,7 +98,7 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
 
               const stage = stageRef.current;
               const shape = stage.getIntersection(stage.getPointerPosition()!);
-              setHoverShape(canvasType, shape);
+              useCanvasStore.getState().setHoverShape(canvasType, shape);
             }}
             {...props}
           >

@@ -1,5 +1,6 @@
 import type Konva from "konva";
 import type { CanvasType } from "@/types/types";
+import { useCallback } from "react";
 import { useCanvasStore } from "@/stores/canvas-store";
 
 type CanvasPanSettings = {
@@ -8,19 +9,17 @@ type CanvasPanSettings = {
 };
 
 export default function useCanvasPanning({ stageRef, canvasType }: CanvasPanSettings) {
-  const setCanvasPosition = useCanvasStore(s => s.setCanvasPosition);
-
-  const handlePan = () => {
+  const handlePan = useCallback(() => {
     if (!stageRef.current)
       return;
 
     const stage = stageRef.current;
     const stageAttrs = stage.attrs;
     const { x, y } = { x: stageAttrs.x, y: stageAttrs.y };
-    setCanvasPosition(canvasType, { x, y });
-  };
+    useCanvasStore.getState().setCanvasPosition(canvasType, { x, y });
+  }, []);
 
-  const resetPan = () => {
+  const resetPan = useCallback(() => {
     if (!stageRef.current)
       return;
 
@@ -30,11 +29,11 @@ export default function useCanvasPanning({ stageRef, canvasType }: CanvasPanSett
     const stageWidth = container.offsetWidth;
     const stageHeight = window.innerHeight; // container height is 0
 
-    setCanvasPosition(canvasType, {
+    useCanvasStore.getState().setCanvasPosition(canvasType, {
       x: stageWidth / 2,
       y: stageHeight / 2,
     });
-  };
+  }, []);
 
   return { handlePan, resetPan };
 }
