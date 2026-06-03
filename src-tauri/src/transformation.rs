@@ -12,14 +12,6 @@ use std::{
 };
 use tauri::{AppHandle, Emitter};
 
-#[derive(Clone, Serialize)]
-struct ConversionProgress {
-    img_name: String,
-    idx: usize,
-    mark_count: usize,
-    progress: usize,
-}
-
 #[tauri::command]
 pub async fn transform_image(
     app: AppHandle,
@@ -60,17 +52,6 @@ pub async fn transform_image(
             );
 
             log::info!("Finished processing mark #{} for {}", (i + 1), img_name);
-            progress.fetch_add(1, Ordering::Relaxed);
-            app.emit(
-                "conversion-progress",
-                ConversionProgress {
-                    img_name: img_name.to_string(),
-                    idx: i,
-                    mark_count,
-                    progress: (progress.load(Ordering::Relaxed) * 100) / mark_count,
-                },
-            )
-            .map_err(|e| e.to_string())?;
 
             let base64 = image_to_base_64(&result)?;
             Ok(base64)

@@ -5,7 +5,7 @@ import { useMarkStore } from "@/stores/mark-store";
 import { Colors } from "@/types/types";
 import MarkPoint from "./MarkPoint";
 
-function Mark({ mark }: { mark: MarkType }) {
+function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
   const [markOffset, setMarkOffset] = useState({ x: 0, y: 0 });
   const [points, setPoints] = useState(mark.points);
   const pointsFlat = useMemo(() => points.flatMap(p => [p.x, p.y]), [points]);
@@ -17,7 +17,7 @@ function Mark({ mark }: { mark: MarkType }) {
         points={pointsFlat}
         fill={`${Colors.GREEN}11`}
         stroke={mark.dirty ? Colors.RED : Colors.LIGHT}
-        strokeWidth={4.0}
+        strokeWidth={4.0 * scale}
         shadowOffset={{ x: 0.5, y: 0.5 }}
         shadowOpacity={1}
         removeMark={() => useMarkStore.getState().removeMark(mark.id)}
@@ -72,6 +72,7 @@ function Mark({ mark }: { mark: MarkType }) {
               useMarkStore.getState().updateMarkPoint(mark.id, id, { x: e.target.x(), y: e.target.y() });
               useMarkStore.getState().updateMarkDirty(mark.id, true);
             }}
+            scaleFactor={scale}
           />
         );
       })}

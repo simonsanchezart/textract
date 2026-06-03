@@ -58,8 +58,8 @@ function AtlasCanvas({ className }: { className?: string }) {
     const imageArray = new Uint8Array(buffer);
 
     await writeFile(exportPath, imageArray);
+
     info(`Exported canvas to ${exportPath}`);
-    // todo: open image/copy path actions?
     toast.success(`Exported canvas to ${exportPath}`, {
       action: {
         label: "Show in Folder",

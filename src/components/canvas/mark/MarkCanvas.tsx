@@ -1,6 +1,7 @@
 import type { AtlasImageType } from "@/stores/atlas-store";
 import type { MarkImageType } from "@/stores/mark-store";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
+import { basename } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/plugin-dialog";
 import { exists } from "@tauri-apps/plugin-fs";
 import { info, warn } from "@tauri-apps/plugin-log";
@@ -10,6 +11,7 @@ import { useEffect, useRef } from "react";
 import { CgAdd } from "react-icons/cg";
 import { FaPlay } from "react-icons/fa";
 import { Line } from "react-konva";
+import { toast } from "sonner";
 import { Toolbar, ToolbarAction } from "@/components/Toolbar";
 import { ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuShortcut, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger } from "@/components/ui/ContextMenu";
 import { useAtlasStore } from "@/stores/atlas-store";
@@ -37,6 +39,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
       }
 
       missingImages.forEach((id) => {
+        toast.warning(`Removing missing image: ${markImages[id].filepath}`);
         warn(`Removing missing image: ${markImages[id].filepath}`);
         useMarkStore.getState().removeImage(id);
       });
@@ -69,11 +72,14 @@ function MarkCanvas({ className = "" }: { className?: string }) {
     const centerY = (stageHeight / 2 - stage.y()) / scale + offset.y;
 
     for (const imgPath of selectedImages) {
+      const imgName = await basename(imgPath);
+      toast.info(`Loading ${imgName}`);
       info(`Loading ${imgPath}`);
 
       const assetUrl = convertFileSrc(imgPath);
       const img = new Image();
       img.src = assetUrl;
+      await img.decode();
 
       const markImage: MarkImageType = {
         id: crypto.randomUUID(),
@@ -85,6 +91,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
         },
         rotation: 0,
         scale: { x: 1, y: 1 },
+        sizeSum: img.width + img.height,
         markIds: [],
       };
 
@@ -110,7 +117,6 @@ function MarkCanvas({ className = "" }: { className?: string }) {
         break;
       }
       case "HOVERED": {
-        // todo: warn
         if (!hoverShape)
           return;
 
@@ -120,9 +126,11 @@ function MarkCanvas({ className = "" }: { className?: string }) {
         if (!hoverMark)
           return;
 
-        // todo: warn
-        if (!hoverMark.dirty)
+        if (!hoverMark.dirty) {
+          toast.warning("No need to process unmodified mark");
+          warn("No need to process unmodified mark");
           return;
+        }
 
         const image = markImages[hoverMark.imageId];
         if (!image)
@@ -137,15 +145,20 @@ function MarkCanvas({ className = "" }: { className?: string }) {
 
         break;
       }
+      default:
+        throw new Error(`${type} is not a valid action`);
     }
 
     await Promise.all(
       entries.map(async ({ image, markIds }) => {
         const dirtyIds = markIds.filter(id => marks[id].dirty);
+        const imgName = await basename(image.filepath);
 
-        // todo: warn and popup
-        if (dirtyIds.length === 0)
+        if (dirtyIds.length === 0) {
+          toast.warning(`No modified marks for image ${imgName}`);
+          warn(`No modified marks for image ${imgName}`);
           return;
+        }
 
         const markPoints = dirtyIds.flatMap(id =>
           marks[id].points.flatMap(p => [Math.round(p.x), Math.round(p.y)]),
@@ -177,6 +190,9 @@ function MarkCanvas({ className = "" }: { className?: string }) {
           }
           useMarkStore.getState().updateMarkDirty(markId, false);
         });
+
+        toast.success(`Finished processing ${dirtyIds.length} marks for ${imgName}`);
+        info(`Finished processing ${dirtyIds.length} marks for ${imgName}`);
       }),
     );
   };

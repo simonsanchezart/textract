@@ -14,6 +14,7 @@ export type MarkImageType = {
   filepath: string;
   src: string;
   markIds: string[];
+  sizeSum: number;
 } & ImageType;
 
 type MarkStore = {

@@ -5,10 +5,11 @@ import { Colors } from "@/types/types";
 type MarkPointProps = {
   position: Vec2;
   offset?: Vec2;
+  scaleFactor?: number;
 } & React.ComponentProps<typeof Rect>;
 
-function MarkPoint({ position, offset = { x: 0, y: 0 }, ...props }: MarkPointProps) {
-  const POINT_SIZE = 12;
+function MarkPoint({ position, offset = { x: 0, y: 0 }, scaleFactor = 1, ...props }: MarkPointProps) {
+  const POINT_SIZE = 12 * scaleFactor;
   const POINT_SIZE_H = POINT_SIZE / 2;
 
   return (

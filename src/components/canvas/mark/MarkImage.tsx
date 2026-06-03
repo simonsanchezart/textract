@@ -19,6 +19,8 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
   const [currentPoints, setCurrentPoints] = useState<Vec2[]>([]);
   const currentPointsFlat = useMemo(() => currentPoints.flatMap(p => [p.x, p.y]), [currentPoints]);
 
+  const scaleFactor = useMemo(() => imageData.sizeSum * 0.0001, [imageData.sizeSum]);
+
   const addPoint = (e: KonvaEventObject<MouseEvent>) => {
     const pos = e.target.getRelativePointerPosition()!;
 
@@ -95,6 +97,7 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
         <Group key={id}>
           <MarkPoint
             position={{ x: m.x, y: m.y }}
+            scaleFactor={scaleFactor}
             onDragMove={(e) => {
               setCurrentPoints((prev) => {
                 const next = [...prev];
@@ -116,7 +119,7 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
         </Group>
       ))}
 
-      {imageData.markIds.map(id => marks[id] && <Mark key={id} mark={marks[id]} />)}
+      {imageData.markIds.map(id => marks[id] && <Mark key={id} mark={marks[id]} scale={scaleFactor} />)}
     </Group>
   );
 }
