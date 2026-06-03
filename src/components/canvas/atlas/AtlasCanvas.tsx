@@ -3,7 +3,7 @@ import { dirname } from "@tauri-apps/api/path";
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeFile } from "@tauri-apps/plugin-fs";
 import { info } from "@tauri-apps/plugin-log";
-import { openPath, openUrl, revealItemInDir } from "@tauri-apps/plugin-opener";
+import { openPath, revealItemInDir } from "@tauri-apps/plugin-opener";
 import { useRef } from "react";
 import { BiExport, BiSolidFileExport } from "react-icons/bi";
 import { Group, Rect, Text } from "react-konva";

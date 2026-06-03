@@ -5,21 +5,16 @@ use rayon::{
     iter::{IndexedParallelIterator, ParallelIterator},
     slice::ParallelSlice,
 };
-use serde::Serialize;
 use std::{
     io::Cursor,
-    sync::atomic::{AtomicUsize, Ordering},
 };
-use tauri::{AppHandle, Emitter};
 
 #[tauri::command]
 pub async fn transform_image(
-    app: AppHandle,
     img_path: String,
     points: Vec<f32>,
 ) -> Result<Vec<String>, String> {
     let mark_count = points.len() / 8;
-    let progress = AtomicUsize::new(0);
     log::info!("Processing {mark_count} marks for {img_path}");
 
     let img = open(&img_path).unwrap().to_rgba8();

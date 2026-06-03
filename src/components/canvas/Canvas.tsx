@@ -62,7 +62,7 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
         break;
       }
       default:
-        break
+        break;
     }
   };
 
@@ -121,15 +121,15 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
                   canvasType === CanvasType.MARK
                     ? ["top-left", "top-right", "bottom-left", "bottom-right"]
                     : [
-                      "top-left",
-                      "top-right",
-                      "bottom-left",
-                      "bottom-right",
-                      "middle-left",
-                      "middle-right",
-                      "top-center",
-                      "bottom-center",
-                    ]
+                        "top-left",
+                        "top-right",
+                        "bottom-left",
+                        "bottom-right",
+                        "middle-left",
+                        "middle-right",
+                        "top-center",
+                        "bottom-center",
+                      ]
                 }
               />
             </Layer>

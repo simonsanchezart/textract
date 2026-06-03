@@ -17,7 +17,7 @@ export default function useCanvasPanning({ stageRef, canvasType }: CanvasPanSett
     const stageAttrs = stage.attrs;
     const { x, y } = { x: stageAttrs.x, y: stageAttrs.y };
     useCanvasStore.getState().setCanvasPosition(canvasType, { x, y });
-  }, []);
+  }, [canvasType, stageRef]);
 
   const resetPan = useCallback(() => {
     if (!stageRef.current)
@@ -33,7 +33,7 @@ export default function useCanvasPanning({ stageRef, canvasType }: CanvasPanSett
       x: stageWidth / 2,
       y: stageHeight / 2,
     });
-  }, []);
+  }, [canvasType, stageRef]);
 
   return { handlePan, resetPan };
 }
