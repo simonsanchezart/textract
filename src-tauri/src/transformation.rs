@@ -5,15 +5,10 @@ use rayon::{
     iter::{IndexedParallelIterator, ParallelIterator},
     slice::ParallelSlice,
 };
-use std::{
-    io::Cursor,
-};
+use std::io::Cursor;
 
 #[tauri::command]
-pub async fn transform_image(
-    img_path: String,
-    points: Vec<f32>,
-) -> Result<Vec<String>, String> {
+pub async fn transform_image(img_path: String, points: Vec<f32>) -> Result<Vec<String>, String> {
     let mark_count = points.len() / 8;
     log::info!("Processing {mark_count} marks for {img_path}");
 
