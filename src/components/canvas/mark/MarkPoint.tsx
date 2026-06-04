@@ -1,4 +1,5 @@
 import type { Vec2 } from "@/types/types";
+import { useMemo } from "react";
 import { Rect } from "react-konva";
 import { Colors } from "@/types/types";
 
@@ -9,8 +10,8 @@ type MarkPointProps = {
 } & React.ComponentProps<typeof Rect>;
 
 function MarkPoint({ position, offset = { x: 0, y: 0 }, scaleFactor = 1, ...props }: MarkPointProps) {
-  const POINT_SIZE = 10 * scaleFactor;
-  const POINT_SIZE_H = POINT_SIZE / 2;
+  const POINT_SIZE = useMemo(() => 10 * scaleFactor, [scaleFactor]);
+  const POINT_SIZE_H = useMemo(() => POINT_SIZE / 2, [POINT_SIZE]);
 
   return (
     <Rect
