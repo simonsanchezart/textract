@@ -99,7 +99,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
     }
   };
 
-  const convertImages = async (type: "ALL" | "SELECTED" | "HOVERED" = "ALL") => {
+  const convertMarks = async (type: "ALL" | "SELECTED" | "HOVERED" = "ALL") => {
     const marks = useMarkStore.getState().marks;
     const images = Object.values(markImages);
     let entries: { image: MarkImageType; markIds: string[] }[] = [];
@@ -149,6 +149,8 @@ function MarkCanvas({ className = "" }: { className?: string }) {
         throw new Error(`${type} is not a valid action`);
     }
 
+    toast("Started converting marks");
+    info("Started converting marks");
     await Promise.all(
       entries.map(async ({ image, markIds }) => {
         const dirtyIds = markIds.filter(id => marks[id].dirty);
@@ -218,18 +220,18 @@ function MarkCanvas({ className = "" }: { className?: string }) {
               <ContextMenuGroup>
                 {(hoverShape && hoverShape instanceof Konva.Line)
                   && (
-                    <ContextMenuItem onClick={() => convertImages("HOVERED")}>
+                    <ContextMenuItem onClick={() => convertMarks("HOVERED")}>
                       Hovered
                     </ContextMenuItem>
                   )}
                 {selectedNodes.length > 0
                   && (
-                    <ContextMenuItem onClick={() => convertImages("SELECTED")}>
+                    <ContextMenuItem onClick={() => convertMarks("SELECTED")}>
                       Selected Images
                     </ContextMenuItem>
                   )}
 
-                <ContextMenuItem onClick={() => convertImages("ALL")}>
+                <ContextMenuItem onClick={() => convertMarks("ALL")}>
                   All
                 </ContextMenuItem>
               </ContextMenuGroup>
@@ -281,7 +283,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
 
       <Toolbar>
         <ToolbarAction Icon={CgAdd} onClick={loadImages} />
-        <ToolbarAction Icon={FaPlay} size={4} onClick={convertImages} />
+        <ToolbarAction Icon={FaPlay} size={4} onClick={convertMarks} />
       </Toolbar>
     </div>
   );
