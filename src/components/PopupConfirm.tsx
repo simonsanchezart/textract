@@ -36,7 +36,7 @@ function PopupConfirm({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+          <DialogDescription className="whitespace-pre-line">{description}</DialogDescription>
         </DialogHeader>
 
         <DialogFooter>
