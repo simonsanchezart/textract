@@ -263,8 +263,23 @@ function MarkCanvas({ className = "" }: { className?: string }) {
     </ContextMenuGroup>
   );
 
+  const handleShortcuts = async (e: React.KeyboardEvent<HTMLDivElement>) => {
+    switch (e.code) {
+      case "KeyA":
+        if (e.shiftKey)
+          loadImages();
+        break;
+      case "KeyR":
+        if (e.shiftKey)
+          convertMarks();
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
-    <div className={`relative h-full ${className}`}>
+    <div className={`relative h-full ${className}`} onKeyDown={handleShortcuts}>
       <Canvas
         transformerRef={transformerRef}
         onDelete={async (ids) => {

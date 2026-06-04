@@ -19,6 +19,14 @@ export default function useCanvasSelection({ canvasType, transformerRef }: Canva
     transformerRef.current?.nodes(selectedNodes);
   }, [selectedNodes, transformerRef]);
 
+  const selectAll = () => {
+    if (!transformerRef.current)
+      return;
+    const stage = transformerRef.current.getStage();
+    const imageNodes = stage?.find(".master") ?? [];
+    setSelectedNodes(canvasType, imageNodes);
+  };
+
   const handleSelection = (e: KonvaPointerEvent) => {
     if (e.target === e.target.getStage()) {
       setSelectedNodes(canvasType, []);
@@ -40,5 +48,5 @@ export default function useCanvasSelection({ canvasType, transformerRef }: Canva
     setSelectedNodes(canvasType, nodes);
   };
 
-  return { selectedNodes, handleSelection };
+  return { selectedNodes, handleSelection, selectAll };
 }

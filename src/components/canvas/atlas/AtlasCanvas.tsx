@@ -133,8 +133,23 @@ function AtlasCanvas({ className }: { className?: string }) {
     </ContextMenuGroup>
   );
 
+  const handleShortcuts = async (e: React.KeyboardEvent<HTMLDivElement>) => {
+    switch (e.code) {
+      case "KeyE":
+        if (e.ctrlKey)
+          exportCanvas();
+        break;
+      case "KeyS":
+        if (e.ctrlKey)
+          exportSelected();
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
-    <div className={`relative h-full ${className}`}>
+    <div className={`relative h-full ${className}`} onKeyDown={handleShortcuts}>
       <Canvas
         canvasType={CanvasType.ATLAS}
         transformerRef={transformerRef}

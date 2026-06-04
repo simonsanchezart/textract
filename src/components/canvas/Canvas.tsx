@@ -36,7 +36,7 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
   const drawGrid = useCanvasGrid({ dotSize: 1, dotSpacing: snapSize }, stageRef);
   const handleZoom = useCanvasZoom({ stageRef, canvasType });
   const { handlePan, resetPan } = useCanvasPanning({ stageRef, canvasType });
-  const { selectedNodes, handleSelection } = useCanvasSelection({ canvasType, transformerRef });
+  const { selectedNodes, handleSelection, selectAll } = useCanvasSelection({ canvasType, transformerRef });
   const { handleTransformDragMove, handleTransformSnapping } = useTransformSnapping({ stageRef, snapSize });
   const [openConfirmation, setOpenConfirmation] = useState(false);
 
@@ -57,10 +57,13 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
 
   const handleShortcuts = async (e: React.KeyboardEvent<HTMLDivElement>) => {
     switch (e.code) {
-      case "Delete": {
+      case "Delete":
         confirmImageDelete();
         break;
-      }
+      case "KeyA":
+        if (e.ctrlKey)
+          selectAll();
+        break;
       default:
         break;
     }
