@@ -208,8 +208,8 @@ function AtlasCanvas({ className }: { className?: string }) {
 
       <Toolbar>
         {/* todo: find better icons */}
-        <ToolbarAction Icon={BiSolidFileExport} onClick={exportCanvas} />
-        <ToolbarAction Icon={BiExport} onClick={exportSelected} />
+        <ToolbarAction Icon={BiSolidFileExport} onClick={exportCanvas} tooltip="Export Canvas" />
+        <ToolbarAction Icon={BiExport} onClick={exportSelected} tooltip="Export Selected" />
       </Toolbar>
     </div>
   );
