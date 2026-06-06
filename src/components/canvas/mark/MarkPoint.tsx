@@ -10,7 +10,7 @@ type MarkPointProps = {
 } & React.ComponentProps<typeof Rect>;
 
 function MarkPoint({ position, offset = { x: 0, y: 0 }, scaleFactor = 1, ...props }: MarkPointProps) {
-  const POINT_SIZE = useMemo(() => 16 * scaleFactor, [scaleFactor]);
+  const POINT_SIZE = useMemo(() => 20 * scaleFactor, [scaleFactor]);
   const POINT_SIZE_H = useMemo(() => POINT_SIZE / 2, [POINT_SIZE]);
 
   return (

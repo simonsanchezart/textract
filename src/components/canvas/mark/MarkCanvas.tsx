@@ -17,7 +17,9 @@ import { ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuSho
 import { useAtlasStore } from "@/stores/atlas-store";
 import { useCanvasStore } from "@/stores/canvas-store";
 import { useMarkStore } from "@/stores/mark-store";
+import { useSettingsStore } from "@/stores/settings-store";
 import { CanvasType } from "@/types/types";
+import { snap } from "@/utils/utils";
 import Canvas from "../Canvas";
 import MarkImage from "./MarkImage";
 
@@ -26,6 +28,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
   const atlasImages = useAtlasStore(state => state.images);
   const selectedNodes = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].selectedNodes);
   const hoverShape = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].hoverShape);
+  const snapSize = useSettingsStore(s => s.snap);
 
   const transformerRef = useRef<Konva.Transformer>(null);
 
@@ -81,16 +84,19 @@ function MarkCanvas({ className = "" }: { className?: string }) {
       img.src = assetUrl;
       await img.decode();
 
+      const snapScaleX = snap(img.width, snapSize) / img.width;
+      const snapScaleY = snap(img.height, snapSize) / img.height;
+
       const markImage: MarkImageType = {
         id: crypto.randomUUID(),
         filepath: imgPath,
         src: assetUrl,
         position: {
-          x: centerX - img.width / 2,
-          y: centerY - img.height / 2,
+          x: snap(centerX - img.width / 2, snapSize),
+          y: snap(centerY - img.height / 2, snapSize),
         },
         rotation: 0,
-        scale: { x: 1, y: 1 },
+        scale: { x: snapScaleX, y: snapScaleY },
         sizeSum: img.width + img.height,
         markIds: [],
       };
@@ -171,12 +177,19 @@ function MarkCanvas({ className = "" }: { className?: string }) {
           points: markPoints,
         });
 
-        results.forEach((base64, idx) => {
+        results.forEach(async (base64, idx) => {
           const markId = dirtyIds[idx];
           const existingAtlasImage = Object.values(atlasImages).find(image => image.markId === markId);
 
+          const img = new Image();
+          img.src = base64;
+          await img.decode();
+          const snapScaleX = snap(img.width, snapSize) / img.width;
+          const snapScaleY = snap(img.height, snapSize) / img.height;
+
           if (existingAtlasImage) {
             useAtlasStore.getState().updateImageBase64(existingAtlasImage.id, base64);
+            useAtlasStore.getState().updateImageScale(existingAtlasImage.id, { x: snapScaleX, y: snapScaleY });
           }
           else {
             const atlasImage: AtlasImageType = {
@@ -185,7 +198,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
               markId,
               position: { x: 0, y: 0 },
               rotation: 0,
-              scale: { x: 1, y: 1 },
+              scale: { x: snapScaleX, y: snapScaleY },
             };
 
             useAtlasStore.getState().addImage(atlasImage);

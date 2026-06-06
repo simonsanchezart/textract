@@ -64,10 +64,10 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
         }}
       />
 
-      {gridPoints.lines.map((line, idx) => {
+      {gridPoints.lines.map((line, idx) => (
         // eslint-disable-next-line react/no-array-index-key
-        return <Line key={idx} offset={{ x: -markOffset.x, y: -markOffset.y }} points={[line.p1.x, line.p1.y, line.p2.x, line.p2.y]} stroke="white" strokeWidth={0.2} dash={[1, 2]} />;
-      })}
+        <Line key={idx} offset={{ x: -markOffset.x, y: -markOffset.y }} points={[line.p1.x, line.p1.y, line.p2.x, line.p2.y]} stroke="white" opacity={0.5} strokeWidth={scale} />
+      ))}
 
       {points.map((p, id) => {
         return (
