@@ -55,7 +55,7 @@ export default function FooterNumberSetting({
   };
 
   return (
-    <div className="flex gap-3 items-center">
+    <div className="flex gap-2 items-center">
       <div className="select-none font-light tracking-widest">
         {title}
       </div>
@@ -75,7 +75,7 @@ export default function FooterNumberSetting({
               if (e.key === "Enter")
                 handleBlur();
             }}
-            className={`w-14 h-6 text-center rounded-none border-x-0 border border-primary/50 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${className}`}
+            className={`w-16 h-6 text-center rounded-none border-x-0 border border-primary/50 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${className}`}
           />
 
           {unit

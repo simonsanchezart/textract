@@ -33,10 +33,10 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
   const snapSize = useSettingsStore(s => s.snap);
   const canvasState = useCanvasStore(s => s.canvas[canvasType]);
 
-  const drawGrid = useCanvasGrid({ dotSize: 1, dotSpacing: snapSize }, stageRef);
+  const drawGrid = useCanvasGrid({ dotSpacing: snapSize }, stageRef);
   const handleZoom = useCanvasZoom({ stageRef, canvasType });
   const { handlePan, resetPan } = useCanvasPanning({ stageRef, canvasType });
-  const { selectedNodes, handleSelection } = useCanvasSelection({ canvasType, transformerRef });
+  const { selectedNodes, handleSelection, selectAll } = useCanvasSelection({ canvasType, transformerRef });
   const { handleTransformDragMove, handleTransformSnapping } = useTransformSnapping({ stageRef, snapSize });
   const [openConfirmation, setOpenConfirmation] = useState(false);
 
@@ -57,10 +57,13 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
 
   const handleShortcuts = async (e: React.KeyboardEvent<HTMLDivElement>) => {
     switch (e.code) {
-      case "Delete": {
+      case "Delete":
         confirmImageDelete();
         break;
-      }
+      case "KeyA":
+        if (e.ctrlKey)
+          selectAll();
+        break;
       default:
         break;
     }
@@ -70,7 +73,9 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
     <div className="h-full" tabIndex={-1} onKeyDown={handleShortcuts}>
       <PopupConfirm
         title="Delete Selected"
-        description="Are you sure you want to delete the selected images?"
+        description={
+          "Are you sure you want to delete the selected images?\nThis cannot be undone"
+        }
         confirmLabel="Delete"
         open={openConfirmation}
         setOpen={setOpenConfirmation}

@@ -1,19 +1,32 @@
 import type { ReactNode } from "react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 type ToolbarActionProps = {
   Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   size?: number;
+  tooltip?: string;
   disabled?: boolean;
   onClick?: () => void | Promise<void>;
 };
 
-export function ToolbarAction({ Icon, onClick, disabled = false, size = 6 }: ToolbarActionProps) {
+export function ToolbarAction({ Icon, onClick, disabled = false, tooltip, size = 6 }: ToolbarActionProps) {
   return (
-    <Icon
-      className={`size-${size} ${disabled ? "opacity-20 pointer-events-none" : "button-icon"
-      }`}
-      onClick={disabled ? undefined : onClick}
-    />
+    <Tooltip delayDuration={400}>
+      <TooltipTrigger asChild>
+        <Icon
+          className={`size-${size} ${disabled ? "opacity-20 pointer-events-none" : "button-icon"
+          }`}
+          onClick={disabled ? undefined : onClick}
+        />
+      </TooltipTrigger>
+
+      {tooltip
+        && (
+          <TooltipContent side="bottom">
+            <span>{tooltip}</span>
+          </TooltipContent>
+        )}
+    </Tooltip>
   );
 }
 

@@ -111,10 +111,10 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
             points={currentPointsFlat}
             fill={`${Colors.GREEN}22`}
             stroke={Colors.LIGHT}
-            strokeWidth={1}
+            strokeWidth={0.25}
             closed
             listening={false}
-            dash={[2, 10]}
+            dash={[2, 5]}
           />
         </Group>
       ))}

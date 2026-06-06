@@ -133,8 +133,23 @@ function AtlasCanvas({ className }: { className?: string }) {
     </ContextMenuGroup>
   );
 
+  const handleShortcuts = async (e: React.KeyboardEvent<HTMLDivElement>) => {
+    switch (e.code) {
+      case "KeyE":
+        if (e.ctrlKey)
+          exportCanvas();
+        break;
+      case "KeyS":
+        if (e.ctrlKey)
+          exportSelected();
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
-    <div className={`relative h-full ${className}`}>
+    <div className={`relative h-full ${className}`} onKeyDown={handleShortcuts}>
       <Canvas
         canvasType={CanvasType.ATLAS}
         transformerRef={transformerRef}
@@ -193,8 +208,8 @@ function AtlasCanvas({ className }: { className?: string }) {
 
       <Toolbar>
         {/* todo: find better icons */}
-        <ToolbarAction Icon={BiSolidFileExport} onClick={exportCanvas} />
-        <ToolbarAction Icon={BiExport} onClick={exportSelected} />
+        <ToolbarAction Icon={BiSolidFileExport} onClick={exportCanvas} tooltip="Export Canvas" />
+        <ToolbarAction Icon={BiExport} onClick={exportSelected} tooltip="Export Selected" />
       </Toolbar>
     </div>
   );

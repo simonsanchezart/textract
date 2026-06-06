@@ -3,12 +3,22 @@ import { useMemo, useState } from "react";
 import { Group, Line } from "react-konva";
 import { useMarkStore } from "@/stores/mark-store";
 import { Colors } from "@/types/types";
+import { lerpVec2 } from "@/utils/utils";
 import MarkPoint from "./MarkPoint";
 
 function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
   const [markOffset, setMarkOffset] = useState({ x: 0, y: 0 });
   const [points, setPoints] = useState(mark.points);
   const pointsFlat = useMemo(() => points.flatMap(p => [p.x, p.y]), [points]);
+
+  const gridPoints = useMemo(() => {
+    const gridLineY1 = { p1: lerpVec2(points[0], points[1], 0.33), p2: lerpVec2(points[3], points[2], 0.33) };
+    const gridLineY2 = { p1: lerpVec2(points[0], points[1], 0.67), p2: lerpVec2(points[3], points[2], 0.67) };
+    const gridLineX1 = { p1: lerpVec2(points[0], points[3], 0.33), p2: lerpVec2(points[1], points[2], 0.33) };
+    const gridLineX2 = { p1: lerpVec2(points[0], points[3], 0.67), p2: lerpVec2(points[1], points[2], 0.67) };
+
+    return { lines: [gridLineY1, gridLineY2, gridLineX1, gridLineX2] };
+  }, [points]);
 
   return (
     <Group draggable>
@@ -53,6 +63,11 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
           e.target.to({ fill: `${Colors.GREEN}11`, duration: 0.02 });
         }}
       />
+
+      {gridPoints.lines.map((line, idx) => (
+        // eslint-disable-next-line react/no-array-index-key
+        <Line key={idx} offset={{ x: -markOffset.x, y: -markOffset.y }} points={[line.p1.x, line.p1.y, line.p2.x, line.p2.y]} stroke="white" opacity={0.5} strokeWidth={scale} />
+      ))}
 
       {points.map((p, id) => {
         return (
