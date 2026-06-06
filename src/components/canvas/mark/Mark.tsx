@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { Group, Line } from "react-konva";
 import { useMarkStore } from "@/stores/mark-store";
 import { Colors } from "@/types/types";
-import { lerp } from "@/utils/utils";
+import { lerpVec2 } from "@/utils/utils";
 import MarkPoint from "./MarkPoint";
 
 function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
@@ -12,10 +12,10 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
   const pointsFlat = useMemo(() => points.flatMap(p => [p.x, p.y]), [points]);
 
   const gridPoints = useMemo(() => {
-    const gridLineY1 = { p1: lerp(points[0], points[1], 0.33), p2: lerp(points[3], points[2], 0.33) };
-    const gridLineY2 = { p1: lerp(points[0], points[1], 0.67), p2: lerp(points[3], points[2], 0.67) };
-    const gridLineX1 = { p1: lerp(points[0], points[3], 0.33), p2: lerp(points[1], points[2], 0.33) };
-    const gridLineX2 = { p1: lerp(points[0], points[3], 0.67), p2: lerp(points[1], points[2], 0.67) };
+    const gridLineY1 = { p1: lerpVec2(points[0], points[1], 0.33), p2: lerpVec2(points[3], points[2], 0.33) };
+    const gridLineY2 = { p1: lerpVec2(points[0], points[1], 0.67), p2: lerpVec2(points[3], points[2], 0.67) };
+    const gridLineX1 = { p1: lerpVec2(points[0], points[3], 0.33), p2: lerpVec2(points[1], points[2], 0.33) };
+    const gridLineX2 = { p1: lerpVec2(points[0], points[3], 0.67), p2: lerpVec2(points[1], points[2], 0.67) };
 
     return { lines: [gridLineY1, gridLineY2, gridLineX1, gridLineX2] };
   }, [points]);

@@ -8,7 +8,7 @@ type CanvasGridSettings = {
 };
 
 export default function useCanvasGrid(settings: CanvasGridSettings, stageRef: React.RefObject<Konva.Stage | null>) {
-  const { dotSpacing = 16, dotSize = 4, zoomLimit = 0.7 } = settings;
+  const { dotSpacing = 16, dotSize = 0.5, zoomLimit = 2.0 } = settings;
 
   const drawGrid = useCallback((ctx: Konva.Context, shape: Konva.Shape) => {
     const clampedSpacing = Math.max(16, dotSpacing);
@@ -20,6 +20,11 @@ export default function useCanvasGrid(settings: CanvasGridSettings, stageRef: Re
     const scale = stage.scaleX();
     if (scale < zoomLimit)
       return;
+
+    const t = Math.max(0, (scale - zoomLimit) / zoomLimit);
+    const opacity = Math.min(255, Math.round(t * 255))
+      .toString(16)
+      .padStart(2, "0");
 
     const viewWidth = stage.width() / scale;
     const viewHeight = stage.height() / scale;
@@ -34,7 +39,7 @@ export default function useCanvasGrid(settings: CanvasGridSettings, stageRef: Re
     const firstX = Math.floor(startX / clampedSpacing) * clampedSpacing;
     const firstY = Math.floor(startY / clampedSpacing) * clampedSpacing;
 
-    ctx.fillStyle = "#3e3e3e";
+    ctx.fillStyle = `#3e3e3e${opacity}`;
     for (let x = firstX; x < endX; x += clampedSpacing) {
       for (let y = firstY; y < endY; y += clampedSpacing) {
         ctx.beginPath();

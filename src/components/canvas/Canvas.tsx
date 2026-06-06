@@ -33,7 +33,7 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
   const snapSize = useSettingsStore(s => s.snap);
   const canvasState = useCanvasStore(s => s.canvas[canvasType]);
 
-  const drawGrid = useCanvasGrid({ dotSize: 1, dotSpacing: snapSize }, stageRef);
+  const drawGrid = useCanvasGrid({ dotSpacing: snapSize }, stageRef);
   const handleZoom = useCanvasZoom({ stageRef, canvasType });
   const { handlePan, resetPan } = useCanvasPanning({ stageRef, canvasType });
   const { selectedNodes, handleSelection, selectAll } = useCanvasSelection({ canvasType, transformerRef });

@@ -17,11 +17,15 @@ export function getMiddle(v: Vec2[]) {
   return average;
 }
 
-export function lerp(a: Vec2, b: Vec2, t: number): Vec2 {
+export function lerpVec2(a: Vec2, b: Vec2, t: number): Vec2 {
   return {
     x: a.x + (b.x - a.x) * t,
     y: a.y + (b.y - a.y) * t,
   };
+}
+
+export function lerpFloat(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
 }
 
 export function snap(x: number, increment: number) {
