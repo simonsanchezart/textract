@@ -35,6 +35,8 @@
     },
     "dialog:default",
     "log:default",
-    "opener:default"
+    "opener:default",
+    "updater:default",
+    "process:allow-restart"
   ]
 }

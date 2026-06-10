@@ -1,41 +1,59 @@
 {
-    "$schema": "https://schema.tauri.app/config/2",
-    "productName": "Textract",
-    "version": "0.1.0",
-    "identifier": "com.simonsanchezart.textract",
-    "build": {
-        "beforeDevCommand": "npm run dev",
-        "devUrl": "http://localhost:1420",
-        "beforeBuildCommand": "npm run build",
-        "frontendDist": "../dist"
-    },
-    "app": {
-        "windows": [
-            {
-                "title": "Textract",
-                "width": 1280,
-                "height": 720,
-                "minWidth": 640,
-                "minHeight": 480,
-                "decorations": false
-            }
-        ],
-        "security": {
-            "csp": null,
-            "assetProtocol": {
-                "enable": true,
-                "scope": {
-                    "requireLiteralLeadingDot": false,
-                    "allow": ["**/*"]
-                }
-            }
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Textract",
+  "version": "0.1.0",
+  "identifier": "com.simonsanchezart.textract",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Textract",
+        "width": 1280,
+        "height": 720,
+        "minWidth": 640,
+        "minHeight": 480,
+        "decorations": false
+      }
+    ],
+    "security": {
+      "csp": null,
+      "assetProtocol": {
+        "enable": true,
+        "scope": {
+          "requireLiteralLeadingDot": false,
+          "allow": [
+            "**/*"
+          ]
         }
-    },
-    "bundle": {
-        "active": true,
-        "targets": ["nsis", "deb", "appimage"],
-        "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
-        "category": "Utility",
-        "shortDescription": "Texture extractor from photos"
+      }
     }
+  },
+  "bundle": {
+    "active": true,
+    "createUpdaterArtifacts": true,
+    "targets": [
+      "nsis",
+      "deb",
+      "appimage"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "category": "Utility",
+    "shortDescription": "Texture extractor from photos"
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDA0NTg1QjA4Nzk2OEFGNDYKUldSR3IyaDVDRnRZQkMxbUlXMzExeWJCU0tFTVlENzFiSEpOQXUzSnAxMG9SQUY4aGJsalNjLy8K"
+    }
+  }
 }
