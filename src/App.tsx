@@ -3,7 +3,7 @@ import Footer from "./components/footer/Footer";
 import Navbar from "./components/Navbar";
 import Textract from "./components/Textract";
 import { Updater } from "./components/updater/Updater";
-import "./App.css";
+import "./app.css";
 
 function App() {
   document.addEventListener("keydown", (e) => {
