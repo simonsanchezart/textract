@@ -2,7 +2,7 @@ import { useShallow } from "zustand/react/shallow";
 import { useSettingsStore } from "@/stores/settings-store";
 import { snap as snapFn, snapPowerOfTwo } from "@/utils/utils";
 import { Button } from "../ui/Button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/Tooltip";
 import FooterBooleanSetting from "./FooterBooleanSetting";
 import FooterNumberSetting from "./FooterNumberSetting";
 
