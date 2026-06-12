@@ -1,10 +1,12 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useState } from "react";
 import { CgClose, CgMaximizeAlt, CgMinimizeAlt } from "react-icons/cg";
+import useAppVersion from "@/hooks/use-app-version";
 import PopupConfirm from "./PopupConfirm";
 
 function Navbar() {
   const appWindow = getCurrentWindow();
+  const appVersion = useAppVersion();
   const [openConfirmation, setOpenConfirmation] = useState(false);
 
   return (
@@ -13,7 +15,8 @@ function Navbar() {
 
       <div className="relative" data-tauri-drag-region>
         <div className="select-none text-center font-light tracking-widest" data-tauri-drag-region>
-          Textract
+          Textract - v
+          {appVersion}
         </div>
 
         <div className="flex gap-2 text-center items-center absolute right-0 top-0">

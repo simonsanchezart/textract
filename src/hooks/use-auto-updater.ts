@@ -1,17 +1,12 @@
-import { getVersion } from "@tauri-apps/api/app";
 import { error } from "@tauri-apps/plugin-log";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check } from "@tauri-apps/plugin-updater";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { toast } from "sonner";
 
-export function Updater() {
-  const [version, setVersion] = useState("0.0.0");
-
+export default function useAutoUpdater() {
   useEffect(() => {
     const checkUpdate = async () => {
-      setVersion(await getVersion());
-
       const update = await check().catch((err) => {
         toast.error("Was not able to check for updates.");
         error(err);
@@ -33,13 +28,4 @@ export function Updater() {
 
     checkUpdate();
   }, []);
-
-  return (
-    <>
-      <h1>
-        Hello from new version
-        {version}
-      </h1>
-    </>
-  );
 }

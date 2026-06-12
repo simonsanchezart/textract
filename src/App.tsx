@@ -2,21 +2,20 @@ import { Toaster } from "sonner";
 import Footer from "./components/footer/Footer";
 import Navbar from "./components/Navbar";
 import Textract from "./components/Textract";
-import { Updater } from "./components/updater/Updater";
+import useAutoUpdater from "./hooks/use-auto-updater";
 import "./app.css";
 
 function App() {
   document.addEventListener("keydown", (e) => {
-    // if (e.key === "F5" || (e.ctrlKey && e.key === "r") || (e.metaKey && e.key === "r"))
-    //   e.preventDefault();
     if (e.ctrlKey && e.code === "KeyA")
       e.preventDefault();
   });
 
+  useAutoUpdater();
+
   return (
     <main className="flex flex-col h-screen text-light-main dark">
       <Navbar />
-      <Updater />
       <Textract />
       <Footer />
       <Toaster
