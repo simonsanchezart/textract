@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/Tooltip";
 
 type ToolbarActionProps = {
   Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
