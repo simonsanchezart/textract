@@ -36,7 +36,10 @@ export function Updater() {
 
   return (
     <>
-      <h1>{version}</h1>
+      <h1>
+        Hello from new version
+        {version}
+      </h1>
     </>
   );
 }
