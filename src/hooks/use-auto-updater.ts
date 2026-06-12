@@ -16,6 +16,7 @@ export default function useAutoUpdater() {
         return;
 
       toast.info(`New Update Available`, {
+        duration: 10000,
         action: {
           label: "Install Update",
           onClick: async () => {
