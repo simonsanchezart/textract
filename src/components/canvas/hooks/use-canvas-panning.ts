@@ -1,6 +1,6 @@
 import type Konva from "konva";
 import type { CanvasType } from "@/types/types";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useCanvasStore } from "@/stores/canvas-store";
 
 type CanvasPanSettings = {
@@ -34,6 +34,8 @@ export default function useCanvasPanning({ stageRef, canvasType }: CanvasPanSett
       y: stageHeight / 2,
     });
   }, [canvasType, stageRef]);
+
+  useEffect(resetPan, [resetPan]);
 
   return { handlePan, resetPan };
 }
