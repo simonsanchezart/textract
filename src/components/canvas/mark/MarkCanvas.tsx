@@ -310,8 +310,8 @@ function MarkCanvas({ className = "" }: { className?: string }) {
       </Canvas>
 
       <Toolbar>
-        <ToolbarAction Icon={CgAdd} onClick={loadImages} tooltip="Load Images" />
-        <ToolbarAction Icon={FaPlay} size={4} onClick={convertMarks} tooltip="Convert Marks" />
+        <ToolbarAction Icon={CgAdd} onClick={loadImages} tooltip="Load Images (Shift+A)" />
+        <ToolbarAction Icon={FaPlay} size={4} onClick={convertMarks} tooltip="Convert Marks (Shift+R)" />
       </Toolbar>
     </div>
   );

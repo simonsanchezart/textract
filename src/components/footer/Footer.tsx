@@ -46,7 +46,7 @@ export default function Footer() {
             <hr />
 
             <ShortcutHelper shortcut="Ctrl+Click" description="Add Mark Point" />
-            <ShortcutHelper shortcut="Shift+R" description="Convert Mark" />
+            <ShortcutHelper shortcut="Shift+R" description="Convert Marks" />
             <ShortcutHelper shortcut="Alt+Click" description="Delete Mark" />
 
             <hr />
