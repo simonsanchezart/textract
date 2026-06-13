@@ -15,7 +15,7 @@ export const useSettingsStore = create(
   persist(
     immer<SettingsStore>(set => ({
       snap: 8,
-      atlasResolution: 2048,
+      atlasResolution: 512,
       atlasAlpha: true,
       setSnap: x => set((state) => {
         state.snap = x;
