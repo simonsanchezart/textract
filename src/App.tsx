@@ -14,7 +14,7 @@ function App() {
   useAutoUpdater();
 
   return (
-    <main className="flex flex-col h-screen text-light-main dark">
+    <main className="flex flex-col h-full text-light-main dark">
       <Navbar />
       <Textract />
       <Footer />
