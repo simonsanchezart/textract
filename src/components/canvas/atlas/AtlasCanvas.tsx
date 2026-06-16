@@ -5,11 +5,12 @@ import { writeFile } from "@tauri-apps/plugin-fs";
 import { info } from "@tauri-apps/plugin-log";
 import { openPath, revealItemInDir } from "@tauri-apps/plugin-opener";
 import { useRef } from "react";
-import { BiExport, BiSolidFileExport } from "react-icons/bi";
+import { BiSolidImageAlt } from "react-icons/bi";
+import { PiSelection } from "react-icons/pi";
 import { Group, Rect, Text } from "react-konva";
 import { toast } from "sonner";
 import { Toolbar, ToolbarAction } from "@/components/Toolbar";
-import { ContextMenuCheckboxItem, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator } from "@/components/ui/ContextMenu";
+import { ContextMenuCheckboxItem, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuShortcut } from "@/components/ui/ContextMenu";
 import { useAtlasStore } from "@/stores/atlas-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { CanvasType } from "@/types/types";
@@ -116,14 +117,24 @@ function AtlasCanvas({ className }: { className?: string }) {
   const contextMenu = () => (
     <ContextMenuGroup>
       <ContextMenuItem onClick={exportCanvas}>
-        <BiSolidFileExport />
+        <BiSolidImageAlt />
         {" "}
         Export Canvas
+        <ContextMenuShortcut>
+          <span className="flex">
+            Ctrl+E
+          </span>
+        </ContextMenuShortcut>
       </ContextMenuItem>
 
       <ContextMenuItem onClick={exportSelected}>
-        <BiExport />
+        <PiSelection />
         Export Selected
+        <ContextMenuShortcut>
+          <span className="flex">
+            Ctrl+S
+          </span>
+        </ContextMenuShortcut>
       </ContextMenuItem>
 
       <ContextMenuCheckboxItem checked={atlasAlpha} onClick={() => useSettingsStore.getState().setAtlasAlpha(!atlasAlpha)}>
@@ -207,9 +218,8 @@ function AtlasCanvas({ className }: { className?: string }) {
       </Canvas>
 
       <Toolbar>
-        {/* todo: find better icons */}
-        <ToolbarAction Icon={BiSolidFileExport} onClick={exportCanvas} tooltip="Export Canvas (Ctrl+E)" />
-        <ToolbarAction Icon={BiExport} onClick={exportSelected} tooltip="Export Selected (Ctrl+S)" />
+        <ToolbarAction Icon={BiSolidImageAlt} onClick={exportCanvas} tooltip="Export Canvas (Ctrl+E)" />
+        <ToolbarAction Icon={PiSelection} onClick={exportSelected} tooltip="Export Selected (Ctrl+S)" />
       </Toolbar>
     </div>
   );

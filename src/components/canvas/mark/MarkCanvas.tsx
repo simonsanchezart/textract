@@ -217,6 +217,12 @@ function MarkCanvas({ className = "" }: { className?: string }) {
       <ContextMenuItem onClick={loadImages}>
         <CgAdd />
         Add Images
+
+        <ContextMenuShortcut>
+          <span className="flex">
+            Shift+A
+          </span>
+        </ContextMenuShortcut>
       </ContextMenuItem>
 
       {Object.keys(markImages).length > 0
@@ -246,6 +252,11 @@ function MarkCanvas({ className = "" }: { className?: string }) {
 
                 <ContextMenuItem onClick={() => convertMarks("ALL")}>
                   All
+                  <ContextMenuShortcut>
+                    <span className="flex">
+                      Shift+R
+                    </span>
+                  </ContextMenuShortcut>
                 </ContextMenuItem>
               </ContextMenuGroup>
             </ContextMenuSubContent>
