@@ -322,7 +322,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
 
       <Toolbar>
         <ToolbarAction Icon={CgAdd} onClick={loadImages} tooltip="Load Images (Shift+A)" />
-        <ToolbarAction Icon={FaPlay} size={4} onClick={convertMarks} tooltip="Convert Marks (Shift+R)" />
+        <ToolbarAction Icon={FaPlay} size={4} onClick={() => convertMarks()} tooltip="Convert Marks (Shift+R)" />
       </Toolbar>
     </div>
   );
