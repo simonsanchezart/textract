@@ -51,8 +51,8 @@ export default function Footer() {
 
             <hr />
 
-            <ShortcutHelper shortcut="Ctrl+E" description="Export Canvas" />
-            <ShortcutHelper shortcut="Ctrl+S" description="Save Selected" />
+            <ShortcutHelper shortcut="Ctrl+E" description="Export Atlas" />
+            <ShortcutHelper shortcut="Ctrl+S" description="Export Selected" />
           </TooltipContent>
         </Tooltip>
       </div>

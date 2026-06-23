@@ -27,7 +27,7 @@ function AtlasCanvas({ className }: { className?: string }) {
 
   const exportCanvas = async () => {
     const exportPath = await save({
-      title: "Export Canvas",
+      title: "Export Atlas",
       filters: [{ name: "Image", extensions: ["png"] }],
       defaultPath: "stage.png",
     });
@@ -119,7 +119,7 @@ function AtlasCanvas({ className }: { className?: string }) {
       <ContextMenuItem onClick={exportCanvas}>
         <BiSolidImageAlt />
         {" "}
-        Export Canvas
+        Export Atlas
         <ContextMenuShortcut>
           <span className="flex">
             Ctrl+E
@@ -218,7 +218,7 @@ function AtlasCanvas({ className }: { className?: string }) {
       </Canvas>
 
       <Toolbar>
-        <ToolbarAction Icon={BiSolidImageAlt} onClick={exportCanvas} tooltip="Export Canvas (Ctrl+E)" />
+        <ToolbarAction Icon={BiSolidImageAlt} onClick={exportCanvas} tooltip="Export Atlas (Ctrl+E)" />
         <ToolbarAction Icon={PiSelection} onClick={exportSelected} tooltip="Export Selected (Ctrl+S)" />
       </Toolbar>
     </div>
