@@ -93,8 +93,18 @@ function AtlasCanvas({ className }: { className?: string }) {
     const exportBasePath = await dirname(exportDir);
     const selectedImages = transformer.getNodes();
     for (const img of selectedImages) {
+      const rect = img.getClientRect({
+        skipShadow: true,
+        skipStroke: true,
+      });
+
       const dataUrl = img.toDataURL({
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height,
         pixelRatio: 1,
+        imageSmoothingEnabled: false,
       });
 
       const response = await fetch(dataUrl);
