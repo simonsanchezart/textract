@@ -1,3 +1,4 @@
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { useShallow } from "zustand/react/shallow";
 import { useSettingsStore } from "@/stores/settings-store";
 import { snap as snapFn, snapPowerOfTwo } from "@/utils/utils";
@@ -53,6 +54,15 @@ export default function Footer() {
 
             <ShortcutHelper shortcut="Ctrl+E" description="Export Atlas" />
             <ShortcutHelper shortcut="Ctrl+S" description="Export Selected" />
+
+            <hr />
+
+            <small
+              onClick={async () => await openUrl("https://www.simonsanchez.art/")}
+              className="text-gray-400 hover:cursor-pointer hover:text-red"
+            >
+              made by simon sanchez
+            </small>
           </TooltipContent>
         </Tooltip>
       </div>
