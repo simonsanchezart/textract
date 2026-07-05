@@ -1,4 +1,4 @@
-# <p align="center"><img src="assets/logo.png" alt="Textract Logo" width="512">
+<p align="center"><img src="assets/logo.png" alt="Textract Logo" width="512">
 
 <p align="center">
   <strong>A standalone desktop application for easy texture extraction & deskewing from images.</strong>
@@ -7,8 +7,6 @@
 <p align="center">
   <img src="https://img.shields.io/github/v/release/simonsanchezart/textract?style=for-the-badge" alt="Release">
 </p>
-
----
 
 ## 📖 Overview
 
@@ -20,8 +18,6 @@
 
 > [Watch the trailer here!](https://youtu.be/Pa0r_seJ-CE)
 
----
-
 ## ⚡ Key Features
 
 - **Dual-Pane Interactive Workspace**:
@@ -32,8 +28,6 @@
 - **Atlas Export**: Arrange your textures into a single atlas for export.
 - **Individual Export**: Export textures individually.
 - **Auto Updater**: Simple one-click updater to get the latest features and fixes.
-
----
 
 ## 🚀 How It Works
 
@@ -51,40 +45,36 @@ graph LR
 3. **Extract**: Hit `Shift + R` or click the Convert button.
 4. **Export**: Position the extracted textures on the Atlas Canvas and export!
 
----
-
 ## 🎹 Keyboard Shortcuts & Controls
 
 Textract is designed for speed. Below is a cheat sheet of shortcuts:
 
 ### General & Navigation
 
-| Action           | Key / Gesture                               | Description                                         |
-| :--------------- | :------------------------------------------ | :-------------------------------------------------- |
-| **Pan Canvas**   | `Scroll wheel click + Drag` or `Drag Stage` | Move around the workspace stage                     |
-| **Zoom Stage**   | `Scroll Wheel`                              | Zoom in or out on the canvas                        |
-| **Context Menu** | `Right Click`                               | Open contextual options (convert, export, settings) |
-| **Select All**   | `Ctrl + A`                                  | Select all images                                   |
-| **Delete Image** | `Delete` (with image selected)              | Remove image from the canvas                        |
+| Action           | Key / Gesture                               |
+| :--------------- | :------------------------------------------ |
+| **Pan Canvas**   | `Scroll wheel click + Drag` or `Drag Stage` |
+| **Zoom Stage**   | `Scroll Wheel`                              |
+| **Context Menu** | `Right Click`                               |
+| **Select All**   | `Ctrl + A`                                  |
+| **Delete Image** | `Delete` (with image selected)              |
 
 ### Mark Canvas (Left Panel)
 
-| Action                    | Key / Shortcut                 | Description                                         |
-| :------------------------ | :----------------------------- | :-------------------------------------------------- |
-| **Load Images**           | `Shift + A`                    | Open file dialog to load images                     |
-| **Add Mark Point**        | `Ctrl + Left Click` (on image) | Place a quad corner (places 4 total)                |
-| **Reset Point Selection** | `Right Click` (while marking)  | Clear current unsaved points                        |
-| **Process/Convert**       | `Shift + R`                    | Compute perspective warp and extract marks to Atlas |
-| **Remove Mark**           | `Alt + Left Click` (on mark)   | Delete the quad mark                                |
+| Action                    | Key / Shortcut                 |
+| :------------------------ | :----------------------------- |
+| **Load Images**           | `Shift + A`                    |
+| **Add Mark Point**        | `Ctrl + Left Click` (on image) |
+| **Reset Point Selection** | `Right Click` (while marking)  |
+| **Process/Convert**       | `Shift + R`                    |
+| **Remove Mark**           | `Alt + Left Click` (on mark)   |
 
 ### Atlas Canvas (Right Panel)
 
-| Action              | Key / Shortcut | Description                              |
-| :------------------ | :------------- | :--------------------------------------- |
-| **Export Atlas**    | `Ctrl + E`     | Save current packed sheet as a PNG       |
-| **Export Selected** | `Ctrl + S`     | Save selected patches as individual PNGs |
-
----
+| Action              | Key / Shortcut |
+| :------------------ | :------------- |
+| **Export Atlas**    | `Ctrl + E`     |
+| **Export Selected** | `Ctrl + S`     |
 
 ## 🛠️ Architecture & Tech Stack
 
