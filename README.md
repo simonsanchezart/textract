@@ -33,6 +33,7 @@
 ## 🚀 How It Works
 
 ```mermaid
+%%{init: {"graph": {"diagramPadding": 150}}}%%
 graph LR
     A[1. Load Images] --> B[2. Place Marks]
     B --> C[3. Extract]
@@ -44,7 +45,7 @@ graph LR
 3. **Extract**: Hit `Shift + R` or click the Convert button.
 4. **Export**: Position the extracted textures on the Atlas Canvas and export!
 
-## 🎹 Keyboard Shortcuts & Controls
+## 🎹 Controls
 
 Textract is designed for speed. Below is a cheat sheet of shortcuts:
 
@@ -75,7 +76,7 @@ Textract is designed for speed. Below is a cheat sheet of shortcuts:
 | **Export Atlas**    | `Ctrl + E`     |
 | **Export Selected** | `Ctrl + S`     |
 
-## 🛠️ Architecture & Tech Stack
+## 🛠️ Stack
 
 - **Frontend**:
     - [React 19](https://react.dev) & [TypeScript](https://www.typescriptlang.org)
