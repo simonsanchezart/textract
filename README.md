@@ -5,7 +5,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/github/v/release/simonsanchezart/textract?style=for-the-badge" alt="Release">
+    <a href="https://youtu.be/Pa0r_seJ-CE">
+    <img src="https://img.shields.io/badge/▶%20Watch%20the%20Trailer-red?style=for-the-badge&logo=youtube&logoColor=white" alt="Watch the Trailer">
+    </a>
+    <img src="https://img.shields.io/github/v/release/simonsanchezart/textract?style=for-the-badge" alt="Release">
 </p>
 
 ## 📖 Overview
@@ -15,8 +18,6 @@
 <p align="center">
   <img src="assets/demo.gif" alt="Textract In Action" width="800">
 </p>
-
-> [Watch the trailer here!](https://youtu.be/Pa0r_seJ-CE)
 
 ## ⚡ Key Features
 
@@ -30,8 +31,6 @@
 - **Auto Updater**: Simple one-click updater to get the latest features and fixes.
 
 ## 🚀 How It Works
-
-It's this simple:
 
 ```mermaid
 graph LR
@@ -78,13 +77,13 @@ Textract is designed for speed. Below is a cheat sheet of shortcuts:
 
 ## 🛠️ Architecture & Tech Stack
 
-- **Frontend Application**:
+- **Frontend**:
     - [React 19](https://react.dev) & [TypeScript](https://www.typescriptlang.org)
     - [react-konva](https://github.com/konvajs/react-konva) / [Konva](https://konvajs.org)
     - [Tailwind CSS](https://tailwindcss.com)
     - [Zustand](https://github.com/pmndrs/zustand)
 
-- **Core**:
+- **Backend & Core**:
     - [Tauri v2](https://tauri.app) (Secure, fast desktop framework)
     - **Rust Backend**:
         - `imageproc` (Warping, bilinear interpolation, geometric transformations)
