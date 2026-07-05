@@ -25,3 +25,4 @@ dist-ssr
 public/*.jpg
 .keys
 src-tauri/2
+assets/trailer
