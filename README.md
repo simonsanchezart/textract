@@ -5,13 +5,13 @@
 </p>
 
 <p align="center">
-    <a href="https://youtu.be/Pa0r_seJ-CE">
+    <a href="https://www.youtube.com/watch?v=77IxX3Gs30A">
     <img src="https://img.shields.io/badge/▶%20Watch%20the%20Trailer-red?style=for-the-badge&logo=youtube&logoColor=white" alt="Watch the Trailer">
     </a>
     <img src="https://img.shields.io/github/v/release/simonsanchezart/textract?style=for-the-badge" alt="Release">
 </p>
 
-## 📖 Overview
+## Overview
 
 **Textract** allows you to load images, mark sections to extract (such as signage, product labels, or building), apply a perspective warp and pack the flattened output into custom texture atlas or export them individually.
 
@@ -19,7 +19,7 @@
   <img src="assets/demo.gif" alt="Textract In Action" width="800">
 </p>
 
-## ⚡ Key Features
+## Key Features
 
 - **Dual-Pane Interactive Workspace**:
     - **Mark Canvas (Left)**: Load source images and mark sections to extract.
@@ -30,10 +30,9 @@
 - **Individual Export**: Export textures individually.
 - **Auto Updater**: Simple one-click updater to get the latest features and fixes.
 
-## 🚀 How It Works
+## How It Works
 
 ```mermaid
-%%{init: {"graph": {"diagramPadding": 150}}}%%
 graph LR
     A[1. Load Images] --> B[2. Place Marks]
     B --> C[3. Extract]
