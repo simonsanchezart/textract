@@ -8,7 +8,9 @@
     <a href="https://www.youtube.com/watch?v=77IxX3Gs30A">
     <img src="https://img.shields.io/badge/▶%20Watch%20the%20Trailer-red?style=for-the-badge&logo=youtube&logoColor=white" alt="Watch the Trailer">
     </a>
-    <img src="https://img.shields.io/github/v/release/simonsanchezart/textract?style=for-the-badge" alt="Release">
+    <a href="https://github.com/simonsanchezart/textract/releases/latest">
+        <img src="https://img.shields.io/github/v/release/simonsanchezart/textract?style=for-the-badge" alt="Release">
+    </a>
 </p>
 
 ## Overview
