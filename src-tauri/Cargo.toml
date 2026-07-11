@@ -18,6 +18,16 @@ crate-type = [
   "rlib"
 ]
 
+[profile.dev]
+incremental = true
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
