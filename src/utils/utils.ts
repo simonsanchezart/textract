@@ -7,6 +7,18 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+function isMacOS() {
+  return navigator.platform.toLowerCase().includes("mac");
+}
+
+export function isShortcutModifierPressed(e: Pick<KeyboardEvent | MouseEvent, "ctrlKey" | "metaKey">) {
+  return isMacOS() ? e.metaKey : e.ctrlKey;
+}
+
+export function getShortcutModifierLabel() {
+  return isMacOS() ? "Cmd" : "Ctrl";
+}
+
 export function getMiddle(v: Vec2[]) {
   const average = v.reduce((a, b) => {
     return { x: a.x + b.x, y: a.y + b.y };

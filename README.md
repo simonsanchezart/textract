@@ -42,7 +42,7 @@ graph LR
 ```
 
 1. **Load Images**: Load PNG, JPG, JPEG, or BMP files.
-2. **Place Marks**: Hold `Ctrl` and click four points to form a rect around your target texture.
+2. **Place Marks**: Hold `Cmd` on macOS or `Ctrl` on Windows/Linux and click four points to form a rect around your target texture.
 3. **Extract**: Hit `Shift + R` or click the Convert button.
 4. **Export**: Position the extracted textures on the Atlas Canvas and export!
 
@@ -57,7 +57,7 @@ Textract is designed for speed. Below is a cheat sheet of shortcuts:
 | **Pan Canvas**   | `Scroll wheel click + Drag` or `Drag Stage` |
 | **Zoom Stage**   | `Scroll Wheel`                              |
 | **Context Menu** | `Right Click`                               |
-| **Select All**   | `Ctrl + A`                                  |
+| **Select All**   | `Cmd + A` on macOS, `Ctrl + A` elsewhere   |
 | **Delete Image** | `Delete` (with image selected)              |
 
 ### Mark Canvas (Left Panel)
@@ -65,7 +65,7 @@ Textract is designed for speed. Below is a cheat sheet of shortcuts:
 | Action                    | Key / Shortcut                 |
 | :------------------------ | :----------------------------- |
 | **Load Images**           | `Shift + A`                    |
-| **Add Mark Point**        | `Ctrl + Left Click` (on image) |
+| **Add Mark Point**        | `Cmd + Left Click` on macOS, `Ctrl + Left Click` elsewhere |
 | **Reset Point Selection** | `Right Click` (while marking)  |
 | **Process/Convert**       | `Shift + R`                    |
 | **Remove Mark**           | `Alt + Left Click` (on mark)   |
@@ -74,8 +74,8 @@ Textract is designed for speed. Below is a cheat sheet of shortcuts:
 
 | Action              | Key / Shortcut |
 | :------------------ | :------------- |
-| **Export Atlas**    | `Ctrl + E`     |
-| **Export Selected** | `Ctrl + S`     |
+| **Export Atlas**    | `Cmd + E` on macOS, `Ctrl + E` elsewhere |
+| **Export Selected** | `Cmd + S` on macOS, `Ctrl + S` elsewhere |
 
 ## 🛠️ Stack
 

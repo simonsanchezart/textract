@@ -3,11 +3,12 @@ import Footer from "./components/footer/Footer";
 import Navbar from "./components/Navbar";
 import Textract from "./components/Textract";
 import useAutoUpdater from "./hooks/use-auto-updater";
+import { isShortcutModifierPressed } from "./utils/utils";
 import "./app.css";
 
 function App() {
   document.addEventListener("keydown", (e) => {
-    if (e.ctrlKey && e.code === "KeyA")
+    if (isShortcutModifierPressed(e) && e.code === "KeyA")
       e.preventDefault();
   });
 

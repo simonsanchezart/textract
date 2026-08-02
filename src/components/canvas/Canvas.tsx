@@ -13,6 +13,7 @@ import useCanvasZoom from "@/components/canvas/hooks/use-canvas-zoom";
 import { useCanvasStore } from "@/stores/canvas-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { CanvasType } from "@/types/types";
+import { isShortcutModifierPressed } from "@/utils/utils";
 import PopupConfirm from "../PopupConfirm";
 import { ContextMenu, ContextMenuContent, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuShortcut, ContextMenuTrigger } from "../ui/ContextMenu";
 import useCanvasPanning from "./hooks/use-canvas-panning";
@@ -61,7 +62,7 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
         confirmImageDelete();
         break;
       case "KeyA":
-        if (e.ctrlKey)
+        if (isShortcutModifierPressed(e))
           selectAll();
         break;
       default:
