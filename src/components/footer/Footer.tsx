@@ -1,7 +1,7 @@
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useShallow } from "zustand/react/shallow";
 import { useSettingsStore } from "@/stores/settings-store";
-import { snap as snapFn, snapPowerOfTwo } from "@/utils/utils";
+import { getShortcutModifierLabel, snap as snapFn, snapPowerOfTwo } from "@/utils/utils";
 import { Button } from "../ui/Button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/Tooltip";
 import FooterBooleanSetting from "./FooterBooleanSetting";
@@ -22,6 +22,7 @@ function ShortcutHelper({ shortcut, description }: { shortcut: string; descripti
 }
 
 export default function Footer() {
+  const shortcutModifier = getShortcutModifierLabel();
   const { snap, atlasResolution, atlasAlpha }
     = useSettingsStore(
       useShallow(s => ({
@@ -41,19 +42,19 @@ export default function Footer() {
 
           <TooltipContent className="flex flex-col gap-2">
             <ShortcutHelper shortcut="Shift+A" description="Load Images" />
-            <ShortcutHelper shortcut="Ctrl+A" description="Select All" />
+            <ShortcutHelper shortcut={`${shortcutModifier}+A`} description="Select All" />
             <ShortcutHelper shortcut="Delete" description="Delete Images" />
 
             <hr />
 
-            <ShortcutHelper shortcut="Ctrl+Click" description="Add Mark Point" />
+            <ShortcutHelper shortcut={`${shortcutModifier}+Click`} description="Add Mark Point" />
             <ShortcutHelper shortcut="Shift+R" description="Convert Marks" />
             <ShortcutHelper shortcut="Alt+Click" description="Delete Mark" />
 
             <hr />
 
-            <ShortcutHelper shortcut="Ctrl+E" description="Export Atlas" />
-            <ShortcutHelper shortcut="Ctrl+S" description="Export Selected" />
+            <ShortcutHelper shortcut={`${shortcutModifier}+E`} description="Export Atlas" />
+            <ShortcutHelper shortcut={`${shortcutModifier}+S`} description="Export Selected" />
 
             <hr />
 

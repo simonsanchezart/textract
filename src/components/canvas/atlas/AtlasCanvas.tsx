@@ -14,6 +14,7 @@ import { ContextMenuCheckboxItem, ContextMenuGroup, ContextMenuItem, ContextMenu
 import { useAtlasStore } from "@/stores/atlas-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { CanvasType } from "@/types/types";
+import { getShortcutModifierLabel, isShortcutModifierPressed } from "@/utils/utils";
 import Canvas from "../Canvas";
 import AtlasImageComponent from "./AtlasImage";
 
@@ -24,6 +25,7 @@ function AtlasCanvas({ className }: { className?: string }) {
 
   const masterGroupRef = useRef<Konva.Group>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
+  const shortcutModifier = getShortcutModifierLabel();
 
   const exportCanvas = async () => {
     const exportPath = await save({
@@ -132,7 +134,8 @@ function AtlasCanvas({ className }: { className?: string }) {
         Export Atlas
         <ContextMenuShortcut>
           <span className="flex">
-            Ctrl+E
+            {shortcutModifier}
+            +E
           </span>
         </ContextMenuShortcut>
       </ContextMenuItem>
@@ -142,7 +145,8 @@ function AtlasCanvas({ className }: { className?: string }) {
         Export Selected
         <ContextMenuShortcut>
           <span className="flex">
-            Ctrl+S
+            {shortcutModifier}
+            +S
           </span>
         </ContextMenuShortcut>
       </ContextMenuItem>
@@ -157,11 +161,11 @@ function AtlasCanvas({ className }: { className?: string }) {
   const handleShortcuts = async (e: React.KeyboardEvent<HTMLDivElement>) => {
     switch (e.code) {
       case "KeyE":
-        if (e.ctrlKey)
+        if (isShortcutModifierPressed(e))
           exportCanvas();
         break;
       case "KeyS":
-        if (e.ctrlKey)
+        if (isShortcutModifierPressed(e))
           exportSelected();
         break;
       default:
@@ -228,8 +232,8 @@ function AtlasCanvas({ className }: { className?: string }) {
       </Canvas>
 
       <Toolbar>
-        <ToolbarAction Icon={BiSolidImageAlt} onClick={exportCanvas} tooltip="Export Atlas (Ctrl+E)" />
-        <ToolbarAction Icon={PiSelection} onClick={exportSelected} tooltip="Export Selected (Ctrl+S)" />
+        <ToolbarAction Icon={BiSolidImageAlt} onClick={exportCanvas} tooltip={`Export Atlas (${shortcutModifier}+E)`} />
+        <ToolbarAction Icon={PiSelection} onClick={exportSelected} tooltip={`Export Selected (${shortcutModifier}+S)`} />
       </Toolbar>
     </div>
   );

@@ -9,7 +9,7 @@ import { useShallow } from "zustand/react/shallow";
 import { useCanvasStore } from "@/stores/canvas-store";
 import { useMarkStore } from "@/stores/mark-store";
 import { CanvasType, Colors } from "@/types/types";
-import { bilinearGrid, classifyCorners, getMiddle } from "@/utils/utils";
+import { bilinearGrid, classifyCorners, getMiddle, isShortcutModifierPressed } from "@/utils/utils";
 import Mark from "./Mark";
 import MarkPoint from "./MarkPoint";
 
@@ -97,7 +97,7 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
       onClick={(e) => {
         if (e.evt.button === 2)
           setCurrentPoints([]);
-        if (e.evt.button === 0 && e.evt.ctrlKey)
+        if (e.evt.button === 0 && isShortcutModifierPressed(e.evt))
           addPoint(e);
       }}
       onDragStart={(e) => {
