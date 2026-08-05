@@ -23,12 +23,13 @@ function ShortcutHelper({ shortcut, description }: { shortcut: string; descripti
 
 export default function Footer() {
   const shortcutModifier = getShortcutModifierLabel();
-  const { snap, atlasResolution, atlasAlpha }
+  const { snap, atlasResolution, atlasAlpha, markHandleScale }
     = useSettingsStore(
       useShallow(s => ({
         snap: s.snap,
         atlasResolution: s.atlasResolution,
         atlasAlpha: s.atlasAlpha,
+        markHandleScale: s.markHandleScale,
       })),
     );
 
@@ -69,6 +70,16 @@ export default function Footer() {
       </div>
 
       <div className="flex gap-4">
+        <FooterNumberSetting
+          title="Handles"
+          value={markHandleScale}
+          setValue={useSettingsStore.getState().setMarkHandleScale}
+          min={0.25}
+          max={4}
+          onIncrement={x => x + 0.25}
+          onDecrement={x => x - 0.25}
+          postProcess={x => Math.round(x * 4) / 4}
+        />
         <FooterNumberSetting
           title="Snap"
           value={snap}
