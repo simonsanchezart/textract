@@ -39,7 +39,9 @@
     "targets": [
       "nsis",
       "deb",
-      "appimage"
+      "appimage",
+      "dmg",
+      "app"
     ],
     "icon": [
       "icons/32x32.png",
@@ -49,7 +51,10 @@
       "icons/icon.ico"
     ],
     "category": "Utility",
-    "shortDescription": "Texture extractor from photos"
+    "shortDescription": "Texture extractor from photos",
+    "macOS": {
+      "minimumSystemVersion": "10.15"
+    }
   },
   "plugins": {
     "updater": {
