@@ -7,19 +7,29 @@ import { Group, Image, Line } from "react-konva";
 import useImage from "use-image";
 import { useShallow } from "zustand/react/shallow";
 import { useMarkStore } from "@/stores/mark-store";
-import { Colors } from "@/types/types";
+import { useCanvasStore } from "@/stores/canvas-store";
+import { useSettingsStore } from "@/stores/settings-store";
+import { CanvasType, Colors } from "@/types/types";
 import { getMiddle, isShortcutModifierPressed } from "@/utils/utils";
 import Mark from "./Mark";
 import MarkPoint from "./MarkPoint";
 
 function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
   const marks = useMarkStore(useShallow(s => s.marks));
+  const canvasZoom = useCanvasStore(s => s.canvas[CanvasType.MARK].scale);
+  const markHandleScale = useSettingsStore(s => s.markHandleScale);
 
   const [image] = useImage(imageData.src);
   const [currentPoints, setCurrentPoints] = useState<Vec2[]>([]);
   const currentPointsFlat = useMemo(() => currentPoints.flatMap(p => [p.x, p.y]), [currentPoints]);
 
-  const scaleFactor = useMemo(() => imageData.sizeSum * 0.0001, [imageData.sizeSum]);
+  // Base size is derived from image pixel dimensions (as before); dividing by
+  // canvasZoom keeps handles/lines a constant on-screen size as the user zooms
+  // the canvas, and markHandleScale is a user-adjustable multiplier on top.
+  const scaleFactor = useMemo(
+    () => (imageData.sizeSum * 0.0001 * markHandleScale) / (canvasZoom || 1),
+    [imageData.sizeSum, markHandleScale, canvasZoom],
+  );
 
   const addPoint = (e: KonvaEventObject<MouseEvent>) => {
     const pos = e.target.getRelativePointerPosition()!;

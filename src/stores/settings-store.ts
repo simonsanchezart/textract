@@ -6,9 +6,11 @@ type SettingsStore = {
   snap: number;
   atlasResolution: number;
   atlasAlpha: boolean;
+  markHandleScale: number;
   setSnap: (x: number) => void;
   setAtlasResolution: (x: number) => void;
   setAtlasAlpha: (x: boolean) => void;
+  setMarkHandleScale: (x: number) => void;
 };
 
 export const useSettingsStore = create(
@@ -17,6 +19,7 @@ export const useSettingsStore = create(
       snap: 8,
       atlasResolution: 512,
       atlasAlpha: true,
+      markHandleScale: 1,
       setSnap: x => set((state) => {
         state.snap = x;
       }),
@@ -25,6 +28,9 @@ export const useSettingsStore = create(
       }),
       setAtlasAlpha: x => set((state) => {
         state.atlasAlpha = x;
+      }),
+      setMarkHandleScale: x => set((state) => {
+        state.markHandleScale = x;
       }),
     })),
     { name: "settings-storage" },
