@@ -39,7 +39,8 @@
     "targets": [
       "nsis",
       "deb",
-      "appimage"
+      "appimage",
+      "app"
     ],
     "icon": [
       "icons/32x32.png",
