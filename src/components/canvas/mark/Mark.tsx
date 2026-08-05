@@ -1,8 +1,9 @@
 import type { MarkType } from "@/stores/mark-store";
 import { useMemo, useState } from "react";
 import { Group, Line } from "react-konva";
+import { useCanvasStore } from "@/stores/canvas-store";
 import { useMarkStore } from "@/stores/mark-store";
-import { Colors } from "@/types/types";
+import { CanvasType, Colors } from "@/types/types";
 import { lerpVec2 } from "@/utils/utils";
 import MarkPoint from "./MarkPoint";
 
@@ -10,6 +11,7 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
   const [markOffset, setMarkOffset] = useState({ x: 0, y: 0 });
   const [points, setPoints] = useState(mark.points);
   const pointsFlat = useMemo(() => points.flatMap(p => [p.x, p.y]), [points]);
+  const selectedPoints = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].selectedPoints);
 
   const gridPoints = useMemo(() => {
     const gridLineY1 = { p1: lerpVec2(points[0], points[1], 0.33), p2: lerpVec2(points[3], points[2], 0.33) };
@@ -36,6 +38,8 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
         onClick={(e) => {
           if (e.evt.altKey)
             useMarkStore.getState().removeMark(mark.id);
+          else
+            useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
         }}
         onDragMove={(e) => {
           setMarkOffset({ x: e.target.x(), y: e.target.y() });
@@ -70,12 +74,17 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
       ))}
 
       {points.map((p, id) => {
+        const selected = selectedPoints.some(sp => sp.markId === mark.id && sp.pointIndex === id);
         return (
           <MarkPoint
             // eslint-disable-next-line react/no-array-index-key
             key={id}
             position={p}
             offset={markOffset}
+            selected={selected}
+            onMouseDown={() => {
+              useCanvasStore.getState().selectPoint(CanvasType.MARK, mark.id, id);
+            }}
             onDragMove={(e) => {
               setPoints((prev) => {
                 const next = [...prev];

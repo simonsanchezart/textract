@@ -15,6 +15,13 @@ export type CanvasState = {
 export type TransientCanvasState = {
   hoverShape: Konva.Shape | null;
   selectedNodes: Node<NodeConfig>[];
+  /**
+   * Mark canvas only: currently-selected mark point(s). An array (not a
+   * single value) even though only one point can be selected today, so a
+   * future multi-select-and-convert-to-curve feature doesn't need a
+   * breaking shape change.
+   */
+  selectedPoints: { markId: string; pointIndex: number }[];
 };
 
 type CanvasStore = {
@@ -26,6 +33,8 @@ type CanvasStore = {
 
   setSelectedNodes: (canvas: CanvasType, nodes: Node<NodeConfig>[]) => void;
   setHoverShape: (canvas: CanvasType, shape: Konva.Shape | null) => void;
+  selectPoint: (canvas: CanvasType, markId: string, pointIndex: number) => void;
+  clearSelectedPoints: (canvas: CanvasType) => void;
 };
 
 export const useCanvasStore = create(
@@ -36,8 +45,8 @@ export const useCanvasStore = create(
         [CanvasType.ATLAS]: { scale: 1, x: 0, y: 0 },
       },
       transientCanvas: {
-        [CanvasType.MARK]: { hoverShape: null, selectedNodes: [] },
-        [CanvasType.ATLAS]: { hoverShape: null, selectedNodes: [] },
+        [CanvasType.MARK]: { hoverShape: null, selectedNodes: [], selectedPoints: [] },
+        [CanvasType.ATLAS]: { hoverShape: null, selectedNodes: [], selectedPoints: [] },
       },
       setCanvasScale: (canvas, scale) =>
         set((state) => {
@@ -55,6 +64,14 @@ export const useCanvasStore = create(
       setHoverShape: (canvas, shape) =>
         set((state) => {
           state.transientCanvas[canvas].hoverShape = shape;
+        }),
+      selectPoint: (canvas, markId, pointIndex) =>
+        set((state) => {
+          state.transientCanvas[canvas].selectedPoints = [{ markId, pointIndex }];
+        }),
+      clearSelectedPoints: canvas =>
+        set((state) => {
+          state.transientCanvas[canvas].selectedPoints = [];
         }),
     })),
     {

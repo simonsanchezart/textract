@@ -297,6 +297,9 @@ function MarkCanvas({ className = "" }: { className?: string }) {
         if (e.shiftKey)
           convertMarks();
         break;
+      case "Escape":
+        useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
+        break;
       default:
         break;
     }
