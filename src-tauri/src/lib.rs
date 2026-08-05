@@ -1,3 +1,4 @@
+mod mesh;
 mod transformation;
 mod utils;
 
@@ -18,7 +19,10 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![transformation::transform_image,])
+        .invoke_handler(tauri::generate_handler![
+            transformation::transform_image,
+            mesh::transform_image_mesh,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
