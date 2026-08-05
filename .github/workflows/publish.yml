@@ -65,6 +65,8 @@ jobs:
             args: ""
           - platform: windows-latest
             args: ""
+          - platform: macos-latest
+            args: ""
 
     runs-on: ${{ matrix.platform }}
     steps:
