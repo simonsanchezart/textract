@@ -9,16 +9,52 @@ import MarkPoint from "./MarkPoint";
 function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
   const [markOffset, setMarkOffset] = useState({ x: 0, y: 0 });
   const [points, setPoints] = useState(mark.points);
-  const pointsFlat = useMemo(() => points.flatMap(p => [p.x, p.y]), [points]);
+  const isGrid = mark.markType === "grid" && !!mark.gridDims;
+  const { rows, cols } = mark.gridDims ?? { rows: 0, cols: 0 };
 
-  const gridPoints = useMemo(() => {
-    const gridLineY1 = { p1: lerpVec2(points[0], points[1], 0.33), p2: lerpVec2(points[3], points[2], 0.33) };
-    const gridLineY2 = { p1: lerpVec2(points[0], points[1], 0.67), p2: lerpVec2(points[3], points[2], 0.67) };
-    const gridLineX1 = { p1: lerpVec2(points[0], points[3], 0.33), p2: lerpVec2(points[1], points[2], 0.33) };
-    const gridLineX2 = { p1: lerpVec2(points[0], points[3], 0.67), p2: lerpVec2(points[1], points[2], 0.67) };
+  // A grid mark's points are row-major, so a single closed Line through them
+  // in that order would zigzag — walk the perimeter (top row, right column,
+  // bottom row reversed, left column reversed) for the outline shape instead.
+  const outlinePoints = useMemo(() => {
+    if (!isGrid)
+      return points;
 
-    return { lines: [gridLineY1, gridLineY2, gridLineX1, gridLineX2] };
-  }, [points]);
+    const at = (r: number, c: number) => points[r * cols + c];
+    const perimeter: typeof points = [];
+    for (let c = 0; c < cols; c++) perimeter.push(at(0, c));
+    for (let r = 1; r < rows; r++) perimeter.push(at(r, cols - 1));
+    for (let c = cols - 2; c >= 0; c--) perimeter.push(at(rows - 1, c));
+    for (let r = rows - 2; r >= 1; r--) perimeter.push(at(r, 0));
+    return perimeter;
+  }, [isGrid, points, rows, cols]);
+
+  const pointsFlat = useMemo(() => outlinePoints.flatMap(p => [p.x, p.y]), [outlinePoints]);
+
+  // Each entry is a flattened [x,y,x,y,...] polyline. For grid marks these
+  // walk every intermediate point (not just the two ends) so the preview
+  // line actually follows the curve the user has dragged into shape rather
+  // than showing a straight chord across it.
+  const gridLines: number[][] = useMemo(() => {
+    if (isGrid) {
+      const lines: number[][] = [];
+      for (let r = 0; r < rows; r++) {
+        const row = points.slice(r * cols, r * cols + cols);
+        lines.push(row.flatMap(p => [p.x, p.y]));
+      }
+      for (let c = 0; c < cols; c++) {
+        const col = Array.from({ length: rows }, (_, r) => points[r * cols + c]);
+        lines.push(col.flatMap(p => [p.x, p.y]));
+      }
+      return lines;
+    }
+
+    const gridLineY1 = [lerpVec2(points[0], points[1], 0.33), lerpVec2(points[3], points[2], 0.33)];
+    const gridLineY2 = [lerpVec2(points[0], points[1], 0.67), lerpVec2(points[3], points[2], 0.67)];
+    const gridLineX1 = [lerpVec2(points[0], points[3], 0.33), lerpVec2(points[1], points[2], 0.33)];
+    const gridLineX2 = [lerpVec2(points[0], points[3], 0.67), lerpVec2(points[1], points[2], 0.67)];
+
+    return [gridLineY1, gridLineY2, gridLineX1, gridLineX2].map(line => line.flatMap(p => [p.x, p.y]));
+  }, [isGrid, points, rows, cols]);
 
   return (
     <Group draggable>
@@ -64,9 +100,9 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
         }}
       />
 
-      {gridPoints.lines.map((line, idx) => (
+      {gridLines.map((linePoints, idx) => (
         // eslint-disable-next-line react/no-array-index-key
-        <Line key={idx} offset={{ x: -markOffset.x, y: -markOffset.y }} points={[line.p1.x, line.p1.y, line.p2.x, line.p2.y]} stroke="white" opacity={0.5} strokeWidth={scale} />
+        <Line key={idx} offset={{ x: -markOffset.x, y: -markOffset.y }} points={linePoints} stroke="white" opacity={0.5} strokeWidth={scale} />
       ))}
 
       {points.map((p, id) => {

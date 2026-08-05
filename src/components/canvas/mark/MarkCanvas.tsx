@@ -6,7 +6,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { exists } from "@tauri-apps/plugin-fs";
 import { info, warn } from "@tauri-apps/plugin-log";
 import Konva from "konva";
-import { TrashIcon } from "lucide-react";
+import { Grid3x3, TrashIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { CgAdd } from "react-icons/cg";
 import { FaPlay } from "react-icons/fa";
@@ -28,6 +28,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
   const atlasImages = useAtlasStore(state => state.images);
   const selectedNodes = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].selectedNodes);
   const hoverShape = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].hoverShape);
+  const markCreationMode = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].markCreationMode);
   const snapSize = useSettingsStore(s => s.snap);
 
   const transformerRef = useRef<Konva.Transformer>(null);
@@ -168,43 +169,67 @@ function MarkCanvas({ className = "" }: { className?: string }) {
           return;
         }
 
-        const markPoints = dirtyIds.flatMap(id =>
-          marks[id].points.flatMap(p => [Math.round(p.x), Math.round(p.y)]),
-        );
+        const applyResults = async (ids: string[], results: string[]) => {
+          results.forEach(async (base64, idx) => {
+            const markId = ids[idx];
+            const existingAtlasImage = Object.values(atlasImages).find(image => image.markId === markId);
 
-        const results: string[] = await invoke("transform_image", {
-          imgPath: image.filepath,
-          points: markPoints,
-        });
+            const img = new Image();
+            img.src = base64;
+            await img.decode();
+            const snapScaleX = snap(img.width, snapSize) / img.width;
+            const snapScaleY = snap(img.height, snapSize) / img.height;
 
-        results.forEach(async (base64, idx) => {
-          const markId = dirtyIds[idx];
-          const existingAtlasImage = Object.values(atlasImages).find(image => image.markId === markId);
+            if (existingAtlasImage) {
+              useAtlasStore.getState().updateImageBase64(existingAtlasImage.id, base64);
+              useAtlasStore.getState().updateImageScale(existingAtlasImage.id, { x: snapScaleX, y: snapScaleY });
+            }
+            else {
+              const atlasImage: AtlasImageType = {
+                id: crypto.randomUUID(),
+                base64,
+                markId,
+                position: { x: 0, y: 0 },
+                rotation: 0,
+                scale: { x: snapScaleX, y: snapScaleY },
+              };
 
-          const img = new Image();
-          img.src = base64;
-          await img.decode();
-          const snapScaleX = snap(img.width, snapSize) / img.width;
-          const snapScaleY = snap(img.height, snapSize) / img.height;
+              useAtlasStore.getState().addImage(atlasImage);
+            }
+            useMarkStore.getState().updateMarkDirty(markId, false);
+          });
+        };
 
-          if (existingAtlasImage) {
-            useAtlasStore.getState().updateImageBase64(existingAtlasImage.id, base64);
-            useAtlasStore.getState().updateImageScale(existingAtlasImage.id, { x: snapScaleX, y: snapScaleY });
-          }
-          else {
-            const atlasImage: AtlasImageType = {
-              id: crypto.randomUUID(),
-              base64,
-              markId,
-              position: { x: 0, y: 0 },
-              rotation: 0,
-              scale: { x: snapScaleX, y: snapScaleY },
-            };
+        const quadIds = dirtyIds.filter(id => marks[id].markType !== "grid");
+        const gridIds = dirtyIds.filter(id => marks[id].markType === "grid");
 
-            useAtlasStore.getState().addImage(atlasImage);
-          }
-          useMarkStore.getState().updateMarkDirty(markId, false);
-        });
+        if (quadIds.length > 0) {
+          const markPoints = quadIds.flatMap(id =>
+            marks[id].points.flatMap(p => [Math.round(p.x), Math.round(p.y)]),
+          );
+
+          const results: string[] = await invoke("transform_image", {
+            imgPath: image.filepath,
+            points: markPoints,
+          });
+
+          await applyResults(quadIds, results);
+        }
+
+        if (gridIds.length > 0) {
+          const gridMarks = gridIds.map(id => ({
+            rows: marks[id].gridDims!.rows,
+            cols: marks[id].gridDims!.cols,
+            points: marks[id].points.flatMap(p => [Math.round(p.x), Math.round(p.y)]),
+          }));
+
+          const results: string[] = await invoke("transform_image_mesh", {
+            imgPath: image.filepath,
+            marks: gridMarks,
+          });
+
+          await applyResults(gridIds, results);
+        }
 
         toast.success(`Finished processing ${dirtyIds.length} marks for ${imgName}`);
         info(`Finished processing ${dirtyIds.length} marks for ${imgName}`);
@@ -297,6 +322,10 @@ function MarkCanvas({ className = "" }: { className?: string }) {
         if (e.shiftKey)
           convertMarks();
         break;
+      case "KeyG":
+        if (e.shiftKey)
+          useCanvasStore.getState().toggleMarkCreationMode(CanvasType.MARK);
+        break;
       default:
         break;
     }
@@ -323,6 +352,15 @@ function MarkCanvas({ className = "" }: { className?: string }) {
       <Toolbar>
         <ToolbarAction Icon={CgAdd} onClick={loadImages} tooltip="Load Images (Shift+A)" />
         <ToolbarAction Icon={FaPlay} size={4} onClick={() => convertMarks()} tooltip="Convert Marks (Shift+R)" />
+        <ToolbarAction
+          Icon={Grid3x3}
+          size={4}
+          active={markCreationMode === "grid"}
+          onClick={() => useCanvasStore.getState().toggleMarkCreationMode(CanvasType.MARK)}
+          tooltip={markCreationMode === "grid"
+            ? "Grid mode: Ctrl+Click 4 corners to place a curved-surface mark (Shift+G)"
+            : "Quad mode: Ctrl+Click 4 corners for a straight mark (Shift+G to switch to curved/grid mode)"}
+        />
       </Toolbar>
     </div>
   );

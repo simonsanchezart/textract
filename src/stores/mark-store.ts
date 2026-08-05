@@ -3,11 +3,20 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
+export type GridDims = {
+  rows: number;
+  cols: number;
+};
+
 export type MarkType = {
   id: string;
   imageId: string;
   points: Vec2[];
   dirty: boolean;
+  /** Defaults to "quad" for marks persisted before grid marks existed. */
+  markType?: "quad" | "grid";
+  /** Only set when markType is "grid" — points is a row-major rows*cols grid. */
+  gridDims?: GridDims;
 };
 
 export type MarkImageType = {

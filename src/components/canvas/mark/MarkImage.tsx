@@ -1,19 +1,26 @@
 import type Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
-import type { MarkImageType } from "@/stores/mark-store";
+import type { GridDims, MarkImageType } from "@/stores/mark-store";
 import type { Vec2 } from "@/types/types";
 import { useMemo, useState } from "react";
 import { Group, Image, Line } from "react-konva";
 import useImage from "use-image";
 import { useShallow } from "zustand/react/shallow";
+import { useCanvasStore } from "@/stores/canvas-store";
 import { useMarkStore } from "@/stores/mark-store";
-import { Colors } from "@/types/types";
-import { getMiddle } from "@/utils/utils";
+import { CanvasType, Colors } from "@/types/types";
+import { bilinearGrid, classifyCorners, getMiddle } from "@/utils/utils";
 import Mark from "./Mark";
 import MarkPoint from "./MarkPoint";
 
+// Grid density for new curved-surface marks. Fixed for now — the user
+// still shapes the curve by dragging individual interior points after
+// creation, so a denser grid isn't required to get a usable result.
+const DEFAULT_GRID_DIMS: GridDims = { rows: 4, cols: 4 };
+
 function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
   const marks = useMarkStore(useShallow(s => s.marks));
+  const markCreationMode = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].markCreationMode);
 
   const [image] = useImage(imageData.src);
   const [currentPoints, setCurrentPoints] = useState<Vec2[]>([]);
@@ -26,20 +33,36 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
 
     const updated = [...currentPoints, { x: pos.x, y: pos.y }];
     if (updated.length === 4) {
-      const center = getMiddle(updated);
-      const sortedPoints = updated.sort((a, b) => {
-        const angleA = Math.atan2(center.y - a.y, center.x - a.x);
-        const angleB = Math.atan2(center.y - b.y, center.x - b.x);
+      if (markCreationMode === "grid") {
+        const corners = classifyCorners(updated);
+        const gridPoints = bilinearGrid(corners, DEFAULT_GRID_DIMS.rows, DEFAULT_GRID_DIMS.cols);
 
-        return angleA < angleB ? 1 : -1;
-      });
+        useMarkStore.getState().addMark(imageData.id, {
+          id: crypto.randomUUID(),
+          imageId: imageData.id,
+          points: gridPoints,
+          dirty: true,
+          markType: "grid",
+          gridDims: DEFAULT_GRID_DIMS,
+        });
+      }
+      else {
+        const center = getMiddle(updated);
+        const sortedPoints = updated.sort((a, b) => {
+          const angleA = Math.atan2(center.y - a.y, center.x - a.x);
+          const angleB = Math.atan2(center.y - b.y, center.x - b.x);
 
-      useMarkStore.getState().addMark(imageData.id, {
-        id: crypto.randomUUID(),
-        imageId: imageData.id,
-        points: sortedPoints,
-        dirty: true,
-      });
+          return angleA < angleB ? 1 : -1;
+        });
+
+        useMarkStore.getState().addMark(imageData.id, {
+          id: crypto.randomUUID(),
+          imageId: imageData.id,
+          points: sortedPoints,
+          dirty: true,
+          markType: "quad",
+        });
+      }
 
       setCurrentPoints([]);
     }
