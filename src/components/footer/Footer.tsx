@@ -55,8 +55,11 @@ export default function Footer() {
             <hr />
 
             <ShortcutHelper shortcut={`${shortcutModifier}+Click`} description="Add Mark Point" />
+            <ShortcutHelper shortcut="Shift+Click (on point)" description="Add/Remove From Selection" />
             <ShortcutHelper shortcut="Shift+R" description="Convert Marks" />
             <ShortcutHelper shortcut="Alt+Click" description="Delete Mark" />
+            <ShortcutHelper shortcut={`${shortcutModifier}+Z`} description="Undo" />
+            <ShortcutHelper shortcut={`Shift+${shortcutModifier}+Z`} description="Redo" />
 
             <hr />
 
@@ -97,9 +100,9 @@ export default function Footer() {
           setValue={useSettingsStore.getState().setMarkHandleScale}
           min={0.25}
           max={4}
-          onIncrement={x => x + 0.25}
-          onDecrement={x => x - 0.25}
-          postProcess={x => Math.round(x * 4) / 4}
+          onIncrement={x => x + 0.1}
+          onDecrement={x => x - 0.1}
+          postProcess={x => Math.round(x * 10) / 10}
         />
         <FooterNumberSetting
           title="Snap"

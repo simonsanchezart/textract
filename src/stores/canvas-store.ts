@@ -43,6 +43,7 @@ type CanvasStore = {
   setMarkGridRows: (canvas: CanvasType, rows: number) => void;
   setMarkGridCols: (canvas: CanvasType, cols: number) => void;
   selectPoint: (canvas: CanvasType, markId: string, pointIndex: number) => void;
+  togglePointSelection: (canvas: CanvasType, markId: string, pointIndex: number) => void;
   clearSelectedPoints: (canvas: CanvasType) => void;
 };
 
@@ -94,6 +95,15 @@ export const useCanvasStore = create(
       selectPoint: (canvas, markId, pointIndex) =>
         set((state) => {
           state.transientCanvas[canvas].selectedPoints = [{ markId, pointIndex }];
+        }),
+      togglePointSelection: (canvas, markId, pointIndex) =>
+        set((state) => {
+          const points = state.transientCanvas[canvas].selectedPoints;
+          const existingIdx = points.findIndex(p => p.markId === markId && p.pointIndex === pointIndex);
+          if (existingIdx >= 0)
+            points.splice(existingIdx, 1);
+          else
+            points.push({ markId, pointIndex });
         }),
       clearSelectedPoints: canvas =>
         set((state) => {

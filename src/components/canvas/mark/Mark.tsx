@@ -129,8 +129,21 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
             position={p}
             offset={markOffset}
             selected={selected}
-            onMouseDown={() => {
-              useCanvasStore.getState().selectPoint(CanvasType.MARK, mark.id, id);
+            onMouseDown={(e) => {
+              if (e.evt.shiftKey)
+                useCanvasStore.getState().togglePointSelection(CanvasType.MARK, mark.id, id);
+              else
+                useCanvasStore.getState().selectPoint(CanvasType.MARK, mark.id, id);
+            }}
+            onClick={(e) => {
+              // Konva clicks bubble, and this point sits inside MarkImage's
+              // Group, whose onClick treats any plain left click as a
+              // background click and calls clearSelectedPoints. Without this
+              // the mousedown above selects the point and the very next
+              // mouseup wipes it again -- unless the pointer happened to move
+              // past Konva's 3px dragDistance, which suppresses the synthetic
+              // click. That made selection look flaky rather than broken.
+              e.cancelBubble = true;
             }}
             onDragMove={(e) => {
               setPoints((prev) => {
