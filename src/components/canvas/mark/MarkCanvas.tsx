@@ -19,7 +19,7 @@ import { useCanvasStore } from "@/stores/canvas-store";
 import { useMarkStore } from "@/stores/mark-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { CanvasType } from "@/types/types";
-import { snap } from "@/utils/utils";
+import { isShortcutModifierPressed, snap } from "@/utils/utils";
 import Canvas from "../Canvas";
 import MarkImage from "./MarkImage";
 
@@ -296,6 +296,16 @@ function MarkCanvas({ className = "" }: { className?: string }) {
       case "KeyR":
         if (e.shiftKey)
           convertMarks();
+        break;
+      case "KeyZ":
+        if (isShortcutModifierPressed(e)) {
+          // Stop the webview's own text-undo from also firing.
+          e.preventDefault();
+          if (e.shiftKey)
+            useMarkStore.temporal.getState().redo();
+          else
+            useMarkStore.temporal.getState().undo();
+        }
         break;
       default:
         break;

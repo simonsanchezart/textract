@@ -127,23 +127,45 @@ export const useMarkStore = create(
         partialize: state => ({ images: state.images, marks: state.marks }),
         limit: 50,
         // A single logical edit (e.g. dragging a point) fires multiple store
-        // actions back-to-back (updateMarkPoint then updateMarkDirty), and
-        // temporal snapshots on every set() call by default -- without this,
-        // one undo only reverts the last of those (the invisible dirty
-        // flag), not the actual edit. Debouncing handleSet coalesces a burst
-        // of same-tick calls into a single history entry.
-        handleSet: handleSet => debounce<typeof handleSet>(handleSet, 300),
+        // actions back-to-back (updateMarkPoint per pointer-move, then
+        // updateMarkDirty), and temporal snapshots on every set() call by
+        // default -- without coalescing, one undo only reverts the last of
+        // those (the invisible dirty flag), not the actual edit.
+        //
+        // This MUST be leading-edge. zundo calls handleSet with the state as
+        // it was *before* that set (see `curriedHandleSet(pastState, ...)` in
+        // zundo/dist/index.js). A trailing-edge debounce keeps the LAST
+        // call's args, i.e. the state just before the final pointer-move --
+        // so undo restored the point to ~where it already was and looked like
+        // a no-op. Leading-edge keeps the FIRST call's args: the state from
+        // before the drag began, which is what undo should restore.
+        handleSet: handleSet => leadingDebounce<typeof handleSet>(handleSet, 300),
       },
     ),
     { name: "mark-storage" },
   ),
 );
 
-function debounce<T extends (...args: Parameters<T>) => void>(fn: T, delayMs: number): T {
+/**
+ * Leading-edge debounce: invokes `fn` immediately on the first call, then
+ * swallows further calls until `delayMs` has elapsed with no calls at all.
+ *
+ * Deliberately leading rather than trailing -- see the handleSet comment
+ * above. A burst of calls therefore yields exactly one invocation, using the
+ * arguments of the call that *started* the burst.
+ */
+function leadingDebounce<T extends (...args: Parameters<T>) => void>(fn: T, delayMs: number): T {
   let timer: ReturnType<typeof setTimeout> | undefined;
   return ((...args: Parameters<T>) => {
+    const isBurstStart = timer === undefined;
+
     if (timer)
       clearTimeout(timer);
-    timer = setTimeout(fn, delayMs, ...args);
+    timer = setTimeout(() => {
+      timer = undefined;
+    }, delayMs);
+
+    if (isBurstStart)
+      fn(...args);
   }) as T;
 }
