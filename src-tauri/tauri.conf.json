@@ -50,6 +50,9 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
+    "resources": [
+      "resources/*"
+    ],
     "category": "Utility",
     "shortDescription": "Texture extractor from photos",
     "macOS": {

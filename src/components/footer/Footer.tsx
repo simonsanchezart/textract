@@ -1,4 +1,5 @@
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { join, resourceDir } from "@tauri-apps/api/path";
+import { openPath, openUrl } from "@tauri-apps/plugin-opener";
 import { useShallow } from "zustand/react/shallow";
 import { useSettingsStore } from "@/stores/settings-store";
 import { getShortcutModifierLabel, snap as snapFn, snapPowerOfTwo } from "@/utils/utils";
@@ -19,6 +20,11 @@ function ShortcutHelper({ shortcut, description }: { shortcut: string; descripti
       </span>
     </>
   );
+}
+
+async function openHelpDoc() {
+  const helpPath = await join(await resourceDir(), "resources", "help.html");
+  await openPath(helpPath);
 }
 
 export default function Footer() {
@@ -60,10 +66,25 @@ export default function Footer() {
             <hr />
 
             <small
+              onClick={openHelpDoc}
+              className="text-gray-400 hover:cursor-pointer hover:text-red"
+            >
+              full docs &amp; feature guide
+            </small>
+
+            <hr />
+
+            <small
               onClick={async () => await openUrl("https://www.simonsanchez.art/")}
               className="text-gray-400 hover:cursor-pointer hover:text-red"
             >
               made by simon sanchez
+            </small>
+            <small
+              onClick={async () => await openUrl("https://github.com/ghsnyc/textract")}
+              className="text-gray-400 hover:cursor-pointer hover:text-red"
+            >
+              macOS port by ghsnyc
             </small>
           </TooltipContent>
         </Tooltip>
