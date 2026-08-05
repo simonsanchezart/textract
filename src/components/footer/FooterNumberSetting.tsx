@@ -65,7 +65,14 @@ export default function FooterNumberSetting({
           -
         </Button>
 
-        <div className="relative">
+        {/*
+          NOTE: on the Input below, `border-l-0` must stay AFTER `border` --
+          tailwind-merge treats the border-width shorthand as conflicting with
+          the per-side widths, so a `border-l-0` (or `border-x-0`) placed
+          before `border` is silently dropped and the input keeps a full
+          border, doubling up against the "-" button's right border.
+        */}
+        <div className="relative flex items-center">
           <Input
             type="number"
             value={inputValue}
@@ -75,7 +82,7 @@ export default function FooterNumberSetting({
               if (e.key === "Enter")
                 handleBlur();
             }}
-            className={`w-16 h-6 text-center rounded-none border-x-0 border border-primary/50 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${className}`}
+            className={`w-16 h-6 text-center rounded-none border border-primary/50 border-l-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${className}`}
           />
 
           {unit
