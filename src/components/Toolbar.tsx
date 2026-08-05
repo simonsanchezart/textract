@@ -24,8 +24,12 @@ export function ToolbarAction({ Icon, onClick, disabled = false, active, tooltip
     <Tooltip delayDuration={400}>
       <TooltipTrigger asChild>
         <Icon
+          // `!opacity-*`/`!text-*` (Tailwind's important-modifier) are required here:
+          // .button-icon already bakes in its own opacity-50/hover:opacity-100, which
+          // otherwise wins the cascade over a plain (non-important) utility and made
+          // the active/inactive states barely distinguishable.
           className={`size-${size} ${disabled ? "opacity-20 pointer-events-none" : "button-icon"
-          } ${isToggle ? (active ? "text-primary" : "opacity-40") : ""}`}
+          } ${isToggle ? (active ? "!opacity-100 !text-primary" : "!opacity-30") : ""}`}
           onClick={disabled ? undefined : onClick}
         />
       </TooltipTrigger>
