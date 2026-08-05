@@ -32,6 +32,7 @@ type CanvasStore = {
   setSelectedNodes: (canvas: CanvasType, nodes: Node<NodeConfig>[]) => void;
   setHoverShape: (canvas: CanvasType, shape: Konva.Shape | null) => void;
   toggleMarkCreationMode: (canvas: CanvasType) => void;
+  setMarkCreationMode: (canvas: CanvasType, mode: "quad" | "grid") => void;
   setMarkGridRows: (canvas: CanvasType, rows: number) => void;
   setMarkGridCols: (canvas: CanvasType, cols: number) => void;
 };
@@ -68,6 +69,10 @@ export const useCanvasStore = create(
         set((state) => {
           state.transientCanvas[canvas].markCreationMode
             = state.transientCanvas[canvas].markCreationMode === "quad" ? "grid" : "quad";
+        }),
+      setMarkCreationMode: (canvas, mode) =>
+        set((state) => {
+          state.transientCanvas[canvas].markCreationMode = mode;
         }),
       setMarkGridRows: (canvas, rows) =>
         set((state) => {

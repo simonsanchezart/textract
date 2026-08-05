@@ -6,7 +6,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { exists } from "@tauri-apps/plugin-fs";
 import { error, info, warn } from "@tauri-apps/plugin-log";
 import Konva from "konva";
-import { Grid3x3, TrashIcon } from "lucide-react";
+import { BoxSelect, Grid3x3, TrashIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { CgAdd } from "react-icons/cg";
 import { FaPlay } from "react-icons/fa";
@@ -362,13 +362,18 @@ function MarkCanvas({ className = "" }: { className?: string }) {
         <ToolbarAction Icon={CgAdd} onClick={loadImages} tooltip="Load Images (Shift+A)" />
         <ToolbarAction Icon={FaPlay} size={4} onClick={() => convertMarks()} tooltip="Convert Marks (Shift+R)" />
         <ToolbarAction
+          Icon={BoxSelect}
+          size={4}
+          active={markCreationMode === "quad"}
+          onClick={() => useCanvasStore.getState().setMarkCreationMode(CanvasType.MARK, "quad")}
+          tooltip={`Quad mode: ${getShortcutModifierLabel()}+Click 4 corners for a straight mark (Shift+G to switch)`}
+        />
+        <ToolbarAction
           Icon={Grid3x3}
           size={4}
           active={markCreationMode === "grid"}
-          onClick={() => useCanvasStore.getState().toggleMarkCreationMode(CanvasType.MARK)}
-          tooltip={markCreationMode === "grid"
-            ? `Grid mode: ${getShortcutModifierLabel()}+Click 4 corners to place a curved-surface mark (Shift+G)`
-            : `Quad mode: ${getShortcutModifierLabel()}+Click 4 corners for a straight mark (Shift+G to switch to curved/grid mode)`}
+          onClick={() => useCanvasStore.getState().setMarkCreationMode(CanvasType.MARK, "grid")}
+          tooltip={`Grid mode: ${getShortcutModifierLabel()}+Click 4 corners to place a curved-surface mark (Shift+G to switch)`}
         />
 
         {markCreationMode === "grid" && (
