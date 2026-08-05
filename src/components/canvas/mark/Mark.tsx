@@ -102,7 +102,7 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
 
       {gridLines.map((linePoints, idx) => (
         // eslint-disable-next-line react/no-array-index-key
-        <Line key={idx} offset={{ x: -markOffset.x, y: -markOffset.y }} points={linePoints} stroke="white" opacity={0.5} strokeWidth={scale} />
+        <Line key={idx} offset={{ x: -markOffset.x, y: -markOffset.y }} points={linePoints} stroke="white" opacity={0.5} strokeWidth={scale} listening={false} />
       ))}
 
       {points.map((p, id) => {
