@@ -12,6 +12,7 @@ import { CgAdd } from "react-icons/cg";
 import { FaPlay } from "react-icons/fa";
 import { Line } from "react-konva";
 import { toast } from "sonner";
+import FooterNumberSetting from "@/components/footer/FooterNumberSetting";
 import { Toolbar, ToolbarAction } from "@/components/Toolbar";
 import { ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuShortcut, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger } from "@/components/ui/ContextMenu";
 import { useAtlasStore } from "@/stores/atlas-store";
@@ -29,6 +30,8 @@ function MarkCanvas({ className = "" }: { className?: string }) {
   const selectedNodes = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].selectedNodes);
   const hoverShape = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].hoverShape);
   const markCreationMode = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].markCreationMode);
+  const markGridRows = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].markGridRows);
+  const markGridCols = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].markGridCols);
   const snapSize = useSettingsStore(s => s.snap);
 
   const transformerRef = useRef<Konva.Transformer>(null);
@@ -361,6 +364,27 @@ function MarkCanvas({ className = "" }: { className?: string }) {
             ? "Grid mode: Ctrl+Click 4 corners to place a curved-surface mark (Shift+G)"
             : "Quad mode: Ctrl+Click 4 corners for a straight mark (Shift+G to switch to curved/grid mode)"}
         />
+
+        {markCreationMode === "grid" && (
+          <>
+            <FooterNumberSetting
+              title="Rows"
+              value={markGridRows}
+              min={2}
+              max={12}
+              setValue={rows => useCanvasStore.getState().setMarkGridRows(CanvasType.MARK, rows)}
+              className="w-10"
+            />
+            <FooterNumberSetting
+              title="Cols"
+              value={markGridCols}
+              min={2}
+              max={12}
+              setValue={cols => useCanvasStore.getState().setMarkGridCols(CanvasType.MARK, cols)}
+              className="w-10"
+            />
+          </>
+        )}
       </Toolbar>
     </div>
   );
