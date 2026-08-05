@@ -1,6 +1,6 @@
 import type Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
-import type { GridDims, MarkImageType } from "@/stores/mark-store";
+import type { MarkImageType } from "@/stores/mark-store";
 import type { Vec2 } from "@/types/types";
 import { useMemo, useState } from "react";
 import { Group, Image, Line } from "react-konva";
@@ -13,14 +13,11 @@ import { bilinearGrid, classifyCorners, getMiddle } from "@/utils/utils";
 import Mark from "./Mark";
 import MarkPoint from "./MarkPoint";
 
-// Grid density for new curved-surface marks. Fixed for now — the user
-// still shapes the curve by dragging individual interior points after
-// creation, so a denser grid isn't required to get a usable result.
-const DEFAULT_GRID_DIMS: GridDims = { rows: 4, cols: 4 };
-
 function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
   const marks = useMarkStore(useShallow(s => s.marks));
   const markCreationMode = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].markCreationMode);
+  const markGridRows = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].markGridRows);
+  const markGridCols = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].markGridCols);
 
   const [image] = useImage(imageData.src);
   const [currentPoints, setCurrentPoints] = useState<Vec2[]>([]);
@@ -35,7 +32,8 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
     if (updated.length === 4) {
       if (markCreationMode === "grid") {
         const corners = classifyCorners(updated);
-        const gridPoints = bilinearGrid(corners, DEFAULT_GRID_DIMS.rows, DEFAULT_GRID_DIMS.cols);
+        const gridDims = { rows: markGridRows, cols: markGridCols };
+        const gridPoints = bilinearGrid(corners, gridDims.rows, gridDims.cols);
 
         useMarkStore.getState().addMark(imageData.id, {
           id: crypto.randomUUID(),
@@ -43,7 +41,7 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
           points: gridPoints,
           dirty: true,
           markType: "grid",
-          gridDims: DEFAULT_GRID_DIMS,
+          gridDims,
         });
       }
       else {

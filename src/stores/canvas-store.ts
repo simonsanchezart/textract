@@ -17,6 +17,9 @@ export type TransientCanvasState = {
   selectedNodes: Node<NodeConfig>[];
   /** Mark canvas only: which mark type Ctrl+Click creates next. */
   markCreationMode: "quad" | "grid";
+  /** Mark canvas only: rows/cols used to seed the next new grid mark. */
+  markGridRows: number;
+  markGridCols: number;
 };
 
 type CanvasStore = {
@@ -29,6 +32,8 @@ type CanvasStore = {
   setSelectedNodes: (canvas: CanvasType, nodes: Node<NodeConfig>[]) => void;
   setHoverShape: (canvas: CanvasType, shape: Konva.Shape | null) => void;
   toggleMarkCreationMode: (canvas: CanvasType) => void;
+  setMarkGridRows: (canvas: CanvasType, rows: number) => void;
+  setMarkGridCols: (canvas: CanvasType, cols: number) => void;
 };
 
 export const useCanvasStore = create(
@@ -39,8 +44,8 @@ export const useCanvasStore = create(
         [CanvasType.ATLAS]: { scale: 1, x: 0, y: 0 },
       },
       transientCanvas: {
-        [CanvasType.MARK]: { hoverShape: null, selectedNodes: [], markCreationMode: "quad" },
-        [CanvasType.ATLAS]: { hoverShape: null, selectedNodes: [], markCreationMode: "quad" },
+        [CanvasType.MARK]: { hoverShape: null, selectedNodes: [], markCreationMode: "quad", markGridRows: 4, markGridCols: 4 },
+        [CanvasType.ATLAS]: { hoverShape: null, selectedNodes: [], markCreationMode: "quad", markGridRows: 4, markGridCols: 4 },
       },
       setCanvasScale: (canvas, scale) =>
         set((state) => {
@@ -63,6 +68,14 @@ export const useCanvasStore = create(
         set((state) => {
           state.transientCanvas[canvas].markCreationMode
             = state.transientCanvas[canvas].markCreationMode === "quad" ? "grid" : "quad";
+        }),
+      setMarkGridRows: (canvas, rows) =>
+        set((state) => {
+          state.transientCanvas[canvas].markGridRows = rows;
+        }),
+      setMarkGridCols: (canvas, cols) =>
+        set((state) => {
+          state.transientCanvas[canvas].markGridCols = cols;
         }),
     })),
     {
