@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.0.1] - 2026-08-05
+### :bug: Bug Fixes
+- [`daacf0b`](https://github.com/simonsanchezart/textract/commit/daacf0b36c89d03371aab5b43427476eb37232ad) - **macos**: support command shortcuts and app bundle *(PR [#14](https://github.com/simonsanchezart/textract/pull/14) by [@jrappeneker](https://github.com/jrappeneker))*
+
+### :wrench: Chores
+- [`4b4aa73`](https://github.com/simonsanchezart/textract/commit/4b4aa736b8b8ae92a18700f07ca913fcfc3ef77d) - use recommended tauri cargo config *(PR [#13](https://github.com/simonsanchezart/textract/pull/13) by [@simonsanchezart](https://github.com/simonsanchezart))*
+  - :arrow_lower_right: *addresses issue [#12](https://github.com/simonsanchezart/textract/issues/12) opened by [@zamazan4ik](https://github.com/zamazan4ik)*
+
+
 ## [v1.0.0] - 2026-07-05
 ### :sparkles: New Features
 - [`8e1516a`](https://github.com/simonsanchezart/textract/commit/8e1516a406301eecefc98f82a71955ab4ef2955f) - center view on start *(commit by [@simonsanchezart](https://github.com/simonsanchezart))*
@@ -25,3 +34,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [`9537d2e`](https://github.com/simonsanchezart/textract/commit/9537d2ed5649a99be44431ddb2d59481a293115b) - ignore trailer assets *(commit by [@simonsanchezart](https://github.com/simonsanchezart))*
 
 [v1.0.0]: https://github.com/simonsanchezart/textract/compare/v0.0.0...v1.0.0
+[v1.0.1]: https://github.com/simonsanchezart/textract/compare/v1.0.0...v1.0.1
