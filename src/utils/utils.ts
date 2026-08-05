@@ -55,16 +55,33 @@ export function clamp(x: number, min: number, max: number) {
 }
 
 /**
- * Classifies 4 arbitrarily-ordered corner points into { tl, tr, bl, br } by
- * comparing each to the centroid. Works for any reasonably convex quad the
- * user clicks (not just axis-aligned ones) — the common case for a mark.
+ * Classifies 4 arbitrarily-ordered corner points into { tl, tr, bl, br }.
+ * Sorts by angle around the centroid first (rotation-invariant — this is
+ * what makes it safe for any quad orientation the user clicks, not just
+ * axis-aligned ones), then starts the cycle at whichever point is closest to
+ * top-left. Quadrant membership tests alone aren't enough here: a rotated
+ * quad (e.g. a diamond) can put two points in one quadrant and none in
+ * another, which silently duplicates a corner and drops one entirely.
  */
 export function classifyCorners(points: Vec2[]): { tl: Vec2; tr: Vec2; bl: Vec2; br: Vec2 } {
   const center = getMiddle(points);
-  const tl = points.find(p => p.x < center.x && p.y < center.y) ?? points[0];
-  const tr = points.find(p => p.x >= center.x && p.y < center.y) ?? points[1];
-  const bl = points.find(p => p.x < center.x && p.y >= center.y) ?? points[2];
-  const br = points.find(p => p.x >= center.x && p.y >= center.y) ?? points[3];
+  const sorted = [...points].sort((a, b) => {
+    const angleA = Math.atan2(a.y - center.y, a.x - center.x);
+    const angleB = Math.atan2(b.y - center.y, b.x - center.x);
+    return angleA - angleB;
+  });
+
+  let startIdx = 0;
+  let best = Infinity;
+  sorted.forEach((p, i) => {
+    const score = p.x + p.y;
+    if (score < best) {
+      best = score;
+      startIdx = i;
+    }
+  });
+
+  const [tl, tr, br, bl] = [0, 1, 2, 3].map(offset => sorted[(startIdx + offset) % 4]);
   return { tl, tr, bl, br };
 }
 

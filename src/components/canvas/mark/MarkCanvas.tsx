@@ -4,7 +4,7 @@ import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { basename } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/plugin-dialog";
 import { exists } from "@tauri-apps/plugin-fs";
-import { info, warn } from "@tauri-apps/plugin-log";
+import { error, info, warn } from "@tauri-apps/plugin-log";
 import Konva from "konva";
 import { Grid3x3, TrashIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
@@ -26,7 +26,6 @@ import MarkImage from "./MarkImage";
 
 function MarkCanvas({ className = "" }: { className?: string }) {
   const markImages = useMarkStore(state => state.images);
-  const atlasImages = useAtlasStore(state => state.images);
   const selectedNodes = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].selectedNodes);
   const hoverShape = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].hoverShape);
   const markCreationMode = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].markCreationMode);
@@ -173,9 +172,9 @@ function MarkCanvas({ className = "" }: { className?: string }) {
         }
 
         const applyResults = async (ids: string[], results: string[]) => {
-          results.forEach(async (base64, idx) => {
+          for (const [idx, base64] of results.entries()) {
             const markId = ids[idx];
-            const existingAtlasImage = Object.values(atlasImages).find(image => image.markId === markId);
+            const existingAtlasImage = Object.values(useAtlasStore.getState().images).find(image => image.markId === markId);
 
             const img = new Image();
             img.src = base64;
@@ -200,38 +199,45 @@ function MarkCanvas({ className = "" }: { className?: string }) {
               useAtlasStore.getState().addImage(atlasImage);
             }
             useMarkStore.getState().updateMarkDirty(markId, false);
-          });
+          }
         };
 
         const quadIds = dirtyIds.filter(id => marks[id].markType !== "grid");
         const gridIds = dirtyIds.filter(id => marks[id].markType === "grid");
 
-        if (quadIds.length > 0) {
-          const markPoints = quadIds.flatMap(id =>
-            marks[id].points.flatMap(p => [Math.round(p.x), Math.round(p.y)]),
-          );
+        try {
+          if (quadIds.length > 0) {
+            const markPoints = quadIds.flatMap(id =>
+              marks[id].points.flatMap(p => [Math.round(p.x), Math.round(p.y)]),
+            );
 
-          const results: string[] = await invoke("transform_image", {
-            imgPath: image.filepath,
-            points: markPoints,
-          });
+            const results: string[] = await invoke("transform_image", {
+              imgPath: image.filepath,
+              points: markPoints,
+            });
 
-          await applyResults(quadIds, results);
+            await applyResults(quadIds, results);
+          }
+
+          if (gridIds.length > 0) {
+            const gridMarks = gridIds.map(id => ({
+              rows: marks[id].gridDims!.rows,
+              cols: marks[id].gridDims!.cols,
+              points: marks[id].points.flatMap(p => [Math.round(p.x), Math.round(p.y)]),
+            }));
+
+            const results: string[] = await invoke("transform_image_mesh", {
+              imgPath: image.filepath,
+              marks: gridMarks,
+            });
+
+            await applyResults(gridIds, results);
+          }
         }
-
-        if (gridIds.length > 0) {
-          const gridMarks = gridIds.map(id => ({
-            rows: marks[id].gridDims!.rows,
-            cols: marks[id].gridDims!.cols,
-            points: marks[id].points.flatMap(p => [Math.round(p.x), Math.round(p.y)]),
-          }));
-
-          const results: string[] = await invoke("transform_image_mesh", {
-            imgPath: image.filepath,
-            marks: gridMarks,
-          });
-
-          await applyResults(gridIds, results);
+        catch (e) {
+          toast.error(`Failed to convert marks for ${imgName}: ${e}`);
+          error(`Failed to convert marks for ${imgName}: ${e}`);
+          return;
         }
 
         toast.success(`Finished processing ${dirtyIds.length} marks for ${imgName}`);
@@ -372,6 +378,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
               value={markGridRows}
               min={2}
               max={12}
+              postProcess={Math.round}
               setValue={rows => useCanvasStore.getState().setMarkGridRows(CanvasType.MARK, rows)}
               className="w-10"
             />
@@ -380,6 +387,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
               value={markGridCols}
               min={2}
               max={12}
+              postProcess={Math.round}
               setValue={cols => useCanvasStore.getState().setMarkGridCols(CanvasType.MARK, cols)}
               className="w-10"
             />
