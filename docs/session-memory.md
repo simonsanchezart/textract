@@ -18,11 +18,11 @@ Stack: React 19 + TypeScript + Vite + Tailwind + Zustand + react-konva (frontend
 6. Shift+R or the Convert toolbar button to extract — should produce a flattened rectangle on the right (export) canvas
 7. Shift+G back to quad mode for normal marks
 
-## What Doesn't (yet)
-- Never run `npm run tauri dev` on this machine yet — Phase 1 not started.
-- No macOS bundle target in `tauri.conf.json` (only Windows NSIS + Linux deb/AppImage).
-- No macOS runner in `.github/workflows/publish.yml` (only ubuntu-22.04 + windows-latest).
-- No curved-surface extraction — current `transform_image` command is a single 4-point planar homography (`imageproc::geometric_transformations::Projection::from_control_points`), which can't model non-planar curvature.
+## What Doesn't (yet) — current as of end of session 2026-08-05 (rate-limit cutoff)
+- **Undo/redo works for image placement but NOT for quad/grid mark point drags.** User confirmed live: dragging a point and pressing Cmd+Z does not revert it, while moving/dragging a whole image and undoing DOES work correctly. The `leadingDebounce` fix in `mark-store.ts` (commit `5dca4e8`) was verified correct in isolation (standalone script against the real store composition) but evidently doesn't fully fix the live point-drag case — needs fresh hands-on investigation next session, don't assume the existing fix is sufficient. Start by reproducing exactly: Cmd+Click 4 points (quad, not grid — simpler case), drag one point, Cmd+Z, observe.
+- **No visual indicator for quad mode.** The grid-mode toolbar icon (3x3 grid) highlights when active, but there's no counterpart icon for quad mode (the default) — user can't tell which mode they're in at a glance unless grid is active. User's ask: add a "square with dots at the 4 corners" icon *before* the grid icon in `MarkCanvas.tsx`'s toolbar, and make toolbar icons generally dimmer/less prominent unless selected/active (not just the grid icon's current `active` prop treatment — apply consistently).
+- Bundled help doc + `macOS port by ghsnyc` attribution (Phase 4b plan item 5) — not started.
+- Per-vertex curve/tension editing (Phase 4b plan item 6) — deliberately deferred, design captured in the plan file but not built.
 
 ## Key Technical Decisions
 - Curved-surface warp approach: piecewise-affine / Delaunay-triangulated mesh warp over an NxM point grid (not full thin-plate-spline) — simpler, uses primitives already available via `imageproc`/hand-rolled barycentric warps, and `imageproc::geometric_transformations::Projection` is retained unchanged for the existing 4-point path.
@@ -34,6 +34,15 @@ Stack: React 19 + TypeScript + Vite + Tailwind + Zustand + react-konva (frontend
 _(none yet — populate as Phase 1+ surfaces macOS-specific build/runtime issues)_
 
 ## Session Log (newest first)
+
+### 2026-08-05 — Session 2: Phase 4b (grid-mark UX), PR #1 closed, ended on rate limit
+- User hands-on confirmed the core curved-surface feature works on a real bottle-label photo (session 1's "no interactive test yet" gap closed). Minor edge softness at low grid density noted as expected, not a bug.
+- Cherry-picked [upstream PR #14](https://github.com/simonsanchezart/textract/pull/14) (community fix, since merged) for macOS's Ctrl+Click-is-right-click conflict — app-wide `isShortcutModifierPressed()`/`getShortcutModifierLabel()` helpers, Cmd on macOS.
+- **PR #1 closed by the maintainer** — redundant with #14. Doesn't affect our own signed installer (entitlements only matter for signed builds; maintainer isn't signing his). PR #2 (curved-surface) will rebase on current `upstream/main` and only contain the mesh-warp feature.
+- Planned + built Phase 4b (see plan file): Opus review of the merged grid-mark code found and fixed 4 confirmed + 1 plausible bug (rotated-quad corner classification, async-forEach race in convertMarks, missing error handling on both invoke calls, grid preview lines stealing hoverShape, non-integer rows/cols). Then built: zoom-stable adjustable handle/line sizing (Footer "Handles" stepper), selected-vertex highlight (canvas-store `selectedPoints`, array-shaped for a later multi-select curve phase), and started undo/redo (zundo `temporal` middleware).
+- **Undo/redo hit two real bugs in a row**, both fixed via Opus investigation rather than guessing: first, dragging a point calls two store actions (`updateMarkPoint` + `updateMarkDirty`), and `temporal` snapshots every `set()` call, so one drag produced two history entries — fixed with a debounced `handleSet`. Second (subtler): that debounce was trailing-edge, but zundo calls `handleSet` with the state *before* the triggering set — a trailing debounce keeps the *last* call's (nearly-final) state, so undo looked like a no-op. Fixed with a leading-edge debounce (keeps the state from *before* the drag started), verified against the real `persist(temporal(immer(...)))` composition via a standalone script before landing.
+- **Session ended on rate limit with undo still not fully fixed**: user confirmed image-position undo now works, but mark point-drag undo still doesn't — see "What Doesn't (yet)" above for exact next-session starting point. Also captured a new UX ask (quad-mode icon + toolbar dimming) not yet started.
+- Business side: user is weighing selling a signed Mac build (MIT permits it) and had a few back-and-forth exchanges with the maintainer on the PR thread about signing/entitlements — informational, not a code change.
 
 ### 2026-08-05 — Session 1 continued: Phases 1-4 + PR #1
 - **Phase 1**: app runs natively on macOS, zero code changes (see LEARNINGS.md for the multi-monitor/computer-use gotchas hit while verifying this).
