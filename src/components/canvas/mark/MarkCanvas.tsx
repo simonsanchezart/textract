@@ -20,7 +20,7 @@ import { useCanvasStore } from "@/stores/canvas-store";
 import { useMarkStore } from "@/stores/mark-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { CanvasType } from "@/types/types";
-import { snap } from "@/utils/utils";
+import { getShortcutModifierLabel, snap } from "@/utils/utils";
 import Canvas from "../Canvas";
 import MarkImage from "./MarkImage";
 
@@ -367,8 +367,8 @@ function MarkCanvas({ className = "" }: { className?: string }) {
           active={markCreationMode === "grid"}
           onClick={() => useCanvasStore.getState().toggleMarkCreationMode(CanvasType.MARK)}
           tooltip={markCreationMode === "grid"
-            ? "Grid mode: Ctrl+Click 4 corners to place a curved-surface mark (Shift+G)"
-            : "Quad mode: Ctrl+Click 4 corners for a straight mark (Shift+G to switch to curved/grid mode)"}
+            ? `Grid mode: ${getShortcutModifierLabel()}+Click 4 corners to place a curved-surface mark (Shift+G)`
+            : `Quad mode: ${getShortcutModifierLabel()}+Click 4 corners for a straight mark (Shift+G to switch to curved/grid mode)`}
         />
 
         {markCreationMode === "grid" && (
