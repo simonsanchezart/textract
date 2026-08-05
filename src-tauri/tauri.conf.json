@@ -53,7 +53,8 @@
     "category": "Utility",
     "shortDescription": "Texture extractor from photos",
     "macOS": {
-      "minimumSystemVersion": "10.15"
+      "minimumSystemVersion": "10.15",
+      "entitlements": "./Entitlements.plist"
     }
   },
   "plugins": {
