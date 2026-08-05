@@ -26,12 +26,16 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
   const [currentPoints, setCurrentPoints] = useState<Vec2[]>([]);
   const currentPointsFlat = useMemo(() => currentPoints.flatMap(p => [p.x, p.y]), [currentPoints]);
 
-  // Base size is derived from image pixel dimensions (as before); dividing by
-  // canvasZoom keeps handles/lines a constant on-screen size as the user zooms
-  // the canvas, and markHandleScale is a user-adjustable multiplier on top.
+  // Handle/line size is intentionally independent of the image's own pixel
+  // dimensions -- the previous formula (imageData.sizeSum * 0.0001) gave a
+  // base factor of ~0.1-0.3 for typical photos, so even maxing out
+  // markHandleScale (4x) only reached a still-tiny on-screen size. A fixed
+  // base means the Handles setting has a real, visible effect regardless of
+  // what photo is loaded. Dividing by canvasZoom keeps the on-screen size
+  // constant as the user zooms the canvas.
   const scaleFactor = useMemo(
-    () => (imageData.sizeSum * 0.0001 * markHandleScale) / (canvasZoom || 1),
-    [imageData.sizeSum, markHandleScale, canvasZoom],
+    () => markHandleScale / (canvasZoom || 1),
+    [markHandleScale, canvasZoom],
   );
 
   const addPoint = (e: KonvaEventObject<MouseEvent>) => {
