@@ -81,7 +81,7 @@ Textract is designed for speed. Below is a cheat sheet of shortcuts:
 
 <details>
 <summary>I cannot run the .app in MacOS</summary>
-The .app is not signed. You must manually remove the quarantine attribute it can be properly executed.
+The .app is not signed. You must manually remove the quarantine attribute so it can be properly executed.
 
 In the terminal, run:
 
