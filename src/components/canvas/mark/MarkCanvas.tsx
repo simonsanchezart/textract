@@ -335,6 +335,9 @@ function MarkCanvas({ className = "" }: { className?: string }) {
         if (e.shiftKey)
           useCanvasStore.getState().toggleMarkCreationMode(CanvasType.MARK);
         break;
+      case "Escape":
+        useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
+        break;
       default:
         break;
     }

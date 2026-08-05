@@ -20,6 +20,13 @@ export type TransientCanvasState = {
   /** Mark canvas only: rows/cols used to seed the next new grid mark. */
   markGridRows: number;
   markGridCols: number;
+  /**
+   * Mark canvas only: currently-selected mark point(s). An array (not a
+   * single value) even though only one point can be selected today, so a
+   * future multi-select-and-convert-to-curve feature doesn't need a
+   * breaking shape change.
+   */
+  selectedPoints: { markId: string; pointIndex: number }[];
 };
 
 type CanvasStore = {
@@ -34,6 +41,8 @@ type CanvasStore = {
   toggleMarkCreationMode: (canvas: CanvasType) => void;
   setMarkGridRows: (canvas: CanvasType, rows: number) => void;
   setMarkGridCols: (canvas: CanvasType, cols: number) => void;
+  selectPoint: (canvas: CanvasType, markId: string, pointIndex: number) => void;
+  clearSelectedPoints: (canvas: CanvasType) => void;
 };
 
 export const useCanvasStore = create(
@@ -44,8 +53,8 @@ export const useCanvasStore = create(
         [CanvasType.ATLAS]: { scale: 1, x: 0, y: 0 },
       },
       transientCanvas: {
-        [CanvasType.MARK]: { hoverShape: null, selectedNodes: [], markCreationMode: "quad", markGridRows: 4, markGridCols: 4 },
-        [CanvasType.ATLAS]: { hoverShape: null, selectedNodes: [], markCreationMode: "quad", markGridRows: 4, markGridCols: 4 },
+        [CanvasType.MARK]: { hoverShape: null, selectedNodes: [], markCreationMode: "quad", markGridRows: 4, markGridCols: 4, selectedPoints: [] },
+        [CanvasType.ATLAS]: { hoverShape: null, selectedNodes: [], markCreationMode: "quad", markGridRows: 4, markGridCols: 4, selectedPoints: [] },
       },
       setCanvasScale: (canvas, scale) =>
         set((state) => {
@@ -76,6 +85,14 @@ export const useCanvasStore = create(
       setMarkGridCols: (canvas, cols) =>
         set((state) => {
           state.transientCanvas[canvas].markGridCols = cols;
+        }),
+      selectPoint: (canvas, markId, pointIndex) =>
+        set((state) => {
+          state.transientCanvas[canvas].selectedPoints = [{ markId, pointIndex }];
+        }),
+      clearSelectedPoints: canvas =>
+        set((state) => {
+          state.transientCanvas[canvas].selectedPoints = [];
         }),
     })),
     {

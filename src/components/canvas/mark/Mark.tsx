@@ -1,14 +1,16 @@
 import type { MarkType } from "@/stores/mark-store";
 import { useMemo, useState } from "react";
 import { Group, Line } from "react-konva";
+import { useCanvasStore } from "@/stores/canvas-store";
 import { useMarkStore } from "@/stores/mark-store";
-import { Colors } from "@/types/types";
+import { CanvasType, Colors } from "@/types/types";
 import { lerpVec2 } from "@/utils/utils";
 import MarkPoint from "./MarkPoint";
 
 function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
   const [markOffset, setMarkOffset] = useState({ x: 0, y: 0 });
   const [points, setPoints] = useState(mark.points);
+  const selectedPoints = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].selectedPoints);
   const isGrid = mark.markType === "grid" && !!mark.gridDims;
   const { rows, cols } = mark.gridDims ?? { rows: 0, cols: 0 };
 
@@ -72,6 +74,8 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
         onClick={(e) => {
           if (e.evt.altKey)
             useMarkStore.getState().removeMark(mark.id);
+          else
+            useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
         }}
         onDragMove={(e) => {
           setMarkOffset({ x: e.target.x(), y: e.target.y() });
@@ -106,12 +110,17 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
       ))}
 
       {points.map((p, id) => {
+        const selected = selectedPoints.some(sp => sp.markId === mark.id && sp.pointIndex === id);
         return (
           <MarkPoint
             // eslint-disable-next-line react/no-array-index-key
             key={id}
             position={p}
             offset={markOffset}
+            selected={selected}
+            onMouseDown={() => {
+              useCanvasStore.getState().selectPoint(CanvasType.MARK, mark.id, id);
+            }}
             onDragMove={(e) => {
               setPoints((prev) => {
                 const next = [...prev];
