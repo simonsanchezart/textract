@@ -13,7 +13,7 @@ Stack: React 19 + TypeScript + Vite + Tailwind + Zustand + react-konva (frontend
 1. `cd textract && CARGO_TARGET_DIR="/Volumes/Studio 4TB T500/_Caches/CodingBUILD_Cache/textract-dev/target" npm run tauri dev`
 2. Load a photo with an actual curved surface (bottle label, bent sign, etc.)
 3. Click the new 3x3-grid toolbar icon (top-left, next to Load/Convert) or press Shift+G to switch to grid mode — icon highlights when active
-4. Ctrl+Click 4 corners around the curved region, same gesture as a normal (quad) mark — this seeds a straight 4x4 interior grid
+4. Cmd+Click (macOS) or Ctrl+Click (Windows/Linux) 4 corners around the curved region, same gesture as a normal (quad) mark — this seeds a straight 4x4 interior grid
 5. Drag the interior grid points (not just corners) to trace the actual curve in the photo
 6. Shift+R or the Convert toolbar button to extract — should produce a flattened rectangle on the right (export) canvas
 7. Shift+G back to quad mode for normal marks
