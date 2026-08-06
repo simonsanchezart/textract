@@ -6,12 +6,26 @@ use std::io::Cursor;
 
 /// One curved-surface mark: an `rows` x `cols` grid of source control points,
 /// laid out row-major (row 0 left-to-right, then row 1, ...).
-#[derive(Deserialize)]
+///
+/// `smooth`/`tension` are per-point and optional. They default to empty, which
+/// means "no point is smooth" — the exact straight-line behaviour every mark
+/// had before curve mode existed, so old payloads keep warping identically.
+#[derive(Deserialize, Default)]
 pub struct GridMark {
     rows: u32,
     cols: u32,
     points: Vec<f32>,
+    #[serde(default)]
+    smooth: Vec<bool>,
+    #[serde(default)]
+    tension: Vec<f32>,
 }
+
+/// How many micro-cells each original cell becomes when a mark uses smoothing.
+/// The output mesh has to stay one uniform rectangular grid so the triangulation
+/// loop can consume it unchanged, so this is global rather than per-cell — sharp
+/// cells are simply subdivided linearly, which is a no-op on their geometry.
+const SUBDIVISION_STEPS: usize = 8;
 
 #[tauri::command]
 pub async fn transform_image_mesh(
@@ -52,12 +66,40 @@ fn warp_mesh(img: &RgbaImage, mark: &GridMark) -> Result<RgbaImage, String> {
         ));
     }
 
+    if !mark.smooth.is_empty() && mark.smooth.len() != rows * cols {
+        return Err(format!(
+            "Expected {} smooth flags ({rows}x{cols} grid) but got {}",
+            rows * cols,
+            mark.smooth.len()
+        ));
+    }
+    if !mark.tension.is_empty() && mark.tension.len() != rows * cols {
+        return Err(format!(
+            "Expected {} tension values ({rows}x{cols} grid) but got {}",
+            rows * cols,
+            mark.tension.len()
+        ));
+    }
+
     let src = grid_from_flat(&mark.points, rows, cols);
     let (cell_w, cell_h) = average_cell_size(&src, rows, cols);
     let out_width = ((cols - 1) as f32 * cell_w).round().max(1.0) as u32;
     let out_height = ((rows - 1) as f32 * cell_h).round().max(1.0) as u32;
 
-    let dst = target_grid(rows, cols, cell_w, cell_h);
+    // Subdividing shrinks the cells but not the mesh, so the output dimensions
+    // above stay derived from the original control points either way.
+    let (src, dst, rows, cols) = if mark.smooth.iter().any(|&s| s) {
+        let smooth = flag_grid(&mark.smooth, rows, cols);
+        let tension = tension_grid(&mark.tension, rows, cols);
+        let (dense, dense_rows, dense_cols) =
+            subdivide_grid(&src, &smooth, &tension, rows, cols, SUBDIVISION_STEPS);
+        let steps = SUBDIVISION_STEPS as f32;
+        let dense_dst = target_grid(dense_rows, dense_cols, cell_w / steps, cell_h / steps);
+        (dense, dense_dst, dense_rows, dense_cols)
+    } else {
+        let dst = target_grid(rows, cols, cell_w, cell_h);
+        (src, dst, rows, cols)
+    };
 
     let mut out = RgbaImage::new(out_width, out_height);
 
@@ -94,6 +136,158 @@ fn grid_from_flat(points: &[f32], rows: usize, cols: usize) -> Vec<Vec<(f32, f32
         grid.push(row);
     }
     grid
+}
+
+fn flag_grid(flags: &[bool], rows: usize, cols: usize) -> Vec<Vec<bool>> {
+    (0..rows)
+        .map(|i| {
+            (0..cols)
+                .map(|j| flags.get(i * cols + j).copied().unwrap_or(false))
+                .collect()
+        })
+        .collect()
+}
+
+fn tension_grid(values: &[f32], rows: usize, cols: usize) -> Vec<Vec<f32>> {
+    (0..rows)
+        .map(|i| {
+            (0..cols)
+                .map(|j| values.get(i * cols + j).copied().unwrap_or(0.0).clamp(0.0, 1.0))
+                .collect()
+        })
+        .collect()
+}
+
+/// Densifies the control grid so the triangulation can follow a curve instead of
+/// a chord. The decision is made per cell rather than per mark: only a cell whose
+/// four corners are all flagged smooth is spline-evaluated, so a mark that mixes
+/// a curved label with sharp corners keeps those corners exactly as sharp as
+/// before. Cells that aren't smooth are interpolated bilinearly, which for the
+/// affine cells the triangulation already produces is a geometric no-op.
+fn subdivide_grid(
+    src: &[Vec<(f32, f32)>],
+    smooth: &[Vec<bool>],
+    tension: &[Vec<f32>],
+    rows: usize,
+    cols: usize,
+    steps: usize,
+) -> (Vec<Vec<(f32, f32)>>, usize, usize) {
+    let out_rows = (rows - 1) * steps + 1;
+    let out_cols = (cols - 1) * steps + 1;
+
+    let mut out = Vec::with_capacity(out_rows);
+    for oi in 0..out_rows {
+        let (ci, ci_lo, fu) = locate(oi, steps, rows);
+        let mut row = Vec::with_capacity(out_cols);
+        for oj in 0..out_cols {
+            let (cj, cj_lo, fv) = locate(oj, steps, cols);
+
+            // A point sitting on a cell boundary belongs to every cell touching
+            // it, and one sharp neighbour is enough to keep it on the straight
+            // edge — otherwise an adjacent curve would round off the crease.
+            let mut all_smooth = true;
+            for a in ci_lo..=ci {
+                for b in cj_lo..=cj {
+                    all_smooth &= smooth[a][b]
+                        && smooth[a][b + 1]
+                        && smooth[a + 1][b]
+                        && smooth[a + 1][b + 1];
+                }
+            }
+
+            row.push(if all_smooth {
+                let t = (tension[ci][cj]
+                    + tension[ci][cj + 1]
+                    + tension[ci + 1][cj]
+                    + tension[ci + 1][cj + 1])
+                    / 4.0;
+                cardinal_patch(src, rows, cols, ci, cj, fu, fv, t)
+            } else {
+                bilinear_cell(src, ci, cj, fu, fv)
+            });
+        }
+        out.push(row);
+    }
+
+    (out, out_rows, out_cols)
+}
+
+/// Maps an output index onto (owning cell, lowest cell also touching it, local
+/// parameter). The last index of an axis clamps back into the final cell at
+/// parameter 1.0 rather than running off the end.
+fn locate(idx: usize, steps: usize, count: usize) -> (usize, usize, f32) {
+    let raw = idx / steps;
+    let cell = raw.min(count - 2);
+    let f = (idx - cell * steps) as f32 / steps as f32;
+    let on_edge = idx.is_multiple_of(steps) && raw == cell;
+    let lo = if on_edge && cell > 0 { cell - 1 } else { cell };
+    (cell, lo, f)
+}
+
+fn bilinear_cell(src: &[Vec<(f32, f32)>], ci: usize, cj: usize, fu: f32, fv: f32) -> (f32, f32) {
+    let lerp = |a: (f32, f32), b: (f32, f32), t: f32| (a.0 + (b.0 - a.0) * t, a.1 + (b.1 - a.1) * t);
+    let top = lerp(src[ci][cj], src[ci][cj + 1], fv);
+    let bottom = lerp(src[ci + 1][cj], src[ci + 1][cj + 1], fv);
+    lerp(top, bottom, fu)
+}
+
+/// Tensor-product Cardinal-spline evaluation over the 4x4 neighbourhood around
+/// cell `(ci, cj)`. Neighbours are clamped at the grid edge (the conventional
+/// Catmull-Rom endpoint duplication), and they're taken raw — a tangent may
+/// reach into a sharp region, which only affects the curve's shape, not whether
+/// that neighbouring cell itself gets smoothed.
+#[allow(clippy::too_many_arguments)]
+fn cardinal_patch(
+    src: &[Vec<(f32, f32)>],
+    rows: usize,
+    cols: usize,
+    ci: usize,
+    cj: usize,
+    fu: f32,
+    fv: f32,
+    tension: f32,
+) -> (f32, f32) {
+    let at = |i: isize, j: isize| {
+        let i = i.clamp(0, rows as isize - 1) as usize;
+        let j = j.clamp(0, cols as isize - 1) as usize;
+        src[i][j]
+    };
+
+    let column: [(f32, f32); 4] = std::array::from_fn(|n| {
+        let i = ci as isize + n as isize - 1;
+        let row: [(f32, f32); 4] = std::array::from_fn(|m| at(i, cj as isize + m as isize - 1));
+        cardinal_point(row, fv, tension)
+    });
+
+    cardinal_point(column, fu, tension)
+}
+
+fn cardinal_point(p: [(f32, f32); 4], t: f32, tension: f32) -> (f32, f32) {
+    (
+        cardinal_1d([p[0].0, p[1].0, p[2].0, p[3].0], t, tension),
+        cardinal_1d([p[0].1, p[1].1, p[2].1, p[3].1], t, tension),
+    )
+}
+
+/// Cubic Hermite between `p[1]` and `p[2]`, with the Catmull-Rom tangents scaled
+/// by `(1 - tension)` toward the plain chord. Hermite is linear in its tangents
+/// and the chord-tangent case collapses to `(1 - t)p1 + t*p2`, so tension = 1.0
+/// is exactly linear interpolation — that identity is what lets a fully damped
+/// smooth mark reproduce the un-smoothed result.
+fn cardinal_1d(p: [f32; 4], t: f32, tension: f32) -> f32 {
+    let chord = p[2] - p[1];
+    let scale = 1.0 - tension;
+    let m1 = scale * 0.5 * (p[2] - p[0]) + tension * chord;
+    let m2 = scale * 0.5 * (p[3] - p[1]) + tension * chord;
+
+    let t2 = t * t;
+    let t3 = t2 * t;
+    let h00 = 2.0 * t3 - 3.0 * t2 + 1.0;
+    let h10 = t3 - 2.0 * t2 + t;
+    let h01 = -2.0 * t3 + 3.0 * t2;
+    let h11 = t3 - t2;
+
+    h00 * p[1] + h10 * m1 + h01 * p[2] + h11 * m2
 }
 
 /// Average horizontal/vertical spacing across the source grid, used as the
@@ -254,6 +448,7 @@ mod tests {
             rows: 3,
             cols: 3,
             points,
+            ..Default::default()
         };
 
         let out = warp_mesh(&img, &mark).expect("warp should succeed");
@@ -293,6 +488,7 @@ mod tests {
             rows: 3,
             cols: 3,
             points,
+            ..Default::default()
         };
 
         let out = warp_mesh(&img, &mark).expect("warp should succeed");
@@ -308,6 +504,7 @@ mod tests {
             rows: 3,
             cols: 3,
             points: vec![0.0, 0.0, 1.0, 1.0], // way too few for a 3x3 grid
+            ..Default::default()
         };
         let img = coordinate_image(10, 10);
         assert!(warp_mesh(&img, &mark).is_err());
@@ -319,9 +516,193 @@ mod tests {
             rows: 1,
             cols: 3,
             points: vec![0.0, 0.0, 1.0, 0.0, 2.0, 0.0],
+            ..Default::default()
         };
         let img = coordinate_image(10, 10);
         assert!(warp_mesh(&img, &mark).is_err());
+    }
+
+    /// A 3x3 grid with straight, evenly spaced columns but unevenly spaced rows
+    /// (y = 10, 70, 100). Every cell is an axis-aligned rectangle, so bilinear
+    /// and the two-triangle affine map agree exactly and any difference between
+    /// a smoothed and un-smoothed warp is the spline, not a subdivision artefact.
+    fn uneven_row_points() -> Vec<f32> {
+        let ys = [10.0f32, 70.0, 100.0];
+        let mut points = Vec::new();
+        for y in ys {
+            for j in 0..3 {
+                points.push(10.0 + j as f32 * 40.0);
+                points.push(y);
+            }
+        }
+        points
+    }
+
+    #[test]
+    fn no_smooth_points_is_identical_to_the_unsubdivided_warp() {
+        let img = coordinate_image(120, 120);
+        let plain = GridMark {
+            rows: 3,
+            cols: 3,
+            points: uneven_row_points(),
+            ..Default::default()
+        };
+        let explicitly_sharp = GridMark {
+            rows: 3,
+            cols: 3,
+            points: uneven_row_points(),
+            smooth: vec![false; 9],
+            tension: vec![0.0; 9],
+        };
+
+        let a = warp_mesh(&img, &plain).expect("warp should succeed");
+        let b = warp_mesh(&img, &explicitly_sharp).expect("warp should succeed");
+        assert_eq!(a.dimensions(), b.dimensions());
+        assert_eq!(a.as_raw(), b.as_raw(), "sharp marks must not be subdivided");
+    }
+
+    #[test]
+    fn full_tension_degenerates_to_the_linear_warp() {
+        let img = coordinate_image(120, 120);
+        let sharp = GridMark {
+            rows: 3,
+            cols: 3,
+            points: uneven_row_points(),
+            ..Default::default()
+        };
+        let damped = GridMark {
+            rows: 3,
+            cols: 3,
+            points: uneven_row_points(),
+            smooth: vec![true; 9],
+            tension: vec![1.0; 9],
+        };
+
+        let a = warp_mesh(&img, &sharp).expect("warp should succeed");
+        let b = warp_mesh(&img, &damped).expect("warp should succeed");
+        assert_eq!(a.dimensions(), b.dimensions());
+
+        for (pa, pb) in a.pixels().zip(b.pixels()) {
+            for ch in 0..2 {
+                assert!(
+                    (pa[ch] as i32 - pb[ch] as i32).abs() <= 1,
+                    "tension 1.0 should match the linear warp: {pa:?} vs {pb:?}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn smooth_points_bend_the_sampling_off_the_chord() {
+        let img = coordinate_image(120, 120);
+        let sharp = GridMark {
+            rows: 3,
+            cols: 3,
+            points: uneven_row_points(),
+            ..Default::default()
+        };
+        let smooth = GridMark {
+            rows: 3,
+            cols: 3,
+            points: uneven_row_points(),
+            smooth: vec![true; 9],
+            tension: vec![0.0; 9],
+        };
+
+        let a = warp_mesh(&img, &sharp).expect("warp should succeed");
+        let b = warp_mesh(&img, &smooth).expect("warp should succeed");
+        assert_eq!(a.dimensions(), (80, 90));
+        assert_eq!(b.dimensions(), (80, 90));
+
+        // Halfway down the lower row band, away from the original grid lines.
+        // The chord there samples y = 84.7; the spline, pulled by the tighter
+        // spacing above, has to reach further down the source than that.
+        let chord = a.get_pixel(20, 67);
+        let spline = b.get_pixel(20, 67);
+        assert!(
+            spline[1] as i32 - chord[1] as i32 > 2,
+            "expected the spline to sample below the chord: {chord:?} vs {spline:?}"
+        );
+
+        // Original grid lines are shared control points, so they still pin the
+        // spline to exactly where the chord meets them.
+        for (x, y) in [(0u32, 0u32), (40, 45), (79, 89)] {
+            let chord = a.get_pixel(x, y);
+            let spline = b.get_pixel(x, y);
+            for ch in 0..2 {
+                assert!(
+                    (chord[ch] as i32 - spline[ch] as i32).abs() <= 1,
+                    "control point moved at ({x}, {y}): {chord:?} vs {spline:?}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn a_sharp_corner_keeps_its_cell_while_neighbours_smooth() {
+        let img = coordinate_image(120, 120);
+        let sharp = GridMark {
+            rows: 3,
+            cols: 3,
+            points: uneven_row_points(),
+            ..Default::default()
+        };
+        // Only the top-left control point is sharp, which makes exactly one
+        // cell — the top-left one — ineligible for subdivision.
+        let mut flags = vec![true; 9];
+        flags[0] = false;
+        let mixed = GridMark {
+            rows: 3,
+            cols: 3,
+            points: uneven_row_points(),
+            smooth: flags,
+            tension: vec![0.0; 9],
+        };
+
+        let a = warp_mesh(&img, &sharp).expect("warp should succeed");
+        let b = warp_mesh(&img, &mixed).expect("warp should succeed");
+
+        // Inside the sharp cell (output x 0..40, y 0..45) nothing may move.
+        for (x, y) in [(10u32, 10u32), (10, 22), (30, 35)] {
+            let pa = a.get_pixel(x, y);
+            let pb = b.get_pixel(x, y);
+            for ch in 0..2 {
+                assert!(
+                    (pa[ch] as i32 - pb[ch] as i32).abs() <= 1,
+                    "sharp cell moved at ({x}, {y}): {pa:?} vs {pb:?}"
+                );
+            }
+        }
+
+        // The all-smooth bottom-right cell still curves.
+        let pa = a.get_pixel(60, 67);
+        let pb = b.get_pixel(60, 67);
+        assert!(
+            pb[1] as i32 - pa[1] as i32 > 2,
+            "smooth cell should have bent: {pa:?} vs {pb:?}"
+        );
+    }
+
+    #[test]
+    fn rejects_mismatched_smooth_or_tension_length() {
+        let img = coordinate_image(120, 120);
+        let bad_smooth = GridMark {
+            rows: 3,
+            cols: 3,
+            points: uneven_row_points(),
+            smooth: vec![true; 4],
+            tension: Vec::new(),
+        };
+        assert!(warp_mesh(&img, &bad_smooth).is_err());
+
+        let bad_tension = GridMark {
+            rows: 3,
+            cols: 3,
+            points: uneven_row_points(),
+            smooth: Vec::new(),
+            tension: vec![0.5; 4],
+        };
+        assert!(warp_mesh(&img, &bad_tension).is_err());
     }
 }
 
