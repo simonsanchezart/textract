@@ -173,6 +173,7 @@ export const useMarkStore = create(
                 mark.pointMeta[i] = { smooth: false, tension: DEFAULT_TENSION };
               mark.pointMeta[i].smooth = !allAlreadySmooth;
             }
+            mark.dirty = true;
           }),
 
         adjustTensionForPoints: (markId, pointIndices, delta) =>
@@ -191,6 +192,7 @@ export const useMarkStore = create(
                 mark.pointMeta[i] = { smooth: false, tension: DEFAULT_TENSION };
               mark.pointMeta[i].tension = Math.min(1, Math.max(0, mark.pointMeta[i].tension + delta));
             }
+            mark.dirty = true;
           }),
       })),
       {

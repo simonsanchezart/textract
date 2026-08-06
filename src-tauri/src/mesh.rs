@@ -159,11 +159,23 @@ fn tension_grid(values: &[f32], rows: usize, cols: usize) -> Vec<Vec<f32>> {
 }
 
 /// Densifies the control grid so the triangulation can follow a curve instead of
-/// a chord. The decision is made per cell rather than per mark: only a cell whose
-/// four corners are all flagged smooth is spline-evaluated, so a mark that mixes
-/// a curved label with sharp corners keeps those corners exactly as sharp as
-/// before. Cells that aren't smooth are interpolated bilinearly, which for the
-/// affine cells the triangulation already produces is a geometric no-op.
+/// a chord.
+///
+/// Smoothness is a property of a *segment* in a *single* direction: the run
+/// between two horizontally adjacent points curves when both of those two points
+/// are flagged smooth, no matter what the points above and below them are flagged
+/// as, and the same holds independently for vertical runs. Demanding that a whole
+/// 2D neighbourhood agree — the obvious alternative — makes the feature
+/// unreachable at the 2x3/3x3 grids the UI actually encourages, because there
+/// every cell touches the mark's outer corners, which are precisely the points a
+/// user wants left sharp.
+///
+/// A sharp segment is expressed as full tension rather than as a separate code
+/// path, because full tension collapses the Hermite basis onto the plain chord
+/// (see `cardinal_1d`). That lets the two per-direction tensions be *blended*
+/// across the perpendicular axis, which is what keeps the surface continuous
+/// where a smooth run borders a sharp one: the curve fades out toward the sharp
+/// side instead of leaving a step in the mesh.
 fn subdivide_grid(
     src: &[Vec<(f32, f32)>],
     smooth: &[Vec<bool>],
@@ -177,33 +189,35 @@ fn subdivide_grid(
 
     let mut out = Vec::with_capacity(out_rows);
     for oi in 0..out_rows {
-        let (ci, ci_lo, fu) = locate(oi, steps, rows);
+        let (ci, fu) = locate(oi, steps, rows);
         let mut row = Vec::with_capacity(out_cols);
         for oj in 0..out_cols {
-            let (cj, cj_lo, fv) = locate(oj, steps, cols);
+            let (cj, fv) = locate(oj, steps, cols);
 
-            // A point sitting on a cell boundary belongs to every cell touching
-            // it, and one sharp neighbour is enough to keep it on the straight
-            // edge — otherwise an adjacent curve would round off the crease.
-            let mut all_smooth = true;
-            for a in ci_lo..=ci {
-                for b in cj_lo..=cj {
-                    all_smooth &= smooth[a][b]
-                        && smooth[a][b + 1]
-                        && smooth[a + 1][b]
-                        && smooth[a + 1][b + 1];
-                }
-            }
+            let top = segment_tension(smooth, tension, (ci, cj), (ci, cj + 1));
+            let bottom = segment_tension(smooth, tension, (ci + 1, cj), (ci + 1, cj + 1));
+            let row_tension = top + (bottom - top) * fu;
 
-            row.push(if all_smooth {
-                let t = (tension[ci][cj]
-                    + tension[ci][cj + 1]
-                    + tension[ci + 1][cj]
-                    + tension[ci + 1][cj + 1])
-                    / 4.0;
-                cardinal_patch(src, rows, cols, ci, cj, fu, fv, t)
-            } else {
+            let left = segment_tension(smooth, tension, (ci, cj), (ci + 1, cj));
+            let right = segment_tension(smooth, tension, (ci, cj + 1), (ci + 1, cj + 1));
+            let column_tension = left + (right - left) * fv;
+
+            // Neither direction curves here, so take the exact bilinear result
+            // rather than the arithmetically-equal-but-rounded spline one.
+            row.push(if row_tension >= 1.0 && column_tension >= 1.0 {
                 bilinear_cell(src, ci, cj, fu, fv)
+            } else {
+                cardinal_patch(
+                    src,
+                    rows,
+                    cols,
+                    ci,
+                    cj,
+                    fu,
+                    fv,
+                    row_tension,
+                    column_tension,
+                )
             });
         }
         out.push(row);
@@ -212,16 +226,28 @@ fn subdivide_grid(
     (out, out_rows, out_cols)
 }
 
-/// Maps an output index onto (owning cell, lowest cell also touching it, local
-/// parameter). The last index of an axis clamps back into the final cell at
-/// parameter 1.0 rather than running off the end.
-fn locate(idx: usize, steps: usize, count: usize) -> (usize, usize, f32) {
-    let raw = idx / steps;
-    let cell = raw.min(count - 2);
-    let f = (idx - cell * steps) as f32 / steps as f32;
-    let on_edge = idx.is_multiple_of(steps) && raw == cell;
-    let lo = if on_edge && cell > 0 { cell - 1 } else { cell };
-    (cell, lo, f)
+/// Tension governing the run between two adjacent control points. Both ends have
+/// to be flagged smooth for the run to curve at all — one sharp end pins it to
+/// the chord, the same way a sharp anchor pins a path segment in a vector editor.
+fn segment_tension(
+    smooth: &[Vec<bool>],
+    tension: &[Vec<f32>],
+    a: (usize, usize),
+    b: (usize, usize),
+) -> f32 {
+    if smooth[a.0][a.1] && smooth[b.0][b.1] {
+        (tension[a.0][a.1] + tension[b.0][b.1]) / 2.0
+    } else {
+        1.0
+    }
+}
+
+/// Maps an output index onto (owning cell, local parameter). The last index of an
+/// axis clamps back into the final cell at parameter 1.0 rather than running off
+/// the end.
+fn locate(idx: usize, steps: usize, count: usize) -> (usize, f32) {
+    let cell = (idx / steps).min(count - 2);
+    (cell, (idx - cell * steps) as f32 / steps as f32)
 }
 
 fn bilinear_cell(src: &[Vec<(f32, f32)>], ci: usize, cj: usize, fu: f32, fv: f32) -> (f32, f32) {
@@ -232,10 +258,15 @@ fn bilinear_cell(src: &[Vec<(f32, f32)>], ci: usize, cj: usize, fu: f32, fv: f32
 }
 
 /// Tensor-product Cardinal-spline evaluation over the 4x4 neighbourhood around
-/// cell `(ci, cj)`. Neighbours are clamped at the grid edge (the conventional
-/// Catmull-Rom endpoint duplication), and they're taken raw — a tangent may
-/// reach into a sharp region, which only affects the curve's shape, not whether
-/// that neighbouring cell itself gets smoothed.
+/// cell `(ci, cj)`, with the two axes damped independently: `row_tension` shapes
+/// the curves running along the rows, `column_tension` the one that then blends
+/// those curves down the columns. Either at 1.0 leaves that axis linear, so a
+/// row-only or column-only smoothing request stays exactly that.
+///
+/// Neighbours are clamped at the grid edge (the conventional Catmull-Rom
+/// endpoint duplication), and they're taken raw — a tangent may reach into a
+/// sharp region, which only affects the curve's shape, not whether that
+/// neighbouring run itself gets smoothed.
 #[allow(clippy::too_many_arguments)]
 fn cardinal_patch(
     src: &[Vec<(f32, f32)>],
@@ -245,7 +276,8 @@ fn cardinal_patch(
     cj: usize,
     fu: f32,
     fv: f32,
-    tension: f32,
+    row_tension: f32,
+    column_tension: f32,
 ) -> (f32, f32) {
     let at = |i: isize, j: isize| {
         let i = i.clamp(0, rows as isize - 1) as usize;
@@ -256,10 +288,10 @@ fn cardinal_patch(
     let column: [(f32, f32); 4] = std::array::from_fn(|n| {
         let i = ci as isize + n as isize - 1;
         let row: [(f32, f32); 4] = std::array::from_fn(|m| at(i, cj as isize + m as isize - 1));
-        cardinal_point(row, fv, tension)
+        cardinal_point(row, fv, row_tension)
     });
 
-    cardinal_point(column, fu, tension)
+    cardinal_point(column, fu, column_tension)
 }
 
 fn cardinal_point(p: [(f32, f32); 4], t: f32, tension: f32) -> (f32, f32) {
@@ -639,7 +671,7 @@ mod tests {
     }
 
     #[test]
-    fn a_sharp_corner_keeps_its_cell_while_neighbours_smooth() {
+    fn a_sharp_corner_pins_its_own_edges_while_the_region_beyond_smooths() {
         let img = coordinate_image(120, 120);
         let sharp = GridMark {
             rows: 3,
@@ -647,8 +679,9 @@ mod tests {
             points: uneven_row_points(),
             ..Default::default()
         };
-        // Only the top-left control point is sharp, which makes exactly one
-        // cell — the top-left one — ineligible for subdivision.
+        // Only the top-left control point is sharp. Both runs leaving it — the
+        // first segment of the top row and of the left column — therefore stay
+        // straight chords, and the curve fades back in away from them.
         let mut flags = vec![true; 9];
         flags[0] = false;
         let mixed = GridMark {
@@ -662,25 +695,169 @@ mod tests {
         let a = warp_mesh(&img, &sharp).expect("warp should succeed");
         let b = warp_mesh(&img, &mixed).expect("warp should succeed");
 
-        // Inside the sharp cell (output x 0..40, y 0..45) nothing may move.
-        for (x, y) in [(10u32, 10u32), (10, 22), (30, 35)] {
+        // The two straight edges meeting at the sharp point (output x 0..40 of
+        // the top edge, y 0..45 of the left edge) may not move at all.
+        for (x, y) in [(0u32, 0u32), (10, 0), (30, 0), (0, 10), (0, 30)] {
             let pa = a.get_pixel(x, y);
             let pb = b.get_pixel(x, y);
             for ch in 0..2 {
                 assert!(
                     (pa[ch] as i32 - pb[ch] as i32).abs() <= 1,
-                    "sharp cell moved at ({x}, {y}): {pa:?} vs {pb:?}"
+                    "sharp edge moved at ({x}, {y}): {pa:?} vs {pb:?}"
                 );
             }
         }
 
-        // The all-smooth bottom-right cell still curves.
+        // The bottom-right region, smooth in both directions, still curves.
         let pa = a.get_pixel(60, 67);
         let pb = b.get_pixel(60, 67);
         assert!(
             pb[1] as i32 - pa[1] as i32 > 2,
-            "smooth cell should have bent: {pa:?} vs {pb:?}"
+            "smooth region should have bent: {pa:?} vs {pb:?}"
         );
+    }
+
+    /// Rows at y = 10, 70, 100 with evenly spaced columns, except the middle
+    /// row's centre point sits at x = 25 instead of 50. That uneven spacing is
+    /// what makes a spline through the row leave the chords a sharp warp
+    /// follows, so smoothing the row shows up in the sampled source x.
+    fn uneven_middle_row_points() -> Vec<f32> {
+        let ys = [10.0f32, 70.0, 100.0];
+        let mut points = Vec::new();
+        for (i, y) in ys.iter().enumerate() {
+            for j in 0..3 {
+                points.push(if i == 1 && j == 1 {
+                    25.0
+                } else {
+                    10.0 + j as f32 * 40.0
+                });
+                points.push(*y);
+            }
+        }
+        points
+    }
+
+    /// The transpose of `uneven_middle_row_points`, for checking that column
+    /// smoothing is decided as independently as row smoothing is.
+    fn uneven_middle_column_points() -> Vec<f32> {
+        let xs = [10.0f32, 70.0, 100.0];
+        let mut points = Vec::new();
+        for i in 0..3 {
+            for (j, x) in xs.iter().enumerate() {
+                points.push(*x);
+                points.push(if j == 1 && i == 1 {
+                    25.0
+                } else {
+                    10.0 + i as f32 * 40.0
+                });
+            }
+        }
+        points
+    }
+
+    /// The scenario that made the original all-four-corners rule unusable: at
+    /// the 3x3 grid the UI encourages, every cell touches an outer corner, so
+    /// requiring a whole cell to agree meant an interior row could never curve
+    /// without also smoothing corners the user wants left alone.
+    #[test]
+    fn an_interior_smooth_row_curves_without_touching_the_outer_corners() {
+        let img = coordinate_image(120, 120);
+        let sharp = GridMark {
+            rows: 3,
+            cols: 3,
+            points: uneven_middle_row_points(),
+            ..Default::default()
+        };
+        let mut flags = vec![false; 9];
+        flags[3..6].fill(true);
+        let row_smooth = GridMark {
+            rows: 3,
+            cols: 3,
+            points: uneven_middle_row_points(),
+            smooth: flags,
+            tension: vec![0.0; 9],
+        };
+
+        let a = warp_mesh(&img, &sharp).expect("warp should succeed");
+        let b = warp_mesh(&img, &row_smooth).expect("warp should succeed");
+        assert_eq!(a.dimensions(), (80, 95));
+        assert_eq!(b.dimensions(), (80, 95));
+
+        // On the smoothed row the spline pulls the sampled x well off the
+        // chord, while y stays put: the curve lives along the row, not across
+        // it, because no column run has both ends smooth.
+        let chord = a.get_pixel(24, 47);
+        let spline = b.get_pixel(24, 47);
+        assert!(
+            chord[0] as i32 - spline[0] as i32 > 2,
+            "smoothed row should have bent: {chord:?} vs {spline:?}"
+        );
+        assert!(
+            (chord[1] as i32 - spline[1] as i32).abs() <= 1,
+            "row smoothing must not move sampling across the row: {chord:?} vs {spline:?}"
+        );
+
+        // The untouched top and bottom rows — which hold all four of the mark's
+        // outer corner points — warp exactly as they did with nothing smoothed.
+        for (x, y) in [(0u32, 0u32), (20, 0), (40, 0), (79, 0), (0, 94), (20, 94), (79, 94)] {
+            let pa = a.get_pixel(x, y);
+            let pb = b.get_pixel(x, y);
+            for ch in 0..2 {
+                assert!(
+                    (pa[ch] as i32 - pb[ch] as i32).abs() <= 1,
+                    "sharp row moved at ({x}, {y}): {pa:?} vs {pb:?}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn an_interior_smooth_column_curves_without_touching_the_outer_corners() {
+        let img = coordinate_image(120, 120);
+        let sharp = GridMark {
+            rows: 3,
+            cols: 3,
+            points: uneven_middle_column_points(),
+            ..Default::default()
+        };
+        let mut flags = vec![false; 9];
+        for i in 0..3 {
+            flags[i * 3 + 1] = true;
+        }
+        let column_smooth = GridMark {
+            rows: 3,
+            cols: 3,
+            points: uneven_middle_column_points(),
+            smooth: flags,
+            tension: vec![0.0; 9],
+        };
+
+        let a = warp_mesh(&img, &sharp).expect("warp should succeed");
+        let b = warp_mesh(&img, &column_smooth).expect("warp should succeed");
+        assert_eq!(a.dimensions(), (95, 80));
+        assert_eq!(b.dimensions(), (95, 80));
+
+        let chord = a.get_pixel(47, 24);
+        let spline = b.get_pixel(47, 24);
+        assert!(
+            chord[1] as i32 - spline[1] as i32 > 2,
+            "smoothed column should have bent: {chord:?} vs {spline:?}"
+        );
+        assert!(
+            (chord[0] as i32 - spline[0] as i32).abs() <= 1,
+            "column smoothing must not move sampling across the column: {chord:?} vs {spline:?}"
+        );
+
+        for (x, y) in [(0u32, 0u32), (0, 20), (0, 40), (0, 79), (94, 0), (94, 20), (94, 79)] {
+            let pa = a.get_pixel(x, y);
+            let pb = b.get_pixel(x, y);
+            for ch in 0..2 {
+                assert!(
+                    (pa[ch] as i32 - pb[ch] as i32).abs() <= 1,
+                    "sharp column moved at ({x}, {y}): {pa:?} vs {pb:?}"
+                );
+            }
+        }
     }
 
     #[test]
