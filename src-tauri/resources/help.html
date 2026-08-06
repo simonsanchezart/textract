@@ -83,19 +83,46 @@
   <h2>Basic workflow</h2>
   <ol>
     <li><strong>Load</strong> — bring in one or more photos on the left (Mark) canvas.</li>
-    <li><strong>Mark</strong> — click 4 corners around the texture you want, either as a straight <em>quad</em> or a curved <em>grid</em> (see below).</li>
+    <li><strong>Mark</strong> — click 4 corners around the texture you want, as a straight <em>quad</em>, a point-grid <em>grid</em> mark, or a <em>bezier</em>-edge mark (see below).</li>
     <li><strong>Convert</strong> — extract the marked region(s) into flattened images on the right (Atlas) canvas.</li>
     <li><strong>Export</strong> — arrange and export the extracted textures from the Atlas canvas.</li>
   </ol>
 
-  <h2>Curved surfaces (grid marks)</h2>
+  <h2>Curved surfaces</h2>
   <p>
     A regular (quad) mark assumes the texture lies on a flat plane. If it's actually
-    wrapped around something curved — a label on a bottle, a sign on a pipe — use
-    <strong>grid mode</strong> instead:
+    wrapped around something curved — a label on a bottle, a sign on a curved wall —
+    use <strong>grid mode</strong> or <strong>bezier mode</strong> instead. Both flatten
+    curved surfaces; which one to reach for depends on the shape:
   </p>
+  <ul>
+    <li><strong>Bezier mode</strong> (recommended for most curved surfaces) — shape 4 curved edges
+      with draggable handles, like Photoshop's Warp tool. Fewer control points, smoother
+      by construction, and works for any curved region: bottles, curved signs, curved walls.</li>
+    <li><strong>Grid mode</strong> — a full NxM grid of individually-draggable points. More
+      manual work, but useful for a mostly-flat shape that's only bent at the edges (e.g. a box
+      or panel), where a handful of straight segments describes the shape better than a smooth
+      curve would.</li>
+  </ul>
+
+  <h3 style="font-size:14px; color:var(--muted); margin: 20px 0 4px; text-transform:uppercase; letter-spacing:0.05em;">Bezier mode</h3>
   <ol>
-    <li>Click the grid-mode toolbar icon (or <code>Shift+G</code>) to switch from quad to grid mode.</li>
+    <li>Click the bezier-mode toolbar icon (or <code>Shift+G</code> to cycle quad → grid → bezier)
+      to switch to bezier mode.</li>
+    <li>Place the mark the same way as a quad: click the 4 corners around the curved region.
+      It starts as a straight-edged rectangle — no curve yet.</li>
+    <li>Each of the 4 edges has 2 small handle points connected to their corner by a thin guide
+      line. <strong>Drag a handle outward</strong> to bow that edge to match the curve you see in
+      the photo. Handles are independent, not mirrored across a corner — a corner can stay a sharp
+      point even while its adjacent edges curve.</li>
+    <li>Convert as usual — no separate "straighten" step needed. The flattened output is produced
+      directly from the curved shape you traced.</li>
+  </ol>
+
+  <h3 style="font-size:14px; color:var(--muted); margin: 20px 0 4px; text-transform:uppercase; letter-spacing:0.05em;">Grid mode</h3>
+  <ol>
+    <li>Click the grid-mode toolbar icon (or <code>Shift+G</code> to cycle quad → grid → bezier)
+      to switch to grid mode.</li>
     <li>Adjust the <strong>Rows</strong> / <strong>Cols</strong> steppers that appear — this sets how many
       control points make up the mesh. More points trace a curve more precisely, but are more work to place.</li>
     <li>Place the mark the same way as a quad: click the 4 corners around the curved region.
@@ -150,7 +177,7 @@
     <colgroup><col style="width:38%;"><col style="width:31%;"><col style="width:31%;"></colgroup>
     <tr><th>Action</th><th>macOS</th><th>Windows / Linux</th></tr>
     <tr><td>Load images</td><td colspan="2"><code>Shift+A</code></td></tr>
-    <tr><td>Toggle quad / grid mark mode</td><td colspan="2"><code>Shift+G</code></td></tr>
+    <tr><td>Cycle quad / grid / bezier mark mode</td><td colspan="2"><code>Shift+G</code></td></tr>
     <tr><td>Add mark point (on image)</td><td><code>Cmd+Click</code></td><td><code>Ctrl+Click</code></td></tr>
     <tr><td>Add/remove point from selection</td><td colspan="2"><code>Shift+Click</code> (on point)</td></tr>
     <tr><td>Reset point selection (while marking)</td><td colspan="2">Right click</td></tr>

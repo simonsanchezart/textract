@@ -54,6 +54,7 @@ export default function Footer() {
 
             <hr />
 
+            <ShortcutHelper shortcut="Shift+G" description="Cycle Quad/Grid/Bezier Mode" />
             <ShortcutHelper shortcut={`${shortcutModifier}+Click`} description="Add Mark Point" />
             <ShortcutHelper shortcut="Shift+Click (on point)" description="Add/Remove From Selection" />
             <ShortcutHelper shortcut="Shift+R" description="Convert Marks" />
