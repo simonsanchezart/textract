@@ -1,5 +1,5 @@
 import type { MarkType } from "@/stores/mark-store";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Group, Line } from "react-konva";
 import { useCanvasStore } from "@/stores/canvas-store";
 import { useMarkStore } from "@/stores/mark-store";
@@ -12,6 +12,17 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
   const [points, setPoints] = useState(mark.points);
   const pointsFlat = useMemo(() => points.flatMap(p => [p.x, p.y]), [points]);
   const selectedPoints = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].selectedPoints);
+  const selectedIndices = useMemo(
+    () => selectedPoints.filter(sp => sp.markId === mark.id).map(sp => sp.pointIndex),
+    [selectedPoints, mark.id],
+  );
+  // Snapshot of `points` + the dragged point's own start position, taken on
+  // drag-start. Needed so a multi-point drag (dragging one selected point
+  // while others are also selected) can apply the same delta to every
+  // selected point -- Konva only reports drag events for the node the
+  // pointer is actually on, so the other selected points have to be moved
+  // by re-deriving the offset from this snapshot, not their own events.
+  const dragStartRef = useRef<{ points: typeof points; origin: { x: number; y: number } } | null>(null);
 
   const gridPoints = useMemo(() => {
     const gridLineY1 = { p1: lerpVec2(points[0], points[1], 0.33), p2: lerpVec2(points[3], points[2], 0.33) };
@@ -83,10 +94,17 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
             offset={markOffset}
             selected={selected}
             onMouseDown={(e) => {
-              if (e.evt.shiftKey)
+              if (e.evt.shiftKey) {
                 useCanvasStore.getState().togglePointSelection(CanvasType.MARK, mark.id, id);
-              else
+              }
+              else if (!selectedIndices.includes(id)) {
+                // Only collapse to a single-point selection if this point
+                // wasn't already part of the current multi-selection --
+                // otherwise grabbing one of several selected points to drag
+                // them together would wipe the rest of the selection before
+                // the drag (onDragStart) even fires.
                 useCanvasStore.getState().selectPoint(CanvasType.MARK, mark.id, id);
+              }
             }}
             onClick={(e) => {
               // Konva clicks bubble, and this point sits inside MarkImage's
@@ -98,16 +116,44 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
               // click. That made selection look flaky rather than broken.
               e.cancelBubble = true;
             }}
+            onDragStart={(e) => {
+              dragStartRef.current = {
+                points,
+                origin: { x: e.target.x(), y: e.target.y() },
+              };
+            }}
             onDragMove={(e) => {
-              setPoints((prev) => {
-                const next = [...prev];
-                next[id] = { x: e.target.x(), y: e.target.y() };
-                return next;
-              });
+              const isMultiDrag = selectedIndices.includes(id) && selectedIndices.length > 1 && dragStartRef.current;
+              if (isMultiDrag && dragStartRef.current) {
+                const dx = e.target.x() - dragStartRef.current.origin.x;
+                const dy = e.target.y() - dragStartRef.current.origin.y;
+                const start = dragStartRef.current.points;
+                setPoints(start.map((p, idx) => (selectedIndices.includes(idx) ? { x: p.x + dx, y: p.y + dy } : p)));
+              }
+              else {
+                setPoints((prev) => {
+                  const next = [...prev];
+                  next[id] = { x: e.target.x(), y: e.target.y() };
+                  return next;
+                });
+              }
             }}
             onDragEnd={(e) => {
-              useMarkStore.getState().updateMarkPoint(mark.id, id, { x: e.target.x(), y: e.target.y() });
+              const isMultiDrag = selectedIndices.includes(id) && selectedIndices.length > 1 && dragStartRef.current;
+              if (isMultiDrag && dragStartRef.current) {
+                const dx = e.target.x() - dragStartRef.current.origin.x;
+                const dy = e.target.y() - dragStartRef.current.origin.y;
+                const start = dragStartRef.current.points;
+                selectedIndices.forEach((idx) => {
+                  const p = start[idx];
+                  useMarkStore.getState().updateMarkPoint(mark.id, idx, { x: p.x + dx, y: p.y + dy });
+                });
+              }
+              else {
+                useMarkStore.getState().updateMarkPoint(mark.id, id, { x: e.target.x(), y: e.target.y() });
+              }
               useMarkStore.getState().updateMarkDirty(mark.id, true);
+              dragStartRef.current = null;
             }}
             scaleFactor={scale}
           />
