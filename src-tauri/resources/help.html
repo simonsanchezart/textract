@@ -111,6 +111,21 @@
     shaping a grid — don't hesitate to drag a point and adjust if the curve isn't quite right.
   </div>
 
+  <h3 style="font-size:14px; color:var(--muted); margin: 20px 0 4px; text-transform:uppercase; letter-spacing:0.05em;">Smoothing a curve (optional)</h3>
+  <p>
+    A grid mark only draws straight lines between the points you place, which can look faceted
+    at low grid density. To smooth it out without placing more points:
+  </p>
+  <ol>
+    <li>Select the points along the part of the curve you want smoothed — e.g. the interior points
+      tracing a bottle label's curvature, but <strong>not</strong> the sharp corners — using
+      <code>Shift+Click</code> to build a multi-selection.</li>
+    <li>Press <code>S</code> to mark them smooth. Only a region where every point around it is
+      marked smooth gets curved; any corner you leave unmarked stays exactly as sharp as before.</li>
+    <li>Use <code>[</code> / <code>]</code> to loosen or tighten the curve for the current selection
+      (tight tension looks the same as a straight line; loose tension bows further off the chord).</li>
+  </ol>
+
   <h2>Shortcuts</h2>
 
   <h3 style="font-size:14px; color:var(--muted); margin: 20px 0 4px; text-transform:uppercase; letter-spacing:0.05em;">General &amp; navigation</h3>
@@ -138,6 +153,8 @@
     <tr><td>Undo</td><td><code>Cmd+Z</code></td><td><code>Ctrl+Z</code></td></tr>
     <tr><td>Redo</td><td><code>Shift+Cmd+Z</code></td><td><code>Shift+Ctrl+Z</code></td></tr>
     <tr><td>Deselect the current point</td><td colspan="2"><code>Escape</code></td></tr>
+    <tr><td>Toggle smooth/sharp for selected point(s)</td><td colspan="2"><code>S</code></td></tr>
+    <tr><td>Decrease/increase tension for selected point(s)</td><td colspan="2"><code>[</code> / <code>]</code></td></tr>
   </table>
 
   <h3 style="font-size:14px; color:var(--muted); margin: 20px 0 4px; text-transform:uppercase; letter-spacing:0.05em;">Atlas canvas (right panel)</h3>

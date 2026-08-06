@@ -9,6 +9,14 @@ export type GridDims = {
   cols: number;
 };
 
+export type PointMeta = {
+  smooth: boolean;
+  /** 0 = loosest curve, 1 = fully damped (identical to a straight line). Only meaningful when smooth. */
+  tension: number;
+};
+
+const DEFAULT_TENSION = 0.5;
+
 export type MarkType = {
   id: string;
   imageId: string;
@@ -18,6 +26,14 @@ export type MarkType = {
   markType?: "quad" | "grid";
   /** Only set when markType is "grid" — points is a row-major rows*cols grid. */
   gridDims?: GridDims;
+  /**
+   * Only meaningful for grid marks, parallel to `points` by index. A missing
+   * array, or a missing/absent entry within it, means "linear" (the default
+   * for every point before this feature existed, and for every point a user
+   * hasn't explicitly made smooth) -- so old persisted marks and marks that
+   * never touch curve mode behave exactly as before.
+   */
+  pointMeta?: PointMeta[];
 };
 
 export type MarkImageType = {
@@ -41,6 +57,14 @@ type MarkStore = {
   updateMarkDirty: (markId: string, dirty: boolean) => void;
   removeMark: (markId: string) => void;
   removeImage: (imageId: string) => void;
+  /**
+   * Toggles smooth on/off for the given point indices on one mark. If any
+   * of the points are currently non-smooth, this turns smooth ON for all of
+   * them; only if every one of them is already smooth does it turn them all
+   * off -- so toggling a mixed selection always "adds" smoothing first.
+   */
+  toggleSmoothForPoints: (markId: string, pointIndices: number[]) => void;
+  adjustTensionForPoints: (markId: string, pointIndices: number[], delta: number) => void;
 };
 
 export const useMarkStore = create(
@@ -130,6 +154,43 @@ export const useMarkStore = create(
             }
 
             delete state.images[imageId];
+          }),
+
+        toggleSmoothForPoints: (markId, pointIndices) =>
+          set((state) => {
+            const mark = state.marks[markId];
+            if (!mark || pointIndices.length === 0)
+              return;
+
+            if (!mark.pointMeta)
+              mark.pointMeta = mark.points.map(() => ({ smooth: false, tension: DEFAULT_TENSION }));
+            while (mark.pointMeta.length < mark.points.length)
+              mark.pointMeta.push({ smooth: false, tension: DEFAULT_TENSION });
+
+            const allAlreadySmooth = pointIndices.every(i => mark.pointMeta![i]?.smooth);
+            for (const i of pointIndices) {
+              if (!mark.pointMeta[i])
+                mark.pointMeta[i] = { smooth: false, tension: DEFAULT_TENSION };
+              mark.pointMeta[i].smooth = !allAlreadySmooth;
+            }
+          }),
+
+        adjustTensionForPoints: (markId, pointIndices, delta) =>
+          set((state) => {
+            const mark = state.marks[markId];
+            if (!mark || pointIndices.length === 0)
+              return;
+
+            if (!mark.pointMeta)
+              mark.pointMeta = mark.points.map(() => ({ smooth: false, tension: DEFAULT_TENSION }));
+            while (mark.pointMeta.length < mark.points.length)
+              mark.pointMeta.push({ smooth: false, tension: DEFAULT_TENSION });
+
+            for (const i of pointIndices) {
+              if (!mark.pointMeta[i])
+                mark.pointMeta[i] = { smooth: false, tension: DEFAULT_TENSION };
+              mark.pointMeta[i].tension = Math.min(1, Math.max(0, mark.pointMeta[i].tension + delta));
+            }
           }),
       })),
       {

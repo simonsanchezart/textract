@@ -60,6 +60,8 @@ export default function Footer() {
             <ShortcutHelper shortcut="Alt+Click" description="Delete Mark" />
             <ShortcutHelper shortcut={`${shortcutModifier}+Z`} description="Undo" />
             <ShortcutHelper shortcut={`Shift+${shortcutModifier}+Z`} description="Redo" />
+            <ShortcutHelper shortcut="S" description="Toggle Smooth For Selected Point(s)" />
+            <ShortcutHelper shortcut="[ / ]" description="Decrease/Increase Tension" />
 
             <hr />
 

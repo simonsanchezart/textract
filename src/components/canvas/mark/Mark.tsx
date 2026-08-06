@@ -54,20 +54,42 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
 
   const pointsFlat = useMemo(() => outlinePoints.flatMap(p => [p.x, p.y]), [outlinePoints]);
 
-  // Each entry is a flattened [x,y,x,y,...] polyline. For grid marks these
-  // walk every intermediate point (not just the two ends) so the preview
-  // line actually follows the curve the user has dragged into shape rather
-  // than showing a straight chord across it.
-  const gridLines: number[][] = useMemo(() => {
+  // Each entry is a flattened [x,y,x,y,...] polyline, plus a Konva `tension`
+  // value. For grid marks these walk every intermediate point (not just the
+  // two ends) so the preview line actually follows the curve the user has
+  // dragged into shape rather than showing a straight chord across it.
+  //
+  // Curve-mode preview: a row/column renders with Konva's native curve
+  // smoothing only when EVERY point along it is marked smooth -- this is a
+  // simplification for visual feedback only (the real per-cell smooth/sharp
+  // decision happens backend-side at convert time, see mesh.rs); a row with
+  // even one sharp corner just renders as the same straight polyline as
+  // before curve mode existed. Konva's tension is the inverse of ours (0 =
+  // straight, higher = curvier), and its scale is unrelated to our 0-1
+  // range, so it's remapped rather than passed through directly.
+  const gridLines: { flat: number[]; tension: number }[] = useMemo(() => {
+    const isSmooth = (idx: number) => mark.pointMeta?.[idx]?.smooth ?? false;
+    const avgTension = (indices: number[]) => {
+      const values = indices.map(i => mark.pointMeta?.[i]?.tension ?? 0.5);
+      return values.reduce((a, b) => a + b, 0) / values.length;
+    };
+    const toLine = (linePoints: typeof points, indices: number[]) => {
+      const allSmooth = indices.every(isSmooth);
+      return {
+        flat: linePoints.flatMap(p => [p.x, p.y]),
+        tension: allSmooth ? 0.5 * (1 - avgTension(indices)) : 0,
+      };
+    };
+
     if (isGrid) {
-      const lines: number[][] = [];
+      const lines: { flat: number[]; tension: number }[] = [];
       for (let r = 0; r < rows; r++) {
-        const row = points.slice(r * cols, r * cols + cols);
-        lines.push(row.flatMap(p => [p.x, p.y]));
+        const indices = Array.from({ length: cols }, (_, c) => r * cols + c);
+        lines.push(toLine(points.slice(r * cols, r * cols + cols), indices));
       }
       for (let c = 0; c < cols; c++) {
-        const col = Array.from({ length: rows }, (_, r) => points[r * cols + c]);
-        lines.push(col.flatMap(p => [p.x, p.y]));
+        const indices = Array.from({ length: rows }, (_, r) => r * cols + c);
+        lines.push(toLine(indices.map(i => points[i]), indices));
       }
       return lines;
     }
@@ -77,8 +99,8 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
     const gridLineX1 = [lerpVec2(points[0], points[3], 0.33), lerpVec2(points[1], points[2], 0.33)];
     const gridLineX2 = [lerpVec2(points[0], points[3], 0.67), lerpVec2(points[1], points[2], 0.67)];
 
-    return [gridLineY1, gridLineY2, gridLineX1, gridLineX2].map(line => line.flatMap(p => [p.x, p.y]));
-  }, [isGrid, points, rows, cols]);
+    return [gridLineY1, gridLineY2, gridLineX1, gridLineX2].map(line => ({ flat: line.flatMap(p => [p.x, p.y]), tension: 0 }));
+  }, [isGrid, points, rows, cols, mark.pointMeta]);
 
   return (
     <Group draggable>
@@ -126,9 +148,9 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
         }}
       />
 
-      {gridLines.map((linePoints, idx) => (
+      {gridLines.map((line, idx) => (
         // eslint-disable-next-line react/no-array-index-key
-        <Line key={idx} offset={{ x: -markOffset.x, y: -markOffset.y }} points={linePoints} stroke="white" opacity={0.5} strokeWidth={scale} listening={false} />
+        <Line key={idx} offset={{ x: -markOffset.x, y: -markOffset.y }} points={line.flat} tension={line.tension} stroke="white" opacity={0.5} strokeWidth={scale} listening={false} />
       ))}
 
       {points.map((p, id) => {

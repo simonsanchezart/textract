@@ -24,6 +24,20 @@ import { getShortcutModifierLabel, isShortcutModifierPressed, snap } from "@/uti
 import Canvas from "../Canvas";
 import MarkImage from "./MarkImage";
 
+/**
+ * Selection can in principle span multiple marks; group point indices per
+ * mark so smooth/tension edits can be applied with one store call per mark.
+ */
+function groupSelectedByMark(selected: { markId: string; pointIndex: number }[]): [string, number[]][] {
+  const byMark = new Map<string, number[]>();
+  for (const { markId, pointIndex } of selected) {
+    if (!byMark.has(markId))
+      byMark.set(markId, []);
+    byMark.get(markId)!.push(pointIndex);
+  }
+  return [...byMark.entries()];
+}
+
 function MarkCanvas({ className = "" }: { className?: string }) {
   const markImages = useMarkStore(state => state.images);
   const selectedNodes = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].selectedNodes);
@@ -220,11 +234,17 @@ function MarkCanvas({ className = "" }: { className?: string }) {
           }
 
           if (gridIds.length > 0) {
-            const gridMarks = gridIds.map(id => ({
-              rows: marks[id].gridDims!.rows,
-              cols: marks[id].gridDims!.cols,
-              points: marks[id].points.flatMap(p => [Math.round(p.x), Math.round(p.y)]),
-            }));
+            const gridMarks = gridIds.map((id) => {
+              const mark = marks[id];
+              const pointMeta = mark.pointMeta;
+              return {
+                rows: mark.gridDims!.rows,
+                cols: mark.gridDims!.cols,
+                points: mark.points.flatMap(p => [Math.round(p.x), Math.round(p.y)]),
+                smooth: pointMeta ? mark.points.map((_, i) => pointMeta[i]?.smooth ?? false) : [],
+                tension: pointMeta ? mark.points.map((_, i) => pointMeta[i]?.tension ?? 0.5) : [],
+              };
+            });
 
             const results: string[] = await invoke("transform_image_mesh", {
               imgPath: image.filepath,
@@ -338,6 +358,26 @@ function MarkCanvas({ className = "" }: { className?: string }) {
       case "Escape":
         useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
         break;
+      case "KeyS": {
+        const selected = useCanvasStore.getState().transientCanvas[CanvasType.MARK].selectedPoints;
+        if (selected.length === 0)
+          break;
+        e.preventDefault();
+        for (const [markId, indices] of groupSelectedByMark(selected))
+          useMarkStore.getState().toggleSmoothForPoints(markId, indices);
+        break;
+      }
+      case "BracketLeft":
+      case "BracketRight": {
+        const selected = useCanvasStore.getState().transientCanvas[CanvasType.MARK].selectedPoints;
+        if (selected.length === 0)
+          break;
+        e.preventDefault();
+        const delta = e.code === "BracketRight" ? 0.1 : -0.1;
+        for (const [markId, indices] of groupSelectedByMark(selected))
+          useMarkStore.getState().adjustTensionForPoints(markId, indices, delta);
+        break;
+      }
       case "KeyZ":
         if (isShortcutModifierPressed(e)) {
           // Stop the webview's own text-undo from also firing.
