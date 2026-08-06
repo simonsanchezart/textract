@@ -367,13 +367,13 @@ function MarkCanvas({ className = "" }: { className?: string }) {
           useMarkStore.getState().toggleSmoothForPoints(markId, indices);
         break;
       }
-      case "BracketLeft":
-      case "BracketRight": {
+      case "Minus":
+      case "Equal": {
         const selected = useCanvasStore.getState().transientCanvas[CanvasType.MARK].selectedPoints;
         if (selected.length === 0)
           break;
         e.preventDefault();
-        const delta = e.code === "BracketRight" ? 0.1 : -0.1;
+        const delta = e.code === "Equal" ? 0.1 : -0.1;
         for (const [markId, indices] of groupSelectedByMark(selected))
           useMarkStore.getState().adjustTensionForPoints(markId, indices, delta);
         break;

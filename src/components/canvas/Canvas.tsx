@@ -30,6 +30,7 @@ type CanvasProps = {
 function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, className, ...props }: CanvasProps) {
   const STAGE_SIZE = 2048;
   const stageRef = useRef<Konva.Stage>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const snapSize = useSettingsStore(s => s.snap);
   const canvasState = useCanvasStore(s => s.canvas[canvasType]);
@@ -71,7 +72,24 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
   };
 
   return (
-    <div className="h-full" tabIndex={-1} onKeyDown={handleShortcuts}>
+    <div
+      ref={containerRef}
+      className="h-full"
+      tabIndex={-1}
+      onKeyDown={handleShortcuts}
+      onMouseDown={() => containerRef.current?.focus()}
+    >
+      {/*
+        Konva renders to a plain <canvas> child, which has no tabindex of its
+        own -- clicking it does not transfer keyboard focus to this div the
+        way clicking a native <button>/<input> would, especially under
+        WebKit (Tauri's macOS webview). Without this, every keyboard
+        shortcut in the canvas tree only worked if some OTHER focusable
+        element (e.g. a toolbar input) happened to already have focus, which
+        made shortcuts flaky depending on what the user clicked last.
+        Explicitly re-focusing this container on every mousedown makes
+        keyboard shortcuts fire reliably regardless of click target.
+      */}
       <PopupConfirm
         title="Delete Selected"
         description={

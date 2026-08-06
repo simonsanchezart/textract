@@ -117,13 +117,19 @@
     at low grid density. To smooth it out without placing more points:
   </p>
   <ol>
-    <li>Select the points along the part of the curve you want smoothed — e.g. the interior points
-      tracing a bottle label's curvature, but <strong>not</strong> the sharp corners — using
-      <code>Shift+Click</code> to build a multi-selection.</li>
-    <li>Press <code>S</code> to mark them smooth. Only a region where every point around it is
-      marked smooth gets curved; any corner you leave unmarked stays exactly as sharp as before.</li>
-    <li>Use <code>[</code> / <code>]</code> to loosen or tighten the curve for the current selection
+    <li>Select the points along the part of the curve you want smoothed — e.g. an entire interior
+      row or column tracing a bottle label's curvature, but <strong>not</strong> the sharp corners —
+      using <code>Shift+Click</code> to build a multi-selection.</li>
+    <li>Press <code>S</code> to mark them smooth. A run of points along a row or column only curves
+      where <strong>both</strong> ends of that segment are marked smooth; a point you leave unmarked
+      stays exactly as sharp as before, and the curve fades back to straight as it approaches it.</li>
+    <li>Use <code>-</code> / <code>=</code> to loosen or tighten the curve for the current selection
       (tight tension looks the same as a straight line; loose tension bows further off the chord).</li>
+    <li><strong>Smoothing only bends the path between points you've already placed</strong> — it
+      doesn't invent curvature on its own. If your points are placed in a straight line, marking them
+      smooth won't visibly change anything; drag the interior points to actually trace the curve you
+      see in the photo first, then smooth them so the mesh follows that shape instead of the straight
+      chords between them.</li>
   </ol>
 
   <h2>Shortcuts</h2>
@@ -154,7 +160,7 @@
     <tr><td>Redo</td><td><code>Shift+Cmd+Z</code></td><td><code>Shift+Ctrl+Z</code></td></tr>
     <tr><td>Deselect the current point</td><td colspan="2"><code>Escape</code></td></tr>
     <tr><td>Toggle smooth/sharp for selected point(s)</td><td colspan="2"><code>S</code></td></tr>
-    <tr><td>Decrease/increase tension for selected point(s)</td><td colspan="2"><code>[</code> / <code>]</code></td></tr>
+    <tr><td>Decrease/increase tension for selected point(s)</td><td colspan="2"><code>-</code> / <code>=</code></td></tr>
   </table>
 
   <h3 style="font-size:14px; color:var(--muted); margin: 20px 0 4px; text-transform:uppercase; letter-spacing:0.05em;">Atlas canvas (right panel)</h3>
