@@ -46,12 +46,13 @@
     font-size: 0.92em;
     color: var(--light);
   }
-  table { width: 100%; border-collapse: collapse; margin: 8px 0 4px; }
+  table { width: 100%; table-layout: fixed; border-collapse: collapse; margin: 8px 0 4px; }
   th, td {
     text-align: left;
     padding: 8px 10px;
     border-bottom: 1px solid var(--border);
     font-size: 14px;
+    overflow-wrap: break-word;
   }
   th { color: var(--muted); font-weight: 500; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; }
   td:first-child { white-space: nowrap; }
@@ -114,6 +115,7 @@
 
   <h3 style="font-size:14px; color:var(--muted); margin: 20px 0 4px; text-transform:uppercase; letter-spacing:0.05em;">General &amp; navigation</h3>
   <table>
+    <colgroup><col style="width:38%;"><col style="width:31%;"><col style="width:31%;"></colgroup>
     <tr><th>Action</th><th>macOS</th><th>Windows / Linux</th></tr>
     <tr><td>Zoom stage</td><td colspan="2">Scroll wheel</td></tr>
     <tr><td>Pan canvas</td><td colspan="2">Scroll-wheel click + drag / drag stage</td></tr>
@@ -124,6 +126,7 @@
 
   <h3 style="font-size:14px; color:var(--muted); margin: 20px 0 4px; text-transform:uppercase; letter-spacing:0.05em;">Mark canvas (left panel)</h3>
   <table>
+    <colgroup><col style="width:38%;"><col style="width:31%;"><col style="width:31%;"></colgroup>
     <tr><th>Action</th><th>macOS</th><th>Windows / Linux</th></tr>
     <tr><td>Load images</td><td colspan="2"><code>Shift+A</code></td></tr>
     <tr><td>Toggle quad / grid mark mode</td><td colspan="2"><code>Shift+G</code></td></tr>
@@ -139,6 +142,7 @@
 
   <h3 style="font-size:14px; color:var(--muted); margin: 20px 0 4px; text-transform:uppercase; letter-spacing:0.05em;">Atlas canvas (right panel)</h3>
   <table>
+    <colgroup><col style="width:38%;"><col style="width:31%;"><col style="width:31%;"></colgroup>
     <tr><th>Action</th><th>macOS</th><th>Windows / Linux</th></tr>
     <tr><td>Export atlas</td><td><code>Cmd+E</code></td><td><code>Ctrl+E</code></td></tr>
     <tr><td>Export selected</td><td><code>Cmd+S</code></td><td><code>Ctrl+S</code></td></tr>
