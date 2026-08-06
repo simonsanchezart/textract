@@ -3,6 +3,8 @@ import type { Vec2 } from "@/types/types";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+export const VALID_IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "bmp"];
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
