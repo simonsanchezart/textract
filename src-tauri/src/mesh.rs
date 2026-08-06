@@ -21,6 +21,34 @@ pub struct GridMark {
     tension: Vec<f32>,
 }
 
+/// One curved-surface mark described by its outline instead of by an interior
+/// grid: 4 corners joined by 4 cubic Bezier edges, the interior inferred.
+///
+/// Edge `i` runs `corners[i]` -> `corners[(i + 1) % 4]` with control points
+/// `handles[2 * i]` and `handles[2 * i + 1]`, so the corner order (top-left,
+/// top-right, bottom-right, bottom-left) makes the edges top, right, bottom,
+/// left — i.e. the bottom and left edges are traversed *backwards* relative to
+/// how the Coons fill wants to read them. The two handles meeting at a corner
+/// belong to different edges and are deliberately independent: a corner is
+/// allowed to kink, because a real label's corner usually does.
+///
+/// Both vectors are flat x,y pairs for the same reason `GridMark.points` is.
+#[derive(Deserialize, Default)]
+pub struct BezierMark {
+    corners: Vec<f32>,
+    handles: Vec<f32>,
+}
+
+/// Resolution of the dense grid the Coons patch is evaluated onto. The boundary
+/// is a curve at every scale, so unlike `GridMark` there is no "no curvature
+/// here" case worth detecting — the mesh is always this dense.
+const BEZIER_GRID_POINTS: usize = 64;
+
+/// Resolution of the arc-length lookup table built per boundary curve. Only
+/// needs to be fine enough that the chord through each step is a good stand-in
+/// for the arc, which is far below the cost of the warp itself.
+const ARC_LUT_STEPS: usize = 256;
+
 /// How many micro-cells each original cell becomes when a mark uses smoothing.
 /// The output mesh has to stay one uniform rectangular grid so the triangulation
 /// loop can consume it unchanged, so this is global rather than per-cell — sharp
@@ -48,6 +76,30 @@ pub async fn transform_image_mesh(
         .collect();
 
     log::info!("Finished processing all grid marks for {}", img_name);
+    buffers
+}
+
+#[tauri::command]
+pub async fn transform_image_bezier(
+    img_path: String,
+    marks: Vec<BezierMark>,
+) -> Result<Vec<String>, String> {
+    log::info!("Processing {} bezier marks for {img_path}", marks.len());
+
+    let img = open(&img_path).map_err(|e| e.to_string())?.to_rgba8();
+    let img_name = crate::utils::get_filename_or_invalid(&img_path);
+
+    let buffers: Result<Vec<String>, String> = marks
+        .par_iter()
+        .enumerate()
+        .map(|(i, mark)| {
+            let result = warp_bezier(&img, mark)?;
+            log::info!("Finished processing bezier mark #{} for {}", (i + 1), img_name);
+            image_to_base_64(&result)
+        })
+        .collect();
+
+    log::info!("Finished processing all bezier marks for {}", img_name);
     buffers
 }
 
@@ -101,6 +153,203 @@ fn warp_mesh(img: &RgbaImage, mark: &GridMark) -> Result<RgbaImage, String> {
         (src, dst, rows, cols)
     };
 
+    Ok(triangulate_and_warp(
+        img, &src, &dst, rows, cols, out_width, out_height,
+    ))
+}
+
+/// Turns a Bezier outline into the same dense source/target grid pair the
+/// `GridMark` path produces, then hands it to the shared rasteriser.
+///
+/// The Coons fill wants all four boundaries oriented the same way the grid is
+/// indexed — top and bottom both left-to-right, left and right both
+/// top-to-bottom — so the bottom and left edges, which the corner winding
+/// traverses backwards, are reversed after sampling. Getting that wrong doesn't
+/// fail loudly, it just mirrors the interior, which is why the orientation is
+/// fixed here once rather than at each use.
+fn warp_bezier(img: &RgbaImage, mark: &BezierMark) -> Result<RgbaImage, String> {
+    if mark.corners.len() != 8 {
+        return Err(format!(
+            "Expected 8 corner values (4 points) but got {}",
+            mark.corners.len()
+        ));
+    }
+    if mark.handles.len() != 16 {
+        return Err(format!(
+            "Expected 16 handle values (8 points, 2 per edge) but got {}",
+            mark.handles.len()
+        ));
+    }
+
+    let point = |src: &[f32], n: usize| (src[n * 2], src[n * 2 + 1]);
+    let edges: [[(f32, f32); 4]; 4] = std::array::from_fn(|i| {
+        [
+            point(&mark.corners, i),
+            point(&mark.handles, i * 2),
+            point(&mark.handles, i * 2 + 1),
+            point(&mark.corners, (i + 1) % 4),
+        ]
+    });
+
+    let rows = BEZIER_GRID_POINTS;
+    let cols = BEZIER_GRID_POINTS;
+
+    let top = sample_bezier_evenly(&edges[0], cols);
+    let right = sample_bezier_evenly(&edges[1], rows);
+    let mut bottom = sample_bezier_evenly(&edges[2], cols);
+    bottom.reverse();
+    let mut left = sample_bezier_evenly(&edges[3], rows);
+    left.reverse();
+
+    let src = coons_patch(&top, &bottom, &left, &right, rows, cols);
+
+    // Opposite edges rarely have equal arc length once bowed, so the flattened
+    // size takes their mean — the same "average spacing" idea `average_cell_size`
+    // uses, applied to the outline instead of to interior cells.
+    let width = (bezier_arc_length(&edges[0]) + bezier_arc_length(&edges[2])) / 2.0;
+    let height = (bezier_arc_length(&edges[1]) + bezier_arc_length(&edges[3])) / 2.0;
+    let out_width = width.round().max(1.0) as u32;
+    let out_height = height.round().max(1.0) as u32;
+
+    let cell_w = width / (cols - 1) as f32;
+    let cell_h = height / (rows - 1) as f32;
+    let dst = target_grid(rows, cols, cell_w, cell_h);
+
+    Ok(triangulate_and_warp(
+        img, &src, &dst, rows, cols, out_width, out_height,
+    ))
+}
+
+/// Transfinite bilinear (Coons) interpolation: the two ruled surfaces spanning
+/// opposite boundary pairs, minus the bilinear surface through the corners that
+/// both of them already contain. Subtracting that shared term is what makes the
+/// result actually interpolate all four curves rather than merely average them.
+///
+/// All four inputs are indexed in grid order: `top`/`bottom` left-to-right with
+/// `cols` samples, `left`/`right` top-to-bottom with `rows` samples.
+fn coons_patch(
+    top: &[(f32, f32)],
+    bottom: &[(f32, f32)],
+    left: &[(f32, f32)],
+    right: &[(f32, f32)],
+    rows: usize,
+    cols: usize,
+) -> Vec<Vec<(f32, f32)>> {
+    let p00 = top[0];
+    let p10 = top[cols - 1];
+    let p01 = bottom[0];
+    let p11 = bottom[cols - 1];
+
+    (0..rows)
+        .map(|i| {
+            let v = i as f32 / (rows - 1) as f32;
+            (0..cols)
+                .map(|j| {
+                    let u = j as f32 / (cols - 1) as f32;
+                    let scaled = |p: (f32, f32), w: f32| (p.0 * w, p.1 * w);
+                    let sum = |a: (f32, f32), b: (f32, f32)| (a.0 + b.0, a.1 + b.1);
+
+                    let ruled_v = sum(scaled(top[j], 1.0 - v), scaled(bottom[j], v));
+                    let ruled_u = sum(scaled(left[i], 1.0 - u), scaled(right[i], u));
+                    let bilinear = sum(
+                        sum(scaled(p00, (1.0 - u) * (1.0 - v)), scaled(p10, u * (1.0 - v))),
+                        sum(scaled(p01, (1.0 - u) * v), scaled(p11, u * v)),
+                    );
+
+                    let blended = sum(ruled_v, ruled_u);
+                    (blended.0 - bilinear.0, blended.1 - bilinear.1)
+                })
+                .collect()
+        })
+        .collect()
+}
+
+fn cubic_bezier_point(p: &[(f32, f32); 4], t: f32) -> (f32, f32) {
+    let mt = 1.0 - t;
+    let (a, b, c, d) = (mt * mt * mt, 3.0 * mt * mt * t, 3.0 * mt * t * t, t * t * t);
+    (
+        a * p[0].0 + b * p[1].0 + c * p[2].0 + d * p[3].0,
+        a * p[0].1 + b * p[1].1 + c * p[2].1 + d * p[3].1,
+    )
+}
+
+/// Cumulative chord length at each of `ARC_LUT_STEPS + 1` uniform `t` values.
+/// Monotonically non-decreasing by construction, which is what lets the inverse
+/// lookup below be a plain binary search.
+fn arc_length_table(p: &[(f32, f32); 4]) -> Vec<f32> {
+    let mut table = Vec::with_capacity(ARC_LUT_STEPS + 1);
+    table.push(0.0);
+
+    let mut prev = cubic_bezier_point(p, 0.0);
+    let mut total = 0.0;
+    for k in 1..=ARC_LUT_STEPS {
+        let current = cubic_bezier_point(p, k as f32 / ARC_LUT_STEPS as f32);
+        total += ((current.0 - prev.0).powi(2) + (current.1 - prev.1).powi(2)).sqrt();
+        table.push(total);
+        prev = current;
+    }
+
+    table
+}
+
+fn bezier_arc_length(p: &[(f32, f32); 4]) -> f32 {
+    *arc_length_table(p).last().unwrap_or(&0.0)
+}
+
+/// `t` at which the curve has travelled `s` units of arc length, by linear
+/// interpolation inside the LUT bucket that straddles `s`. The error is bounded
+/// by one bucket's worth of curvature, so refining the LUT beats refining this.
+fn t_at_arc_length(table: &[f32], s: f32) -> f32 {
+    let last = table.len() - 1;
+    let idx = table.partition_point(|&v| v < s).clamp(1, last);
+    let (lo, hi) = (table[idx - 1], table[idx]);
+    let span = hi - lo;
+    let frac = if span > f32::EPSILON {
+        (s - lo) / span
+    } else {
+        0.0
+    };
+    (idx as f32 - 1.0 + frac) / last as f32
+}
+
+/// Samples a cubic Bezier at `count` points spaced evenly by *arc length*.
+///
+/// Uniform `t` is not uniform distance — it bunches wherever the curve bends
+/// hardest, which is exactly where a warp mesh can least afford sparse control,
+/// so the samples are placed by inverting the arc-length table instead.
+fn sample_bezier_evenly(p: &[(f32, f32); 4], count: usize) -> Vec<(f32, f32)> {
+    let table = arc_length_table(p);
+    let total = *table.last().unwrap_or(&0.0);
+
+    // A degenerate (zero-length) edge has no direction to space samples along;
+    // collapsing every sample onto its single point keeps the grid rectangular.
+    if count < 2 || total <= f32::EPSILON {
+        return vec![cubic_bezier_point(p, 0.0); count.max(1)];
+    }
+
+    (0..count)
+        .map(|i| {
+            let s = i as f32 / (count - 1) as f32 * total;
+            cubic_bezier_point(p, t_at_arc_length(&table, s))
+        })
+        .collect()
+}
+
+/// Rasterises a source/target grid pair into the flattened output.
+///
+/// Shared by every mark type: whatever produced the dense correspondence — a
+/// subdivided `GridMark` or a Coons-filled `BezierMark` — hands over two grids
+/// of identical shape and this is the only place that turns them into pixels,
+/// so the sampling behaviour can't drift between the two tools.
+fn triangulate_and_warp(
+    img: &RgbaImage,
+    src: &[Vec<(f32, f32)>],
+    dst: &[Vec<(f32, f32)>],
+    rows: usize,
+    cols: usize,
+    out_width: u32,
+    out_height: u32,
+) -> RgbaImage {
     let mut out = RgbaImage::new(out_width, out_height);
 
     for i in 0..rows - 1 {
@@ -122,7 +371,7 @@ fn warp_mesh(img: &RgbaImage, mark: &GridMark) -> Result<RgbaImage, String> {
         }
     }
 
-    Ok(out)
+    out
 }
 
 fn grid_from_flat(points: &[f32], rows: usize, cols: usize) -> Vec<Vec<(f32, f32)>> {
@@ -858,6 +1107,133 @@ mod tests {
                 );
             }
         }
+    }
+
+    /// Builds a `BezierMark` from 4 corners with every edge left straight: the
+    /// handles sit at the conventional 1/3 and 2/3 points of the chord, the
+    /// placement at which a cubic Bezier degenerates to its own straight line.
+    fn straight_bezier(corners: [(f32, f32); 4]) -> BezierMark {
+        let mut handles = Vec::with_capacity(16);
+        for i in 0..4 {
+            let a = corners[i];
+            let b = corners[(i + 1) % 4];
+            for f in [1.0f32 / 3.0, 2.0 / 3.0] {
+                handles.push(a.0 + (b.0 - a.0) * f);
+                handles.push(a.1 + (b.1 - a.1) * f);
+            }
+        }
+        BezierMark {
+            corners: corners.iter().flat_map(|p| [p.0, p.1]).collect(),
+            handles,
+        }
+    }
+
+    #[test]
+    fn flat_bezier_matches_a_plain_crop() {
+        let img = coordinate_image(100, 60);
+        // The same [10,10]..[90,50] rectangle the flat GridMark test uses, so a
+        // straight-edged Bezier quad has to behave like that plain crop too.
+        let mark = straight_bezier([(10.0, 10.0), (90.0, 10.0), (90.0, 50.0), (10.0, 50.0)]);
+
+        let out = warp_bezier(&img, &mark).expect("warp should succeed");
+        assert_eq!(out.dimensions(), (80, 40));
+
+        let corner = out.get_pixel(0, 0);
+        assert!((corner[0] as i32 - 10).abs() <= 1, "unexpected R at corner: {corner:?}");
+        assert!((corner[1] as i32 - 10).abs() <= 1, "unexpected G at corner: {corner:?}");
+
+        let corner = out.get_pixel(79, 39);
+        assert!((corner[0] as i32 - 90).abs() <= 1, "unexpected R at br corner: {corner:?}");
+        assert!((corner[1] as i32 - 50).abs() <= 1, "unexpected G at br corner: {corner:?}");
+
+        let center = out.get_pixel(40, 20);
+        assert!((center[0] as i32 - 50).abs() <= 1, "unexpected R at center: {center:?}");
+        assert!((center[1] as i32 - 30).abs() <= 1, "unexpected G at center: {center:?}");
+    }
+
+    #[test]
+    fn a_bowed_edge_samples_off_the_straight_chord() {
+        let img = coordinate_image(120, 120);
+        let corners = [(10.0, 20.0), (90.0, 20.0), (90.0, 60.0), (10.0, 60.0)];
+
+        let flat = straight_bezier(corners);
+        // Same quad, but the top edge's two handles are pushed 30px down, so the
+        // edge bows into the interior instead of running straight across.
+        let mut bowed = straight_bezier(corners);
+        bowed.handles[1] += 30.0;
+        bowed.handles[3] += 30.0;
+
+        let a = warp_bezier(&img, &flat).expect("warp should succeed");
+        let b = warp_bezier(&img, &bowed).expect("warp should succeed");
+
+        // Mid-span of the top edge, well away from the corners the bow pins.
+        let straight = a.get_pixel(a.width() / 2, 0);
+        let curved = b.get_pixel(b.width() / 2, 0);
+        assert!(
+            curved[1] as i32 - straight[1] as i32 > 5,
+            "expected the bowed edge to sample below the chord: {straight:?} vs {curved:?}"
+        );
+
+        // The corners themselves are shared control points either way.
+        for out in [&a, &b] {
+            let corner = out.get_pixel(0, 0);
+            assert!((corner[0] as i32 - 10).abs() <= 1, "corner moved: {corner:?}");
+            assert!((corner[1] as i32 - 20).abs() <= 1, "corner moved: {corner:?}");
+        }
+    }
+
+    #[test]
+    fn arc_length_sampling_stays_evenly_spaced_through_a_sharp_bend() {
+        // A hairpin: uniform-t sampling piles points up around the turn, which
+        // is precisely the case the arc-length table exists to fix.
+        let curve = [(0.0f32, 0.0), (120.0, 0.0), (120.0, 20.0), (0.0, 20.0)];
+        const COUNT: usize = 64;
+
+        let spread = |samples: &[(f32, f32)]| {
+            let gaps: Vec<f32> = samples
+                .windows(2)
+                .map(|w| ((w[1].0 - w[0].0).powi(2) + (w[1].1 - w[0].1).powi(2)).sqrt())
+                .collect();
+            let min = gaps.iter().cloned().fold(f32::INFINITY, f32::min);
+            let max = gaps.iter().cloned().fold(0.0f32, f32::max);
+            max / min
+        };
+
+        let samples = sample_bezier_evenly(&curve, COUNT);
+        assert_eq!(samples.len(), COUNT);
+        let arc_spread = spread(&samples);
+
+        let uniform_t: Vec<(f32, f32)> = (0..COUNT)
+            .map(|i| cubic_bezier_point(&curve, i as f32 / (COUNT - 1) as f32))
+            .collect();
+        let t_spread = spread(&uniform_t);
+
+        // Gaps are measured as chords, so around a hairpin they read slightly
+        // short of the arc they stand in for and can't come out exactly equal.
+        // What matters is that they stay within a fraction of each other rather
+        // than varying by an order of magnitude, which is what uniform `t` does.
+        assert!(
+            arc_spread <= 1.2,
+            "arc-length samples should be near-uniform, spread was {arc_spread}"
+        );
+        assert!(
+            t_spread > arc_spread * 5.0,
+            "uniform-t should bunch far worse than arc length: {t_spread} vs {arc_spread}"
+        );
+    }
+
+    #[test]
+    fn rejects_mismatched_corner_or_handle_count() {
+        let img = coordinate_image(120, 120);
+        let mut short_corners =
+            straight_bezier([(10.0, 10.0), (90.0, 10.0), (90.0, 50.0), (10.0, 50.0)]);
+        short_corners.corners.truncate(6);
+        assert!(warp_bezier(&img, &short_corners).is_err());
+
+        let mut short_handles =
+            straight_bezier([(10.0, 10.0), (90.0, 10.0), (90.0, 50.0), (10.0, 50.0)]);
+        short_handles.handles.push(0.0);
+        assert!(warp_bezier(&img, &short_handles).is_err());
     }
 
     #[test]

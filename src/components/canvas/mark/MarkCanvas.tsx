@@ -6,7 +6,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { exists } from "@tauri-apps/plugin-fs";
 import { error, info, warn } from "@tauri-apps/plugin-log";
 import Konva from "konva";
-import { BoxSelect, Grid3x3, TrashIcon } from "lucide-react";
+import { BoxSelect, Grid3x3, Spline, TrashIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { CgAdd } from "react-icons/cg";
 import { FaPlay } from "react-icons/fa";
@@ -216,8 +216,9 @@ function MarkCanvas({ className = "" }: { className?: string }) {
           }
         };
 
-        const quadIds = dirtyIds.filter(id => marks[id].markType !== "grid");
+        const quadIds = dirtyIds.filter(id => marks[id].markType !== "grid" && marks[id].markType !== "bezier");
         const gridIds = dirtyIds.filter(id => marks[id].markType === "grid");
+        const bezierIds = dirtyIds.filter(id => marks[id].markType === "bezier");
 
         try {
           if (quadIds.length > 0) {
@@ -252,6 +253,23 @@ function MarkCanvas({ className = "" }: { className?: string }) {
             });
 
             await applyResults(gridIds, results);
+          }
+
+          if (bezierIds.length > 0) {
+            const bezierMarks = bezierIds.map((id) => {
+              const mark = marks[id];
+              return {
+                corners: mark.corners!.flatMap(p => [Math.round(p.x), Math.round(p.y)]),
+                handles: mark.handles!.flatMap(p => [Math.round(p.x), Math.round(p.y)]),
+              };
+            });
+
+            const results: string[] = await invoke("transform_image_bezier", {
+              imgPath: image.filepath,
+              marks: bezierMarks,
+            });
+
+            await applyResults(bezierIds, results);
           }
         }
         catch (e) {
@@ -419,14 +437,21 @@ function MarkCanvas({ className = "" }: { className?: string }) {
           size={4}
           active={markCreationMode === "quad"}
           onClick={() => useCanvasStore.getState().setMarkCreationMode(CanvasType.MARK, "quad")}
-          tooltip={`Quad mode: ${getShortcutModifierLabel()}+Click 4 corners for a straight mark (Shift+G to switch)`}
+          tooltip={`Quad mode: ${getShortcutModifierLabel()}+Click 4 corners for a straight mark (Shift+G to cycle modes)`}
         />
         <ToolbarAction
           Icon={Grid3x3}
           size={4}
           active={markCreationMode === "grid"}
           onClick={() => useCanvasStore.getState().setMarkCreationMode(CanvasType.MARK, "grid")}
-          tooltip={`Grid mode: ${getShortcutModifierLabel()}+Click 4 corners to place a curved-surface mark (Shift+G to switch)`}
+          tooltip={`Grid mode: ${getShortcutModifierLabel()}+Click 4 corners for a point-grid curved mark (Shift+G to cycle modes)`}
+        />
+        <ToolbarAction
+          Icon={Spline}
+          size={4}
+          active={markCreationMode === "bezier"}
+          onClick={() => useCanvasStore.getState().setMarkCreationMode(CanvasType.MARK, "bezier")}
+          tooltip={`Bezier mode: ${getShortcutModifierLabel()}+Click 4 corners for a bezier-edge curved mark (Shift+G to cycle modes)`}
         />
 
         {markCreationMode === "grid" && (

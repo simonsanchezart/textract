@@ -86,6 +86,23 @@ export function classifyCorners(points: Vec2[]): { tl: Vec2; tr: Vec2; bl: Vec2;
 }
 
 /**
+ * Seeds the 8 bezier handles (2 per edge) for a brand-new bezier mark from
+ * its 4 corners [tl, tr, br, bl], placed at each straight edge's 1/3 and 2/3
+ * points — the standard "this cubic bezier is actually a straight line"
+ * control-point placement, so a fresh mark renders as a plain straight-edged
+ * quad until the user drags a handle to bow it.
+ */
+export function straightBezierHandles(corners: Vec2[]): Vec2[] {
+  const handles: Vec2[] = [];
+  for (let i = 0; i < 4; i++) {
+    const p0 = corners[i];
+    const p3 = corners[(i + 1) % 4];
+    handles.push(lerpVec2(p0, p3, 1 / 3), lerpVec2(p0, p3, 2 / 3));
+  }
+  return handles;
+}
+
+/**
  * Bilinearly interpolates a rows x cols grid of points across a quad defined
  * by its 4 corners, returned row-major (row 0 first, left-to-right).
  * Used to seed a new curved-surface (grid) mark's interior control points —

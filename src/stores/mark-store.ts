@@ -20,10 +20,11 @@ const DEFAULT_TENSION = 0.5;
 export type MarkType = {
   id: string;
   imageId: string;
+  /** Unused (empty) for bezier marks -- they use corners/handles instead. */
   points: Vec2[];
   dirty: boolean;
   /** Defaults to "quad" for marks persisted before grid marks existed. */
-  markType?: "quad" | "grid";
+  markType?: "quad" | "grid" | "bezier";
   /** Only set when markType is "grid" — points is a row-major rows*cols grid. */
   gridDims?: GridDims;
   /**
@@ -34,6 +35,20 @@ export type MarkType = {
    * never touch curve mode behave exactly as before.
    */
   pointMeta?: PointMeta[];
+  /**
+   * Only set when markType is "bezier": 4 corners in order
+   * [top-left, top-right, bottom-right, bottom-left].
+   */
+  corners?: Vec2[];
+  /**
+   * Only set when markType is "bezier": 8 handles, 2 per edge, independent
+   * (not mirrored across a corner). Edge i runs corners[i] -> corners[(i+1)%4]
+   * as a cubic bezier: P0=corners[i], P1=handles[2i], P2=handles[2i+1],
+   * P3=corners[(i+1)%4]. A newly-placed bezier mark seeds handles at the 1/3
+   * and 2/3 points of each straight edge, which renders as a perfectly
+   * straight line until the user drags a handle to bow it.
+   */
+  handles?: Vec2[];
 };
 
 export type MarkImageType = {
@@ -65,6 +80,10 @@ type MarkStore = {
    */
   toggleSmoothForPoints: (markId: string, pointIndices: number[]) => void;
   adjustTensionForPoints: (markId: string, pointIndices: number[], delta: number) => void;
+  updateBezierCorner: (markId: string, cornerIdx: number, newPoint: Vec2) => void;
+  updateBezierHandle: (markId: string, handleIdx: number, newPoint: Vec2) => void;
+  /** Shifts every corner and handle by the same delta, for a whole-mark drag. */
+  translateBezierMark: (markId: string, dx: number, dy: number) => void;
 };
 
 export const useMarkStore = create(
@@ -192,6 +211,34 @@ export const useMarkStore = create(
                 mark.pointMeta[i] = { smooth: false, tension: DEFAULT_TENSION };
               mark.pointMeta[i].tension = Math.min(1, Math.max(0, mark.pointMeta[i].tension + delta));
             }
+            mark.dirty = true;
+          }),
+
+        updateBezierCorner: (markId, cornerIdx, newPoint) =>
+          set((state) => {
+            const mark = state.marks[markId];
+            if (!mark?.corners)
+              return;
+            mark.corners[cornerIdx] = newPoint;
+            mark.dirty = true;
+          }),
+
+        updateBezierHandle: (markId, handleIdx, newPoint) =>
+          set((state) => {
+            const mark = state.marks[markId];
+            if (!mark?.handles)
+              return;
+            mark.handles[handleIdx] = newPoint;
+            mark.dirty = true;
+          }),
+
+        translateBezierMark: (markId, dx, dy) =>
+          set((state) => {
+            const mark = state.marks[markId];
+            if (!mark?.corners || !mark.handles)
+              return;
+            mark.corners = mark.corners.map(p => ({ x: p.x + dx, y: p.y + dy }));
+            mark.handles = mark.handles.map(p => ({ x: p.x + dx, y: p.y + dy }));
             mark.dirty = true;
           }),
       })),

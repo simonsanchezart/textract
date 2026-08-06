@@ -22,6 +22,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             transformation::transform_image,
             mesh::transform_image_mesh,
+            mesh::transform_image_bezier,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -10,7 +10,8 @@ import { useCanvasStore } from "@/stores/canvas-store";
 import { useMarkStore } from "@/stores/mark-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { CanvasType, Colors } from "@/types/types";
-import { bilinearGrid, classifyCorners, getMiddle, isShortcutModifierPressed } from "@/utils/utils";
+import { bilinearGrid, classifyCorners, getMiddle, isShortcutModifierPressed, straightBezierHandles } from "@/utils/utils";
+import BezierMark from "./BezierMark";
 import Mark from "./Mark";
 import MarkPoint from "./MarkPoint";
 
@@ -55,6 +56,20 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
           dirty: true,
           markType: "grid",
           gridDims,
+        });
+      }
+      else if (markCreationMode === "bezier") {
+        const { tl, tr, br, bl } = classifyCorners(updated);
+        const corners = [tl, tr, br, bl];
+
+        useMarkStore.getState().addMark(imageData.id, {
+          id: crypto.randomUUID(),
+          imageId: imageData.id,
+          points: [],
+          dirty: true,
+          markType: "bezier",
+          corners,
+          handles: straightBezierHandles(corners),
         });
       }
       else {
@@ -155,7 +170,14 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
         </Group>
       ))}
 
-      {imageData.markIds.map(id => marks[id] && <Mark key={id} mark={marks[id]} scale={scaleFactor} />)}
+      {imageData.markIds.map((id) => {
+        const mark = marks[id];
+        if (!mark)
+          return null;
+        return mark.markType === "bezier"
+          ? <BezierMark key={id} mark={mark} scale={scaleFactor} />
+          : <Mark key={id} mark={mark} scale={scaleFactor} />;
+      })}
     </Group>
   );
 }

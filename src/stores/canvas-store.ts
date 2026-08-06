@@ -16,7 +16,7 @@ export type TransientCanvasState = {
   hoverShape: Konva.Shape | null;
   selectedNodes: Node<NodeConfig>[];
   /** Mark canvas only: which mark type Ctrl+Click creates next. */
-  markCreationMode: "quad" | "grid";
+  markCreationMode: "quad" | "grid" | "bezier";
   /** Mark canvas only: rows/cols used to seed the next new grid mark. */
   markGridRows: number;
   markGridCols: number;
@@ -39,7 +39,7 @@ type CanvasStore = {
   setSelectedNodes: (canvas: CanvasType, nodes: Node<NodeConfig>[]) => void;
   setHoverShape: (canvas: CanvasType, shape: Konva.Shape | null) => void;
   toggleMarkCreationMode: (canvas: CanvasType) => void;
-  setMarkCreationMode: (canvas: CanvasType, mode: "quad" | "grid") => void;
+  setMarkCreationMode: (canvas: CanvasType, mode: "quad" | "grid" | "bezier") => void;
   setMarkGridRows: (canvas: CanvasType, rows: number) => void;
   setMarkGridCols: (canvas: CanvasType, cols: number) => void;
   selectPoint: (canvas: CanvasType, markId: string, pointIndex: number) => void;
@@ -77,8 +77,9 @@ export const useCanvasStore = create(
         }),
       toggleMarkCreationMode: canvas =>
         set((state) => {
+          const next = { quad: "grid", grid: "bezier", bezier: "quad" } as const;
           state.transientCanvas[canvas].markCreationMode
-            = state.transientCanvas[canvas].markCreationMode === "quad" ? "grid" : "quad";
+            = next[state.transientCanvas[canvas].markCreationMode];
         }),
       setMarkCreationMode: (canvas, mode) =>
         set((state) => {
