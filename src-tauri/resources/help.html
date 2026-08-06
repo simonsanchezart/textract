@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Textract — Help</title>
+<style>
+  :root {
+    --dark: #282828;
+    --dark-darker: #1e1e1e;
+    --light: #faf1c9;
+    --muted: #a8a196;
+    --green: #00ff00;
+    --border: #3a3a3a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 40px 24px 64px;
+    background: var(--dark-darker);
+    color: var(--light);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  h1 {
+    font-size: 28px;
+    margin: 0 0 4px;
+    letter-spacing: 0.02em;
+  }
+  .subtitle { color: var(--muted); margin: 0 0 36px; font-size: 15px; }
+  h2 {
+    font-size: 18px;
+    margin: 40px 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: 0.02em;
+  }
+  p { color: #d8d0bd; }
+  ol, ul { color: #d8d0bd; padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  code {
+    background: var(--dark);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 0.92em;
+    color: var(--light);
+  }
+  table { width: 100%; table-layout: fixed; border-collapse: collapse; margin: 8px 0 4px; }
+  th, td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    overflow-wrap: break-word;
+  }
+  th { color: var(--muted); font-weight: 500; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; }
+  td:first-child { white-space: nowrap; }
+  .callout {
+    background: var(--dark);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--light);
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin: 16px 0;
+    font-size: 14px;
+    color: #d8d0bd;
+  }
+  footer {
+    margin-top: 56px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Textract</h1>
+  <p class="subtitle">Texture extractor from photos — reference &amp; shortcuts</p>
+
+  <h2>Basic workflow</h2>
+  <ol>
+    <li><strong>Load</strong> — bring in one or more photos on the left (Mark) canvas.</li>
+    <li><strong>Mark</strong> — click 4 corners around the texture you want, either as a straight <em>quad</em> or a curved <em>grid</em> (see below).</li>
+    <li><strong>Convert</strong> — extract the marked region(s) into flattened images on the right (Atlas) canvas.</li>
+    <li><strong>Export</strong> — arrange and export the extracted textures from the Atlas canvas.</li>
+  </ol>
+
+  <h2>Curved surfaces (grid marks)</h2>
+  <p>
+    A regular (quad) mark assumes the texture lies on a flat plane. If it's actually
+    wrapped around something curved — a label on a bottle, a sign on a pipe — use
+    <strong>grid mode</strong> instead:
+  </p>
+  <ol>
+    <li>Click the grid-mode toolbar icon (or <code>Shift+G</code>) to switch from quad to grid mode.</li>
+    <li>Adjust the <strong>Rows</strong> / <strong>Cols</strong> steppers that appear — this sets how many
+      control points make up the mesh. More points trace a curve more precisely, but are more work to place.</li>
+    <li>Place the mark the same way as a quad: click the 4 corners around the curved region.
+      This seeds a straight interior grid between them.</li>
+    <li><strong>Drag the interior points</strong> (not just the corners) so the grid lines follow the actual
+      curve in the photo — e.g. bow the middle rows outward to match a bottle's curvature.</li>
+    <li>Convert as usual. The backend flattens the curved grid into a rectangular image, following the
+      shape you traced rather than a single flat plane.</li>
+  </ol>
+  <div class="callout">
+    Undo (<code>Cmd+Z</code> on macOS, <code>Ctrl+Z</code> elsewhere) and redo
+    (<code>Shift+Cmd+Z</code> on macOS, <code>Shift+Ctrl+Z</code> elsewhere) both work while
+    shaping a grid — don't hesitate to drag a point and adjust if the curve isn't quite right.
+  </div>
+
+  <h2>Shortcuts</h2>
+
+  <h3 style="font-size:14px; color:var(--muted); margin: 20px 0 4px; text-transform:uppercase; letter-spacing:0.05em;">General &amp; navigation</h3>
+  <table>
+    <colgroup><col style="width:38%;"><col style="width:31%;"><col style="width:31%;"></colgroup>
+    <tr><th>Action</th><th>macOS</th><th>Windows / Linux</th></tr>
+    <tr><td>Zoom stage</td><td colspan="2">Scroll wheel</td></tr>
+    <tr><td>Pan canvas</td><td colspan="2">Scroll-wheel click + drag / drag stage</td></tr>
+    <tr><td>Context menu</td><td colspan="2">Right click</td></tr>
+    <tr><td>Select all</td><td><code>Cmd+A</code></td><td><code>Ctrl+A</code></td></tr>
+    <tr><td>Delete selected image</td><td colspan="2"><code>Delete</code></td></tr>
+  </table>
+
+  <h3 style="font-size:14px; color:var(--muted); margin: 20px 0 4px; text-transform:uppercase; letter-spacing:0.05em;">Mark canvas (left panel)</h3>
+  <table>
+    <colgroup><col style="width:38%;"><col style="width:31%;"><col style="width:31%;"></colgroup>
+    <tr><th>Action</th><th>macOS</th><th>Windows / Linux</th></tr>
+    <tr><td>Load images</td><td colspan="2"><code>Shift+A</code></td></tr>
+    <tr><td>Toggle quad / grid mark mode</td><td colspan="2"><code>Shift+G</code></td></tr>
+    <tr><td>Add mark point (on image)</td><td><code>Cmd+Click</code></td><td><code>Ctrl+Click</code></td></tr>
+    <tr><td>Add/remove point from selection</td><td colspan="2"><code>Shift+Click</code> (on point)</td></tr>
+    <tr><td>Reset point selection (while marking)</td><td colspan="2">Right click</td></tr>
+    <tr><td>Process / convert marks</td><td colspan="2"><code>Shift+R</code></td></tr>
+    <tr><td>Remove mark (on mark)</td><td colspan="2"><code>Alt+Click</code></td></tr>
+    <tr><td>Undo</td><td><code>Cmd+Z</code></td><td><code>Ctrl+Z</code></td></tr>
+    <tr><td>Redo</td><td><code>Shift+Cmd+Z</code></td><td><code>Shift+Ctrl+Z</code></td></tr>
+    <tr><td>Deselect the current point</td><td colspan="2"><code>Escape</code></td></tr>
+  </table>
+
+  <h3 style="font-size:14px; color:var(--muted); margin: 20px 0 4px; text-transform:uppercase; letter-spacing:0.05em;">Atlas canvas (right panel)</h3>
+  <table>
+    <colgroup><col style="width:38%;"><col style="width:31%;"><col style="width:31%;"></colgroup>
+    <tr><th>Action</th><th>macOS</th><th>Windows / Linux</th></tr>
+    <tr><td>Export atlas</td><td><code>Cmd+E</code></td><td><code>Ctrl+E</code></td></tr>
+    <tr><td>Export selected</td><td><code>Cmd+S</code></td><td><code>Ctrl+S</code></td></tr>
+  </table>
+
+  <footer>
+    Textract — <a href="https://github.com/simonsanchezart/textract" style="color:var(--light);">simonsanchezart/textract</a> (MIT).
+  </footer>
+</div>
+</body>
+</html>
