@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { useStore } from "zustand";
 import FooterNumberSetting from "@/components/footer/FooterNumberSetting";
 import { Toolbar, ToolbarAction } from "@/components/Toolbar";
-import { ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuShortcut, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger } from "@/components/ui/ContextMenu";
+import { ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuShortcut } from "@/components/ui/ContextMenu";
 import { useAtlasStore } from "@/stores/atlas-store";
 import { useCanvasStore } from "@/stores/canvas-store";
 import { useMarkStore } from "@/stores/mark-store";
@@ -149,6 +149,15 @@ function MarkCanvas({ className = "" }: { className?: string }) {
   };
 
   const convertMarks = async (type: "ALL" | "SELECTED" | "HOVERED" = "ALL") => {
+    // Entry-point diagnostic: proves the handler was actually invoked at all
+    // (vs. a Radix onClick that silently never fires), and separately
+    // whether the `hoverShape` closed over by this render is stale compared
+    // to a fresh read of the store at click time.
+    const freshHoverShape = useCanvasStore.getState().transientCanvas[CanvasType.MARK].hoverShape;
+    info(
+      `convertMarks ENTRY type=${type} closureHoverShape=${hoverShape?.id() ?? "null"} `
+      + `freshHoverShape=${freshHoverShape?.id() ?? "null"}`,
+    );
     const marks = useMarkStore.getState().marks;
     const images = Object.values(markImages);
     let entries: { image: MarkImageType; markIds: string[] }[] = [];
@@ -335,40 +344,44 @@ function MarkCanvas({ className = "" }: { className?: string }) {
 
       {Object.keys(markImages).length > 0
         && (
-          <ContextMenuSub>
-            <ContextMenuSubTrigger>
-              <FaPlay />
-              <span className="mx-2">
-                Convert
-              </span>
-            </ContextMenuSubTrigger>
-
-            <ContextMenuSubContent>
-              <ContextMenuGroup>
-                {hoveredMark
-                  && (
-                    <ContextMenuItem onClick={() => convertMarks("HOVERED")}>
-                      Hovered
-                    </ContextMenuItem>
-                  )}
-                {selectedNodes.length > 0
-                  && (
-                    <ContextMenuItem onClick={() => convertMarks("SELECTED")}>
-                      Selected Images
-                    </ContextMenuItem>
-                  )}
-
-                <ContextMenuItem onClick={() => convertMarks("ALL")}>
-                  All
-                  <ContextMenuShortcut>
-                    <span className="flex">
-                      Shift+R
-                    </span>
-                  </ContextMenuShortcut>
+          // Flat top-level items, NOT a `ContextMenuSub`. A nested
+          // `ContextMenuSub`/`ContextMenuSubContent` here reproducibly ate
+          // every click on its items -- confirmed live via a stubbed-Tauri
+          // browser session with both `onClick` and Radix's own `onSelect`:
+          // clicking "Hovered"/"All" inside the sub closed just the
+          // submenu (reverting to the still-open parent) without ever
+          // invoking the handler -- a Radix `ContextMenu`-specific Sub
+          // interaction bug (not present on `DropdownMenu.Sub`), not
+          // something fixable by changing which event prop is used.
+          // Top-level items (e.g. "Remove Mark" below) were never
+          // affected, so flattening these three out of the Sub sidesteps
+          // the bug entirely rather than working around it.
+          <ContextMenuGroup>
+            {hoveredMark
+              && (
+                <ContextMenuItem onClick={() => convertMarks("HOVERED")}>
+                  <FaPlay />
+                  Convert Hovered
                 </ContextMenuItem>
-              </ContextMenuGroup>
-            </ContextMenuSubContent>
-          </ContextMenuSub>
+              )}
+            {selectedNodes.length > 0
+              && (
+                <ContextMenuItem onClick={() => convertMarks("SELECTED")}>
+                  <FaPlay />
+                  Convert Selected Images
+                </ContextMenuItem>
+              )}
+
+            <ContextMenuItem onClick={() => convertMarks("ALL")}>
+              <FaPlay />
+              Convert All
+              <ContextMenuShortcut>
+                <span className="flex">
+                  Shift+R
+                </span>
+              </ContextMenuShortcut>
+            </ContextMenuItem>
+          </ContextMenuGroup>
         )}
 
       {(hoveredMark && hoveredMarkId)
