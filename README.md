@@ -57,25 +57,37 @@ Textract is designed for speed. Below is a cheat sheet of shortcuts:
 | **Pan Canvas**   | `Scroll wheel click + Drag` or `Drag Stage` |
 | **Zoom Stage**   | `Scroll Wheel`                              |
 | **Context Menu** | `Right Click`                               |
-| **Select All**   | `Cmd + A` on macOS, `Ctrl + A` elsewhere   |
+| **Select All**   | `Cmd + A` on macOS, `Ctrl + A` elsewhere    |
 | **Delete Image** | `Delete` (with image selected)              |
 
 ### Mark Canvas (Left Panel)
 
-| Action                    | Key / Shortcut                 |
-| :------------------------ | :----------------------------- |
-| **Load Images**           | `Shift + A`                    |
+| Action                    | Key / Shortcut                                             |
+| :------------------------ | :--------------------------------------------------------- |
+| **Load Images**           | `Shift + A`                                                |
 | **Add Mark Point**        | `Cmd + Left Click` on macOS, `Ctrl + Left Click` elsewhere |
-| **Reset Point Selection** | `Right Click` (while marking)  |
-| **Process/Convert**       | `Shift + R`                    |
-| **Remove Mark**           | `Alt + Left Click` (on mark)   |
+| **Reset Point Selection** | `Right Click` (while marking)                              |
+| **Process/Convert**       | `Shift + R`                                                |
+| **Remove Mark**           | `Alt + Left Click` (on mark)                               |
 
 ### Atlas Canvas (Right Panel)
 
-| Action              | Key / Shortcut |
-| :------------------ | :------------- |
+| Action              | Key / Shortcut                           |
+| :------------------ | :--------------------------------------- |
 | **Export Atlas**    | `Cmd + E` on macOS, `Ctrl + E` elsewhere |
 | **Export Selected** | `Cmd + S` on macOS, `Ctrl + S` elsewhere |
+
+## Issues
+
+<details>
+<summary>I cannot run the .app in MacOS</summary>
+The .app is not signed. You must manually remove the quarantine attribute so it can be properly executed.
+
+In the terminal, run:
+
+`xattr -c "PATH_TO_TEXTRACT.APP"`
+
+</details>
 
 ## 🛠️ Stack
 
