@@ -1,3 +1,4 @@
+import type Konva from "konva";
 import type { AtlasImageType } from "@/stores/atlas-store";
 import type { MarkImageType } from "@/stores/mark-store";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
@@ -5,7 +6,6 @@ import { basename } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/plugin-dialog";
 import { exists } from "@tauri-apps/plugin-fs";
 import { info, warn } from "@tauri-apps/plugin-log";
-import Konva from "konva";
 import { TrashIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { CgAdd } from "react-icons/cg";
@@ -31,6 +31,29 @@ function MarkCanvas({ className = "" }: { className?: string }) {
   const snapSize = useSettingsStore(s => s.snap);
 
   const transformerRef = useRef<Konva.Transformer>(null);
+
+  /**
+   * The mark the right-click landed on, if any.
+   *
+   * `hoverShape` is whatever Konva shape `getIntersection` found under the
+   * pointer -- which for a mark is EITHER its outline `Line` OR one of the
+   * draggable corner/handle points sitting on top of it (a `Rect`). Both
+   * carry the mark's `id`, so resolving the id against the mark store is the
+   * reliable test. The previous gate (`hoverShape instanceof Konva.Line`)
+   * only accepted the outline, so any right-click that happened to land on a
+   * point silently rendered neither "Convert > Hovered" nor "Remove Mark" --
+   * no menu item, therefore no click, therefore not a single log line to
+   * explain it. That is why this looked like "Convert Hovered never runs".
+   * It hits bezier marks hardest (12 points, several of them mid-edge where
+   * you'd naturally aim) but is not bezier-specific: quad marks have 4 and
+   * grid marks up to 144, all with the same problem.
+   *
+   * Read imperatively rather than via a `marks` subscription on purpose:
+   * this only needs to be correct at render time, and subscribing would
+   * re-render the whole canvas tree on every point drag.
+   */
+  const hoveredMarkId = hoverShape?.id() || null;
+  const hoveredMark = hoveredMarkId ? useMarkStore.getState().marks[hoveredMarkId] : undefined;
 
   useEffect(() => {
     const removeMissingImages = async () => {
@@ -129,32 +152,33 @@ function MarkCanvas({ className = "" }: { className?: string }) {
           return;
         }
 
-        const hoveredMarkId = hoverShape.id();
-        const hoverMark = marks[hoveredMarkId];
+        const hitId = hoverShape.id();
+        const hoverMark = marks[hitId];
 
         if (!hoverMark) {
           toast.warning("No mark under the pointer to convert");
-          warn(`Convert Hovered: no mark found for id "${hoveredMarkId}" (hit a shape without a valid mark id)`);
+          warn(`Convert Hovered: no mark found for id "${hitId}" (hit a ${hoverShape.getClassName()} without a valid mark id)`);
           return;
         }
 
         if (!hoverMark.dirty) {
           toast.warning("No need to process unmodified mark");
-          warn("No need to process unmodified mark");
+          warn(`Convert Hovered: mark "${hitId}" is not dirty, nothing to reprocess`);
           return;
         }
 
         const image = markImages[hoverMark.imageId];
         if (!image) {
           toast.warning("No mark under the pointer to convert");
-          warn(`Convert Hovered: mark "${hoveredMarkId}" has no owning image`);
+          warn(`Convert Hovered: mark "${hitId}" has no owning image`);
           return;
         }
 
+        info(`Convert Hovered: converting mark "${hitId}" (${hoverMark.markType ?? "quad"})`);
         entries = [
           {
             image,
-            markIds: [hoveredMarkId],
+            markIds: [hitId],
           },
         ];
 
@@ -246,7 +270,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
 
             <ContextMenuSubContent>
               <ContextMenuGroup>
-                {(hoverShape && hoverShape instanceof Konva.Line)
+                {hoveredMark
                   && (
                     <ContextMenuItem onClick={() => convertMarks("HOVERED")}>
                       Hovered
@@ -272,13 +296,17 @@ function MarkCanvas({ className = "" }: { className?: string }) {
           </ContextMenuSub>
         )}
 
-      {(hoverShape && hoverShape instanceof Konva.Line)
+      {(hoveredMark && hoveredMarkId)
         && (
           <ContextMenuGroup>
             <ContextMenuItem
               variant="destructive"
               onClick={() => {
-                hoverShape.getAttr("removeMark")?.();
+                // Was `hoverShape.getAttr("removeMark")?.()`, which only
+                // works when the hit shape is the outline Line -- the
+                // `removeMark` attr doesn't exist on the point Rects. Going
+                // through the store by id works for either.
+                useMarkStore.getState().removeMark(hoveredMarkId);
               }}
             >
               <TrashIcon />
