@@ -60,38 +60,54 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
   // dragged into shape rather than showing a straight chord across it.
   //
   // Curve-mode preview: a row/column renders with Konva's native curve
-  // smoothing only when EVERY point along it is marked smooth -- this is a
-  // simplification for visual feedback only (the real per-cell smooth/sharp
-  // decision happens backend-side at convert time, see mesh.rs); a row with
-  // even one sharp corner just renders as the same straight polyline as
-  // before curve mode existed. Konva's tension is the inverse of ours (0 =
-  // straight, higher = curvier), and its scale is unrelated to our 0-1
-  // range, so it's remapped rather than passed through directly.
-  const gridLines: { flat: number[]; tension: number }[] = useMemo(() => {
+  // smoothing whenever AT LEAST ONE point along it is marked smooth (using
+  // the average tension of just the smooth points) -- previously this
+  // required EVERY point on the line to be smooth, including both corners,
+  // which made it effectively impossible to smooth an interior stretch while
+  // leaving the mark's actual corners sharp. This is still a simplification
+  // for visual feedback only (the real per-cell smooth/sharp decision, which
+  // does properly fade to straight right at a sharp point, happens
+  // backend-side at convert time -- see mesh.rs); this preview curves the
+  // whole line uniformly rather than fading near an unmarked point. Corner
+  // POSITIONS are unaffected either way -- Catmull-Rom curves pass exactly
+  // through every given point, tension only bends the path between them.
+  // Konva's tension is the inverse of ours (0 = straight, higher = curvier),
+  // and its scale is unrelated to our 0-1 range, so it's remapped rather
+  // than passed through directly.
+  //
+  // `boundary` (the outermost row/col/col/row, i.e. the mark's own outline)
+  // is kept separate from `interior` so the visible outline itself can be
+  // rendered with this same curve, instead of always being a straight
+  // perimeter regardless of smoothing -- see the boundary-styled overlay
+  // Lines below, which sit on top of (and are visually identical to, when
+  // nothing is smoothed) the straight hit-testing/fill outline.
+  const gridLines: { interior: { flat: number[]; tension: number }[]; boundary: { flat: number[]; tension: number }[] } = useMemo(() => {
     const isSmooth = (idx: number) => mark.pointMeta?.[idx]?.smooth ?? false;
     const avgTension = (indices: number[]) => {
       const values = indices.map(i => mark.pointMeta?.[i]?.tension ?? 0.5);
       return values.reduce((a, b) => a + b, 0) / values.length;
     };
     const toLine = (linePoints: typeof points, indices: number[]) => {
-      const allSmooth = indices.every(isSmooth);
+      const smoothIndices = indices.filter(isSmooth);
       return {
         flat: linePoints.flatMap(p => [p.x, p.y]),
-        tension: allSmooth ? 0.5 * (1 - avgTension(indices)) : 0,
+        tension: smoothIndices.length > 0 ? 0.5 * (1 - avgTension(smoothIndices)) : 0,
       };
     };
 
     if (isGrid) {
-      const lines: { flat: number[]; tension: number }[] = [];
-      for (let r = 0; r < rows; r++) {
+      const rowLines = Array.from({ length: rows }, (_, r) => {
         const indices = Array.from({ length: cols }, (_, c) => r * cols + c);
-        lines.push(toLine(points.slice(r * cols, r * cols + cols), indices));
-      }
-      for (let c = 0; c < cols; c++) {
+        return toLine(points.slice(r * cols, r * cols + cols), indices);
+      });
+      const colLines = Array.from({ length: cols }, (_, c) => {
         const indices = Array.from({ length: rows }, (_, r) => r * cols + c);
-        lines.push(toLine(indices.map(i => points[i]), indices));
-      }
-      return lines;
+        return toLine(indices.map(i => points[i]), indices);
+      });
+      return {
+        boundary: [rowLines[0], rowLines[rows - 1], colLines[0], colLines[cols - 1]],
+        interior: [...rowLines.slice(1, rows - 1), ...colLines.slice(1, cols - 1)],
+      };
     }
 
     const gridLineY1 = [lerpVec2(points[0], points[1], 0.33), lerpVec2(points[3], points[2], 0.33)];
@@ -99,7 +115,10 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
     const gridLineX1 = [lerpVec2(points[0], points[3], 0.33), lerpVec2(points[1], points[2], 0.33)];
     const gridLineX2 = [lerpVec2(points[0], points[3], 0.67), lerpVec2(points[1], points[2], 0.67)];
 
-    return [gridLineY1, gridLineY2, gridLineX1, gridLineX2].map(line => ({ flat: line.flatMap(p => [p.x, p.y]), tension: 0 }));
+    return {
+      boundary: [],
+      interior: [gridLineY1, gridLineY2, gridLineX1, gridLineX2].map(line => ({ flat: line.flatMap(p => [p.x, p.y]), tension: 0 })),
+    };
   }, [isGrid, points, rows, cols, mark.pointMeta]);
 
   return (
@@ -148,9 +167,22 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
         }}
       />
 
-      {gridLines.map((line, idx) => (
+      {/*
+        Styled to match the base outline Line above (same stroke color/
+        width), sitting on top of it. When nothing is smoothed this is
+        visually identical to the straight outline underneath (same
+        points, tension 0) -- it only visibly diverges once a boundary
+        row/column has a smooth point, at which point it curves while the
+        underlying Line (kept for hit-testing/fill/drag) stays straight.
+      */}
+      {gridLines.boundary.map((line, idx) => (
         // eslint-disable-next-line react/no-array-index-key
-        <Line key={idx} offset={{ x: -markOffset.x, y: -markOffset.y }} points={line.flat} tension={line.tension} stroke="white" opacity={0.5} strokeWidth={scale} listening={false} />
+        <Line key={`boundary-${idx}`} offset={{ x: -markOffset.x, y: -markOffset.y }} points={line.flat} tension={line.tension} stroke={mark.dirty ? Colors.RED : Colors.LIGHT} strokeWidth={4.0 * scale} listening={false} />
+      ))}
+
+      {gridLines.interior.map((line, idx) => (
+        // eslint-disable-next-line react/no-array-index-key
+        <Line key={`interior-${idx}`} offset={{ x: -markOffset.x, y: -markOffset.y }} points={line.flat} tension={line.tension} stroke="white" opacity={0.5} strokeWidth={scale} listening={false} />
       ))}
 
       {points.map((p, id) => {
