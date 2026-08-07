@@ -174,7 +174,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
           return;
         }
 
-        info(`Convert Hovered: converting mark "${hitId}" (${hoverMark.markType ?? "quad"})`);
+        info(`Convert Hovered: converting mark "${hitId}"`);
         entries = [
           {
             image,
