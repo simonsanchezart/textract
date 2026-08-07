@@ -213,6 +213,7 @@ function BezierMark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
           <MarkPoint
             // eslint-disable-next-line react/no-array-index-key
             key={idx}
+            id={mark.id}
             position={h}
             offset={markOffset}
             selected={selected}
@@ -274,6 +275,7 @@ function BezierMark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
           <MarkPoint
             // eslint-disable-next-line react/no-array-index-key
             key={idx}
+            id={mark.id}
             position={c}
             offset={markOffset}
             selected={selected}

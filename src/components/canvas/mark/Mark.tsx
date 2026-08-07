@@ -159,6 +159,7 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
           <MarkPoint
             // eslint-disable-next-line react/no-array-index-key
             key={id}
+            id={mark.id}
             position={p}
             offset={markOffset}
             selected={selected}

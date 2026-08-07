@@ -140,14 +140,20 @@ function MarkCanvas({ className = "" }: { className?: string }) {
         break;
       }
       case "HOVERED": {
-        if (!hoverShape)
+        if (!hoverShape) {
+          toast.warning("No mark under the pointer to convert");
+          warn("Convert Hovered: hoverShape was not set (right-click didn't land on a mark)");
           return;
+        }
 
         const hoveredMarkId = hoverShape.id();
         const hoverMark = marks[hoveredMarkId];
 
-        if (!hoverMark)
+        if (!hoverMark) {
+          toast.warning("No mark under the pointer to convert");
+          warn(`Convert Hovered: no mark found for id "${hoveredMarkId}" (hit a shape without a valid mark id)`);
           return;
+        }
 
         if (!hoverMark.dirty) {
           toast.warning("No need to process unmodified mark");
@@ -156,8 +162,11 @@ function MarkCanvas({ className = "" }: { className?: string }) {
         }
 
         const image = markImages[hoverMark.imageId];
-        if (!image)
+        if (!image) {
+          toast.warning("No mark under the pointer to convert");
+          warn(`Convert Hovered: mark "${hoveredMarkId}" has no owning image`);
           return;
+        }
 
         entries = [
           {
