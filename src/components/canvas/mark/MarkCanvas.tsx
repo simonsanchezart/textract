@@ -260,6 +260,19 @@ function MarkCanvas({ className = "" }: { className?: string }) {
 
       {Object.keys(markImages).length > 0
         && (
+          // The `onFocusOutside` prop below works around a real bug in
+          // Radix's own `MenuSubContent` (@radix-ui/react-menu, source
+          // index.mjs:745-747): it closes the sub via
+          // `context.onOpenChange(false)` whenever focus lands anywhere
+          // but the sub's own trigger -- which includes the completely
+          // normal focus a `ContextMenuItem` receives on click, closing
+          // the sub before the click's own event chain (pointerup -> click
+          // -> Radix's internal "menu.itemSelect") can complete. Per
+          // @radix-ui/primitive's `composeEventHandlers`, our own
+          // `onFocusOutside` runs first and calling `preventDefault()`
+          // there skips that internal closer entirely. Swapping
+          // `onClick`/`onSelect` on the ITEMS does nothing for this --
+          // the real problem is one level up, on the `SubContent` itself.
           <ContextMenuSub>
             <ContextMenuSubTrigger>
               <FaPlay />
@@ -268,7 +281,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
               </span>
             </ContextMenuSubTrigger>
 
-            <ContextMenuSubContent>
+            <ContextMenuSubContent onFocusOutside={e => e.preventDefault()}>
               <ContextMenuGroup>
                 {hoveredMark
                   && (
