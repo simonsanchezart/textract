@@ -124,7 +124,17 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
                 return;
 
               const stage = stageRef.current;
-              const shape = stage.getIntersection(stage.getPointerPosition()!);
+              const pos = stage.getPointerPosition();
+              const shape = pos ? stage.getIntersection(pos) : null;
+              // Diagnostic breadcrumb: every "right-click convert / remove
+              // doesn't work" report so far has come down to WHAT was under
+              // the pointer, and there was previously no way to tell from a
+              // log whether the hit-test found the mark outline, one of its
+              // draggable points, the photo underneath, or nothing at all.
+              debug(
+                `Context menu hit-test: pos=${pos ? `${Math.round(pos.x)},${Math.round(pos.y)}` : "null"} `
+                + `shape=${shape ? shape.getClassName() : "none"} id="${shape?.id() ?? ""}"`,
+              );
               useCanvasStore.getState().setHoverShape(canvasType, shape);
             }}
             {...props}
