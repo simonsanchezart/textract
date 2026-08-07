@@ -6,12 +6,13 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { exists } from "@tauri-apps/plugin-fs";
 import { info, warn } from "@tauri-apps/plugin-log";
 import Konva from "konva";
-import { TrashIcon } from "lucide-react";
+import { Redo2, TrashIcon, Undo2 } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { CgAdd } from "react-icons/cg";
 import { FaPlay } from "react-icons/fa";
 import { Line } from "react-konva";
 import { toast } from "sonner";
+import { useStore } from "zustand";
 import { Toolbar, ToolbarAction } from "@/components/Toolbar";
 import { ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuShortcut, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger } from "@/components/ui/ContextMenu";
 import { useAtlasStore } from "@/stores/atlas-store";
@@ -19,7 +20,7 @@ import { useCanvasStore } from "@/stores/canvas-store";
 import { useMarkStore } from "@/stores/mark-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { CanvasType } from "@/types/types";
-import { isShortcutModifierPressed, snap } from "@/utils/utils";
+import { getShortcutModifierLabel, isShortcutModifierPressed, snap } from "@/utils/utils";
 import Canvas from "../Canvas";
 import MarkImage from "./MarkImage";
 
@@ -29,6 +30,8 @@ function MarkCanvas({ className = "" }: { className?: string }) {
   const selectedNodes = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].selectedNodes);
   const hoverShape = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].hoverShape);
   const snapSize = useSettingsStore(s => s.snap);
+  const canUndo = useStore(useMarkStore.temporal, s => s.pastStates.length > 0);
+  const canRedo = useStore(useMarkStore.temporal, s => s.futureStates.length > 0);
 
   const transformerRef = useRef<Konva.Transformer>(null);
 
@@ -333,6 +336,11 @@ function MarkCanvas({ className = "" }: { className?: string }) {
       <Toolbar>
         <ToolbarAction Icon={CgAdd} onClick={loadImages} tooltip="Load Images (Shift+A)" />
         <ToolbarAction Icon={FaPlay} size={4} onClick={() => convertMarks()} tooltip="Convert Marks (Shift+R)" />
+      </Toolbar>
+
+      <Toolbar position="top-right">
+        <ToolbarAction Icon={Undo2} disabled={!canUndo} onClick={() => useMarkStore.temporal.getState().undo()} tooltip={`Undo (${getShortcutModifierLabel()}+Z)`} />
+        <ToolbarAction Icon={Redo2} disabled={!canRedo} onClick={() => useMarkStore.temporal.getState().redo()} tooltip={`Redo (Shift+${getShortcutModifierLabel()}+Z)`} />
       </Toolbar>
     </div>
   );
