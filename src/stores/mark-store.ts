@@ -84,6 +84,12 @@ type MarkStore = {
   updateBezierHandle: (markId: string, handleIdx: number, newPoint: Vec2) => void;
   /** Shifts every corner and handle by the same delta, for a whole-mark drag. */
   translateBezierMark: (markId: string, dx: number, dy: number) => void;
+  /**
+   * Shifts a subset of corners/handles by the same delta, for a multi-select
+   * group drag. Indices share one combined space so selection can span both
+   * kinds of point: 0-3 are corners, 4-11 are handles (handle = index - 4).
+   */
+  translateBezierPoints: (markId: string, combinedIndices: number[], dx: number, dy: number) => void;
 };
 
 export const useMarkStore = create(
@@ -239,6 +245,20 @@ export const useMarkStore = create(
               return;
             mark.corners = mark.corners.map(p => ({ x: p.x + dx, y: p.y + dy }));
             mark.handles = mark.handles.map(p => ({ x: p.x + dx, y: p.y + dy }));
+            mark.dirty = true;
+          }),
+
+        translateBezierPoints: (markId, combinedIndices, dx, dy) =>
+          set((state) => {
+            const mark = state.marks[markId];
+            if (!mark?.corners || !mark.handles)
+              return;
+            for (const i of combinedIndices) {
+              if (i < 4)
+                mark.corners[i] = { x: mark.corners[i].x + dx, y: mark.corners[i].y + dy };
+              else
+                mark.handles[i - 4] = { x: mark.handles[i - 4].x + dx, y: mark.handles[i - 4].y + dy };
+            }
             mark.dirty = true;
           }),
       })),

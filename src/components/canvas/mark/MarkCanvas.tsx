@@ -381,8 +381,16 @@ function MarkCanvas({ className = "" }: { className?: string }) {
         if (selected.length === 0)
           break;
         e.preventDefault();
-        for (const [markId, indices] of groupSelectedByMark(selected))
-          useMarkStore.getState().toggleSmoothForPoints(markId, indices);
+        // Smooth/tension are a grid-mark-only concept (pointMeta is parallel
+        // to `points`, which bezier marks leave empty) -- skip any selected
+        // point belonging to a non-grid mark rather than writing junk state.
+        {
+          const marks = useMarkStore.getState().marks;
+          for (const [markId, indices] of groupSelectedByMark(selected)) {
+            if (marks[markId]?.markType === "grid")
+              useMarkStore.getState().toggleSmoothForPoints(markId, indices);
+          }
+        }
         break;
       }
       case "Minus":
@@ -392,8 +400,13 @@ function MarkCanvas({ className = "" }: { className?: string }) {
           break;
         e.preventDefault();
         const delta = e.code === "Equal" ? 0.1 : -0.1;
-        for (const [markId, indices] of groupSelectedByMark(selected))
-          useMarkStore.getState().adjustTensionForPoints(markId, indices, delta);
+        {
+          const marks = useMarkStore.getState().marks;
+          for (const [markId, indices] of groupSelectedByMark(selected)) {
+            if (marks[markId]?.markType === "grid")
+              useMarkStore.getState().adjustTensionForPoints(markId, indices, delta);
+          }
+        }
         break;
       }
       case "KeyZ":

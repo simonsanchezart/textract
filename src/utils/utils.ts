@@ -40,6 +40,19 @@ export function lerpFloat(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
 
+/** Evaluates a cubic bezier P0-P1-P2-P3 at parameter t in [0,1]. */
+export function cubicBezierPoint(p0: Vec2, p1: Vec2, p2: Vec2, p3: Vec2, t: number): Vec2 {
+  const mt = 1 - t;
+  const a = mt * mt * mt;
+  const b = 3 * mt * mt * t;
+  const c = 3 * mt * t * t;
+  const d = t * t * t;
+  return {
+    x: a * p0.x + b * p1.x + c * p2.x + d * p3.x,
+    y: a * p0.y + b * p1.y + c * p2.y + d * p3.y,
+  };
+}
+
 export function snap(x: number, increment: number) {
   return Math.round(x / increment) * increment;
 }
