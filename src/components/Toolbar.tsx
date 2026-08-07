@@ -44,9 +44,14 @@ export function ToolbarAction({ Icon, onClick, disabled = false, active, tooltip
   );
 }
 
-export function Toolbar({ children }: { children: ReactNode }) {
+const POSITION_CLASSES = {
+  "top-left": "top-0 left-0 rounded-b-xl",
+  "top-right": "top-0 right-0 rounded-b-xl",
+} as const;
+
+export function Toolbar({ children, position = "top-left" }: { children: ReactNode; position?: keyof typeof POSITION_CLASSES }) {
   return (
-    <div className="flex text-center items-center absolute top-0 left-0 bg-dark-main-darker p-2 rounded-b-xl gap-2">
+    <div className={`flex text-center items-center absolute bg-dark-main-darker p-2 gap-2 ${POSITION_CLASSES[position]}`}>
       {children}
     </div>
   );

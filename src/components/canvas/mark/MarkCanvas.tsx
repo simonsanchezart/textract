@@ -6,12 +6,13 @@ import { basename } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/plugin-dialog";
 import { exists } from "@tauri-apps/plugin-fs";
 import { error, info, warn } from "@tauri-apps/plugin-log";
-import { BoxSelect, Grid3x3, Spline, TrashIcon } from "lucide-react";
+import { BoxSelect, Grid3x3, Redo2, Spline, TrashIcon, Undo2 } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { CgAdd } from "react-icons/cg";
 import { FaPlay } from "react-icons/fa";
 import { Line } from "react-konva";
 import { toast } from "sonner";
+import { useStore } from "zustand";
 import FooterNumberSetting from "@/components/footer/FooterNumberSetting";
 import { Toolbar, ToolbarAction } from "@/components/Toolbar";
 import { ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuShortcut, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger } from "@/components/ui/ContextMenu";
@@ -46,6 +47,8 @@ function MarkCanvas({ className = "" }: { className?: string }) {
   const markGridRows = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].markGridRows);
   const markGridCols = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].markGridCols);
   const snapSize = useSettingsStore(s => s.snap);
+  const canUndo = useStore(useMarkStore.temporal, s => s.pastStates.length > 0);
+  const canRedo = useStore(useMarkStore.temporal, s => s.futureStates.length > 0);
 
   const transformerRef = useRef<Konva.Transformer>(null);
 
@@ -526,6 +529,11 @@ function MarkCanvas({ className = "" }: { className?: string }) {
             />
           </>
         )}
+      </Toolbar>
+
+      <Toolbar position="top-right">
+        <ToolbarAction Icon={Undo2} disabled={!canUndo} onClick={() => useMarkStore.temporal.getState().undo()} tooltip={`Undo (${getShortcutModifierLabel()}+Z)`} />
+        <ToolbarAction Icon={Redo2} disabled={!canRedo} onClick={() => useMarkStore.temporal.getState().redo()} tooltip={`Redo (Shift+${getShortcutModifierLabel()}+Z)`} />
       </Toolbar>
     </div>
   );

@@ -4,11 +4,13 @@ import { save } from "@tauri-apps/plugin-dialog";
 import { writeFile } from "@tauri-apps/plugin-fs";
 import { info } from "@tauri-apps/plugin-log";
 import { openPath, revealItemInDir } from "@tauri-apps/plugin-opener";
+import { Redo2, Undo2 } from "lucide-react";
 import { useRef } from "react";
 import { BiSolidImageAlt } from "react-icons/bi";
 import { PiSelection } from "react-icons/pi";
 import { Group, Rect, Text } from "react-konva";
 import { toast } from "sonner";
+import { useStore } from "zustand";
 import { Toolbar, ToolbarAction } from "@/components/Toolbar";
 import { ContextMenuCheckboxItem, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuShortcut } from "@/components/ui/ContextMenu";
 import { useAtlasStore } from "@/stores/atlas-store";
@@ -26,6 +28,8 @@ function AtlasCanvas({ className }: { className?: string }) {
   const masterGroupRef = useRef<Konva.Group>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
   const shortcutModifier = getShortcutModifierLabel();
+  const canUndo = useStore(useAtlasStore.temporal, s => s.pastStates.length > 0);
+  const canRedo = useStore(useAtlasStore.temporal, s => s.futureStates.length > 0);
 
   const exportCanvas = async () => {
     const exportPath = await save({
@@ -168,6 +172,16 @@ function AtlasCanvas({ className }: { className?: string }) {
         if (isShortcutModifierPressed(e))
           exportSelected();
         break;
+      case "KeyZ":
+        if (isShortcutModifierPressed(e)) {
+          // Stop the webview's own text-undo from also firing.
+          e.preventDefault();
+          if (e.shiftKey)
+            useAtlasStore.temporal.getState().redo();
+          else
+            useAtlasStore.temporal.getState().undo();
+        }
+        break;
       default:
         break;
     }
@@ -234,6 +248,11 @@ function AtlasCanvas({ className }: { className?: string }) {
       <Toolbar>
         <ToolbarAction Icon={BiSolidImageAlt} onClick={exportCanvas} tooltip={`Export Atlas (${shortcutModifier}+E)`} />
         <ToolbarAction Icon={PiSelection} onClick={exportSelected} tooltip={`Export Selected (${shortcutModifier}+S)`} />
+      </Toolbar>
+
+      <Toolbar position="top-right">
+        <ToolbarAction Icon={Undo2} disabled={!canUndo} onClick={() => useAtlasStore.temporal.getState().undo()} tooltip={`Undo (${shortcutModifier}+Z)`} />
+        <ToolbarAction Icon={Redo2} disabled={!canRedo} onClick={() => useAtlasStore.temporal.getState().redo()} tooltip={`Redo (Shift+${shortcutModifier}+Z)`} />
       </Toolbar>
     </div>
   );
