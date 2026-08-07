@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { useStore } from "zustand";
 import FooterNumberSetting from "@/components/footer/FooterNumberSetting";
 import { Toolbar, ToolbarAction } from "@/components/Toolbar";
-import { ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuShortcut } from "@/components/ui/ContextMenu";
+import { ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuShortcut, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger } from "@/components/ui/ContextMenu";
 import { useAtlasStore } from "@/stores/atlas-store";
 import { useCanvasStore } from "@/stores/canvas-store";
 import { useMarkStore } from "@/stores/mark-store";
@@ -344,44 +344,53 @@ function MarkCanvas({ className = "" }: { className?: string }) {
 
       {Object.keys(markImages).length > 0
         && (
-          // Flat top-level items, NOT a `ContextMenuSub`. A nested
-          // `ContextMenuSub`/`ContextMenuSubContent` here reproducibly ate
-          // every click on its items -- confirmed live via a stubbed-Tauri
-          // browser session with both `onClick` and Radix's own `onSelect`:
-          // clicking "Hovered"/"All" inside the sub closed just the
-          // submenu (reverting to the still-open parent) without ever
-          // invoking the handler -- a Radix `ContextMenu`-specific Sub
-          // interaction bug (not present on `DropdownMenu.Sub`), not
-          // something fixable by changing which event prop is used.
-          // Top-level items (e.g. "Remove Mark" below) were never
-          // affected, so flattening these three out of the Sub sidesteps
-          // the bug entirely rather than working around it.
-          <ContextMenuGroup>
-            {hoveredMark
-              && (
-                <ContextMenuItem onClick={() => convertMarks("HOVERED")}>
-                  <FaPlay />
-                  Convert Hovered
-                </ContextMenuItem>
-              )}
-            {selectedNodes.length > 0
-              && (
-                <ContextMenuItem onClick={() => convertMarks("SELECTED")}>
-                  <FaPlay />
-                  Convert Selected Images
-                </ContextMenuItem>
-              )}
-
-            <ContextMenuItem onClick={() => convertMarks("ALL")}>
+          // The `onFocusOutside` prop below works around a real bug in
+          // Radix's own `MenuSubContent` (@radix-ui/react-menu, source
+          // index.mjs:745-747): it closes the sub via
+          // `context.onOpenChange(false)` whenever focus lands anywhere
+          // but the sub's own trigger -- which includes the completely
+          // normal focus a `ContextMenuItem` receives on click, closing
+          // the sub before the click's own event chain (pointerup -> click
+          // -> Radix's internal "menu.itemSelect") can complete. Per
+          // @radix-ui/primitive's `composeEventHandlers`, our own
+          // `onFocusOutside` runs first and calling `preventDefault()`
+          // there skips that internal closer entirely. Swapping
+          // `onClick`/`onSelect` on the ITEMS does nothing for this --
+          // the real problem is one level up, on the `SubContent` itself.
+          <ContextMenuSub>
+            <ContextMenuSubTrigger>
               <FaPlay />
-              Convert All
-              <ContextMenuShortcut>
-                <span className="flex">
-                  Shift+R
-                </span>
-              </ContextMenuShortcut>
-            </ContextMenuItem>
-          </ContextMenuGroup>
+              <span className="mx-2">
+                Convert
+              </span>
+            </ContextMenuSubTrigger>
+
+            <ContextMenuSubContent onFocusOutside={e => e.preventDefault()}>
+              <ContextMenuGroup>
+                {hoveredMark
+                  && (
+                    <ContextMenuItem onClick={() => convertMarks("HOVERED")}>
+                      Hovered
+                    </ContextMenuItem>
+                  )}
+                {selectedNodes.length > 0
+                  && (
+                    <ContextMenuItem onClick={() => convertMarks("SELECTED")}>
+                      Selected Images
+                    </ContextMenuItem>
+                  )}
+
+                <ContextMenuItem onClick={() => convertMarks("ALL")}>
+                  All
+                  <ContextMenuShortcut>
+                    <span className="flex">
+                      Shift+R
+                    </span>
+                  </ContextMenuShortcut>
+                </ContextMenuItem>
+              </ContextMenuGroup>
+            </ContextMenuSubContent>
+          </ContextMenuSub>
         )}
 
       {(hoveredMark && hoveredMarkId)
