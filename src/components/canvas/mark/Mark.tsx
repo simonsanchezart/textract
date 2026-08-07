@@ -127,7 +127,15 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
         id={mark.id}
         points={pointsFlat}
         fill={`${Colors.GREEN}11`}
-        stroke={mark.dirty ? Colors.RED : Colors.LIGHT}
+        // For grid marks the 4 boundary-styled Lines below (which curve
+        // per-edge, unlike this one) are the actual visible outline --
+        // this stroke is kept transparent (not removed) purely so hit-
+        // testing/dragging/the removeMark attr keep working exactly as
+        // before; drawing both would double up whenever a boundary edge
+        // is curved (the curved overlay visibly diverges from this
+        // underlying straight one). Quad marks have no such overlay, so
+        // this stays the real visible outline for them, same as always.
+        stroke={isGrid ? "transparent" : (mark.dirty ? Colors.RED : Colors.LIGHT)}
         strokeWidth={4.0 * scale}
         shadowOffset={{ x: 0.5, y: 0.5 }}
         shadowOpacity={1}
@@ -168,16 +176,16 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
       />
 
       {/*
-        Styled to match the base outline Line above (same stroke color/
-        width), sitting on top of it. When nothing is smoothed this is
-        visually identical to the straight outline underneath (same
-        points, tension 0) -- it only visibly diverges once a boundary
-        row/column has a smooth point, at which point it curves while the
-        underlying Line (kept for hit-testing/fill/drag) stays straight.
+        This IS the visible outline for grid marks -- the underlying Line
+        above has a transparent stroke (kept only for hit-testing/drag),
+        so there's exactly one visible line per edge, never two. Blue
+        specifically for a curved edge (overriding the usual dirty/clean
+        red/cream) so it's obvious at a glance which edges are actually
+        smoothed, distinct from the interior mesh's white guide lines.
       */}
       {gridLines.boundary.map((line, idx) => (
         // eslint-disable-next-line react/no-array-index-key
-        <Line key={`boundary-${idx}`} offset={{ x: -markOffset.x, y: -markOffset.y }} points={line.flat} tension={line.tension} stroke={mark.dirty ? Colors.RED : Colors.LIGHT} strokeWidth={4.0 * scale} listening={false} />
+        <Line key={`boundary-${idx}`} offset={{ x: -markOffset.x, y: -markOffset.y }} points={line.flat} tension={line.tension} stroke={line.tension > 0 ? Colors.BLUE : (mark.dirty ? Colors.RED : Colors.LIGHT)} strokeWidth={4.0 * scale} listening={false} />
       ))}
 
       {gridLines.interior.map((line, idx) => (
