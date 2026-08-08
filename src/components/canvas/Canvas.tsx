@@ -92,9 +92,7 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
       */}
       <PopupConfirm
         title="Delete Selected"
-        description={
-          "Are you sure you want to delete the selected images?\nThis cannot be undone"
-        }
+        description="Are you sure you want to delete the selected images?"
         confirmLabel="Delete"
         open={openConfirmation}
         setOpen={setOpenConfirmation}
