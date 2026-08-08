@@ -4,6 +4,7 @@ import { temporal } from "zundo";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
+import { leadingDebounce } from "./store-utils";
 
 export type AtlasImageType = {
   markId: string;
@@ -95,20 +96,3 @@ export const useAtlasStore = create(
     { name: "atlas-storage", storage: createJSONStorage(() => indexedDBStorage) },
   ),
 );
-
-/** See mark-store.ts's identical helper for the full rationale. */
-function leadingDebounce<T extends (...args: Parameters<T>) => void>(fn: T, delayMs: number): T {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  return ((...args: Parameters<T>) => {
-    const isBurstStart = timer === undefined;
-
-    if (timer)
-      clearTimeout(timer);
-    timer = setTimeout(() => {
-      timer = undefined;
-    }, delayMs);
-
-    if (isBurstStart)
-      fn(...args);
-  }) as T;
-}
