@@ -82,7 +82,7 @@ export const useAtlasStore = create(
           }),
       })),
       {
-        limit: 30,
+        limit: 50,
         // Same leading-edge requirement as mark-store's undo (see its own
         // comment for the full reasoning): a transform gesture fires 3
         // separate set() calls (scale, rotation, position) that must
