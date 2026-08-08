@@ -2,13 +2,12 @@ import type { AtlasImageType } from "@/stores/atlas-store";
 import type { MarkImageType } from "@/stores/mark-store";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { basename } from "@tauri-apps/api/path";
-import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { open } from "@tauri-apps/plugin-dialog";
 import { exists } from "@tauri-apps/plugin-fs";
 import { info, warn } from "@tauri-apps/plugin-log";
 import Konva from "konva";
 import { TrashIcon } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { CgAdd } from "react-icons/cg";
 import { FaPlay } from "react-icons/fa";
 import { Line } from "react-konva";
@@ -30,6 +29,7 @@ import { useSettingsStore } from "@/stores/settings-store";
 import { CanvasType } from "@/types/types";
 import { snap, VALID_IMAGE_EXTENSIONS } from "@/utils/utils";
 import Canvas from "../Canvas";
+import useDragNDrop from "../hooks/use-drag-n-drop";
 import MarkImage from "./MarkImage";
 
 function MarkCanvas({ className = "" }: { className?: string }) {
@@ -117,6 +117,18 @@ function MarkCanvas({ className = "" }: { className?: string }) {
 
     loadImages(selectedImages);
   };
+
+  const dragHover = useDragNDrop({
+    onDrop: async (payload) => {
+      const filteredFiles = payload.paths.filter((f) => {
+        const extension = f.split(".").pop()?.toLowerCase();
+        return extension ? VALID_IMAGE_EXTENSIONS.includes(extension) : false;
+      });
+
+      if (filteredFiles)
+        await loadImages(filteredFiles);
+    },
+  });
 
   const convertMarks = async (type: "ALL" | "SELECTED" | "HOVERED" = "ALL") => {
     const marks = useMarkStore.getState().marks;
@@ -227,49 +239,6 @@ function MarkCanvas({ className = "" }: { className?: string }) {
       }),
     );
   };
-
-  // todo: extract into hook
-  const [dragHover, setDragHover] = useState(false);
-  const dragHoverInitializedRef = useRef(false);
-
-  useEffect(() => {
-    if (dragHoverInitializedRef.current)
-      return;
-    dragHoverInitializedRef.current = true;
-
-    let unlisten: () => void;
-
-    const setup = async () => {
-      unlisten = await getCurrentWebview().onDragDropEvent(async (event) => {
-        switch (event.payload.type) {
-          case "enter":
-            setDragHover(true);
-            break;
-
-          case "drop": {
-            const filteredFiles = event.payload.paths.filter((f) => {
-              const extension = f.split(".").pop()?.toLowerCase();
-              return extension ? VALID_IMAGE_EXTENSIONS.includes(extension) : false;
-            });
-
-            if (filteredFiles)
-              await loadImages(filteredFiles);
-            setDragHover(false);
-            break;
-          }
-
-          case "leave":
-            setDragHover(false);
-            break;
-        }
-      });
-    };
-
-    setup();
-    return () => {
-      unlisten?.();
-    };
-  });
 
   const contextMenu = () => (
     <ContextMenuGroup>
