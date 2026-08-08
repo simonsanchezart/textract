@@ -51,7 +51,7 @@ const POSITION_CLASSES = {
 
 export function Toolbar({ children, position = "top-left" }: { children: ReactNode; position?: keyof typeof POSITION_CLASSES }) {
   return (
-    <div className={`flex text-center items-center absolute bg-dark-main-darker p-2 gap-2 ${POSITION_CLASSES[position]}`}>
+    <div data-no-panel-resize className={`flex text-center items-center absolute bg-dark-main-darker p-2 gap-2 ${POSITION_CLASSES[position]}`}>
       {children}
     </div>
   );
