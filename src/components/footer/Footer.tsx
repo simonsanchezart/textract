@@ -60,11 +60,16 @@ export default function Footer() {
 
             <hr />
 
-            <small
-              onClick={async () => await openUrl("https://www.simonsanchez.art/")}
-              className="text-gray-400 hover:cursor-pointer hover:text-red"
-            >
-              made by simon sanchez
+            <small>
+              <a className="link" onClick={async () => await openUrl("https://www.simonsanchez.art/")}>
+                made by simon sanchez
+              </a>
+              {" "}
+              and
+              {" "}
+              <a className="link" onClick={async () => await openUrl("https://github.com/simonsanchezart/textract/graphs/contributors")}>
+                contributors
+              </a>
             </small>
           </TooltipContent>
         </Tooltip>
