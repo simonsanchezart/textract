@@ -15,8 +15,18 @@ export default function useAutoUpdater() {
       if (!update)
         return;
 
-      toast.info(`New Update Available`, {
+      toast.info("Update Available", {
         duration: 10000,
+        description: (
+          <a
+            href="https://github.com/simonsanchezart/textract/releases/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            View changelog
+          </a>
+        ),
         action: {
           label: "Install Update",
           onClick: async () => {
