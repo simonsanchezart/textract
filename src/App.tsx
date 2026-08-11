@@ -2,7 +2,7 @@ import { Toaster } from "sonner";
 import Footer from "./components/footer/Footer";
 import Navbar from "./components/Navbar";
 import Textract from "./components/Textract";
-import useAutoUpdater from "./hooks/use-auto-updater";
+import useAutoUpdater from "./hooks/UseAutoUpdater";
 import { isShortcutModifierPressed } from "./utils/utils";
 import "./app.css";
 
@@ -28,7 +28,7 @@ function App() {
         closeButton
         swipeDirections={["left"]}
         toastOptions={{
-          style: { width: "fit-content" },
+          style: { minWidth: "280px", maxWidth: "320px" },
         }}
 
       />
