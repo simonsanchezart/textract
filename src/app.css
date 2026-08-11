@@ -18,7 +18,7 @@
 }
 
 .link {
-  @apply text-gray-400 hover:cursor-pointer hover:text-red
+  @apply text-gray-400 hover:cursor-pointer hover:text-red;
 }
 
 @custom-variant dark (&:is(.dark *));
