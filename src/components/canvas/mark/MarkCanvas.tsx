@@ -32,26 +32,6 @@ function MarkCanvas({ className = "" }: { className?: string }) {
 
   const transformerRef = useRef<Konva.Transformer>(null);
 
-  /**
-   * The mark the right-click landed on, if any.
-   *
-   * `hoverShape` is whatever Konva shape `getIntersection` found under the
-   * pointer -- which for a mark is EITHER its outline `Line` OR one of the
-   * draggable corner/handle points sitting on top of it (a `Rect`). Both
-   * carry the mark's `id`, so resolving the id against the mark store is the
-   * reliable test. The previous gate (`hoverShape instanceof Konva.Line`)
-   * only accepted the outline, so any right-click that happened to land on a
-   * point silently rendered neither "Convert > Hovered" nor "Remove Mark" --
-   * no menu item, therefore no click, therefore not a single log line to
-   * explain it. That is why this looked like "Convert Hovered never runs".
-   * It hits bezier marks hardest (12 points, several of them mid-edge where
-   * you'd naturally aim) but is not bezier-specific: quad marks have 4 and
-   * grid marks up to 144, all with the same problem.
-   *
-   * Read imperatively rather than via a `marks` subscription on purpose:
-   * this only needs to be correct at render time, and subscribing would
-   * re-render the whole canvas tree on every point drag.
-   */
   const hoveredMarkId = hoverShape?.id() || null;
   const hoveredMark = hoveredMarkId ? useMarkStore.getState().marks[hoveredMarkId] : undefined;
 
@@ -147,7 +127,8 @@ function MarkCanvas({ className = "" }: { className?: string }) {
       }
       case "HOVERED": {
         if (!hoverShape) {
-          toast.warning("No mark under the pointer to convert");
+          // this code should be unreachable
+          toast.error("No mark under the pointer to convert");
           warn("Convert Hovered: hoverShape was not set (right-click didn't land on a mark)");
           return;
         }
@@ -260,19 +241,6 @@ function MarkCanvas({ className = "" }: { className?: string }) {
 
       {Object.keys(markImages).length > 0
         && (
-          // The `onFocusOutside` prop below works around a real bug in
-          // Radix's own `MenuSubContent` (@radix-ui/react-menu, source
-          // index.mjs:745-747): it closes the sub via
-          // `context.onOpenChange(false)` whenever focus lands anywhere
-          // but the sub's own trigger -- which includes the completely
-          // normal focus a `ContextMenuItem` receives on click, closing
-          // the sub before the click's own event chain (pointerup -> click
-          // -> Radix's internal "menu.itemSelect") can complete. Per
-          // @radix-ui/primitive's `composeEventHandlers`, our own
-          // `onFocusOutside` runs first and calling `preventDefault()`
-          // there skips that internal closer entirely. Swapping
-          // `onClick`/`onSelect` on the ITEMS does nothing for this --
-          // the real problem is one level up, on the `SubContent` itself.
           <ContextMenuSub>
             <ContextMenuSubTrigger>
               <FaPlay />
@@ -281,6 +249,10 @@ function MarkCanvas({ className = "" }: { className?: string }) {
               </span>
             </ContextMenuSubTrigger>
 
+            {/*
+            onFocusOutside={e => e.preventDefault()}
+            Work around a Radix MenuSubContent bug that prematurely closes the submenu
+            when a ContextMenuItem receives focus before its click/select event completes. */}
             <ContextMenuSubContent onFocusOutside={e => e.preventDefault()}>
               <ContextMenuGroup>
                 {hoveredMark
@@ -315,10 +287,6 @@ function MarkCanvas({ className = "" }: { className?: string }) {
             <ContextMenuItem
               variant="destructive"
               onClick={() => {
-                // Was `hoverShape.getAttr("removeMark")?.()`, which only
-                // works when the hit shape is the outline Line -- the
-                // `removeMark` attr doesn't exist on the point Rects. Going
-                // through the store by id works for either.
                 useMarkStore.getState().removeMark(hoveredMarkId);
               }}
             >
