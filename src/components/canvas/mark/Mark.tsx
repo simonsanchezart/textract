@@ -1,5 +1,6 @@
 import type { MarkType } from "@/stores/mark-store";
 import { useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { Group, Line } from "react-konva";
 import { useCanvasStore } from "@/stores/canvas-store";
 import { useMarkStore } from "@/stores/mark-store";
@@ -53,7 +54,17 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
             useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
         }}
         onDragMove={(e) => {
-          setMarkOffset({ x: e.target.x(), y: e.target.y() });
+          // Konva positions the dragged node synchronously inside this
+          // native mousemove handler and paints that same frame; a plain
+          // setState here commits on a later task, so the points/lines
+          // positioned via `offset={markOffset}` would trail a frame behind
+          // the outline Konva is already dragging. flushSync keeps them in
+          // the same frame. Deliberate use, not the perf footgun the lint
+          // rule usually warns about -- this IS the fix.
+          // eslint-disable-next-line react-dom/no-flush-sync
+          flushSync(() => {
+            setMarkOffset({ x: e.target.x(), y: e.target.y() });
+          });
         }}
         onDragEnd={(e) => {
           const dx = e.target.x();
@@ -143,20 +154,33 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
               };
             }}
             onDragMove={(e) => {
-              const isMultiDrag = selectedIndices.includes(id) && selectedIndices.length > 1 && dragStartRef.current;
-              if (isMultiDrag && dragStartRef.current) {
-                const dx = e.target.x() - dragStartRef.current.origin.x;
-                const dy = e.target.y() - dragStartRef.current.origin.y;
-                const start = dragStartRef.current.points;
-                setPoints(start.map((p, idx) => (selectedIndices.includes(idx) ? { x: p.x + dx, y: p.y + dy } : p)));
-              }
-              else {
-                setPoints((prev) => {
-                  const next = [...prev];
-                  next[id] = { x: e.target.x(), y: e.target.y() };
-                  return next;
-                });
-              }
+              // Same late-commit issue as the outline's onDragMove above:
+              // without flushSync the OTHER selected points (which only
+              // move because this re-render positions them -- Konva only
+              // moves the node the pointer is actually on) render a frame
+              // or more stale, visible as those points sitting at their
+              // pre-drag spot for a moment before snapping to place on
+              // release. Invisible on a single-point drag, since there
+              // Konva is already moving the only node that needs to move.
+              // Deliberate use, not the perf footgun the lint rule usually
+              // warns about -- this IS the fix.
+              // eslint-disable-next-line react-dom/no-flush-sync
+              flushSync(() => {
+                const isMultiDrag = selectedIndices.includes(id) && selectedIndices.length > 1 && dragStartRef.current;
+                if (isMultiDrag && dragStartRef.current) {
+                  const dx = e.target.x() - dragStartRef.current.origin.x;
+                  const dy = e.target.y() - dragStartRef.current.origin.y;
+                  const start = dragStartRef.current.points;
+                  setPoints(start.map((p, idx) => (selectedIndices.includes(idx) ? { x: p.x + dx, y: p.y + dy } : p)));
+                }
+                else {
+                  setPoints((prev) => {
+                    const next = [...prev];
+                    next[id] = { x: e.target.x(), y: e.target.y() };
+                    return next;
+                  });
+                }
+              });
             }}
             onDragEnd={(e) => {
               const isMultiDrag = selectedIndices.includes(id) && selectedIndices.length > 1 && dragStartRef.current;
@@ -164,10 +188,9 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
                 const dx = e.target.x() - dragStartRef.current.origin.x;
                 const dy = e.target.y() - dragStartRef.current.origin.y;
                 const start = dragStartRef.current.points;
-                selectedIndices.forEach((idx) => {
-                  const p = start[idx];
-                  useMarkStore.getState().updateMarkPoint(mark.id, idx, { x: p.x + dx, y: p.y + dy });
-                });
+                const next = start.map((p, idx) => (selectedIndices.includes(idx) ? { x: p.x + dx, y: p.y + dy } : p));
+                setPoints(next);
+                useMarkStore.getState().updateMark(mark.id, next);
               }
               else {
                 useMarkStore.getState().updateMarkPoint(mark.id, id, { x: e.target.x(), y: e.target.y() });
