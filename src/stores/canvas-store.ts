@@ -77,7 +77,14 @@ export const useCanvasStore = create(
         }),
       toggleMarkCreationMode: canvas =>
         set((state) => {
-          const next = { quad: "grid", grid: "bezier", bezier: "quad" } as const;
+          // Grid mode is hidden from the toolbar for now (per
+          // simonsanchezart's PR #24 review -- no clear use case beyond
+          // what Quad + Bezier already cover), so it's excluded from the
+          // cycle. Existing grid marks still render/edit/convert fine;
+          // this only prevents creating new ones via the UI. `grid: "quad"`
+          // is a safety net in case a persisted mode from before this
+          // change is still "grid" -- Shift+G cycles straight back out.
+          const next = { quad: "bezier", grid: "quad", bezier: "quad" } as const;
           state.transientCanvas[canvas].markCreationMode
             = next[state.transientCanvas[canvas].markCreationMode];
         }),

@@ -6,7 +6,7 @@ import { basename } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/plugin-dialog";
 import { exists } from "@tauri-apps/plugin-fs";
 import { error, info, warn } from "@tauri-apps/plugin-log";
-import { BoxSelect, Grid3x3, Redo2, Spline, TrashIcon, Undo2 } from "lucide-react";
+import { BoxSelect, Redo2, Spline, TrashIcon, Undo2 } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { CgAdd } from "react-icons/cg";
 import { FaPlay } from "react-icons/fa";
@@ -514,6 +514,15 @@ function MarkCanvas({ className = "" }: { className?: string }) {
           onClick={() => useCanvasStore.getState().setMarkCreationMode(CanvasType.MARK, "quad")}
           tooltip={`Quad mode: ${getShortcutModifierLabel()}+Click 4 corners for a straight mark (Shift+G to cycle modes)`}
         />
+        {/*
+          Grid mode is hidden from the toolbar for now, per
+          simonsanchezart's PR #24 review -- his read is that Quad + Bezier
+          already cover every real use case, and he'd rather hide (possibly
+          later remove) the grid tool than ship three overlapping ways to
+          mark a curved surface. Left commented out rather than deleted:
+          the mesh-warp backend and all grid-mark editing/conversion code
+          stay fully intact, so this is reversible with one line if a real
+          use case does turn up.
         <ToolbarAction
           Icon={Grid3x3}
           size={4}
@@ -521,6 +530,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
           onClick={() => useCanvasStore.getState().setMarkCreationMode(CanvasType.MARK, "grid")}
           tooltip={`Grid mode: ${getShortcutModifierLabel()}+Click 4 corners for a point-grid curved mark (Shift+G to cycle modes)`}
         />
+        */}
         <ToolbarAction
           Icon={Spline}
           size={4}
