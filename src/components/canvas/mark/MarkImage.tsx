@@ -29,9 +29,13 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
   // markHandleScale (4x) only reached a still-tiny on-screen size. A fixed
   // base means the Handles setting has a real, visible effect regardless of
   // what photo is loaded. Dividing by canvasZoom keeps the on-screen size
-  // constant as the user zooms the canvas.
+  // constant as the user zooms in -- only compensating above 1x, per
+  // review: dividing unconditionally also grows handles as the user zooms
+  // OUT (canvasZoom < 1 means dividing by a fraction, i.e. multiplying),
+  // so a zoomed-out view could end up with handles dominating the screen.
+  // Below 1x they now just shrink normally along with everything else.
   const scaleFactor = useMemo(
-    () => markHandleScale / (canvasZoom || 1),
+    () => markHandleScale / (canvasZoom > 1 ? canvasZoom || 1 : 1),
     [markHandleScale, canvasZoom],
   );
 
