@@ -48,34 +48,7 @@ graph LR
 
 ## 🎹 Controls
 
-Textract is designed for speed. Below is a cheat sheet of shortcuts:
-
-### General & Navigation
-
-| Action           | Key / Gesture                               |
-| :--------------- | :------------------------------------------ |
-| **Pan Canvas**   | `Scroll wheel click + Drag` or `Drag Stage` |
-| **Zoom Stage**   | `Scroll Wheel`                              |
-| **Context Menu** | `Right Click`                               |
-| **Select All**   | `Cmd + A` on macOS, `Ctrl + A` elsewhere    |
-| **Delete Image** | `Delete` (with image selected)              |
-
-### Mark Canvas (Left Panel)
-
-| Action                    | Key / Shortcut                                             |
-| :------------------------ | :--------------------------------------------------------- |
-| **Load Images**           | `Shift + A`                                                |
-| **Add Mark Point**        | `Cmd + Left Click` on macOS, `Ctrl + Left Click` elsewhere |
-| **Reset Point Selection** | `Right Click` (while marking)                              |
-| **Process/Convert**       | `Shift + R`                                                |
-| **Remove Mark**           | `Alt + Left Click` (on mark)                               |
-
-### Atlas Canvas (Right Panel)
-
-| Action              | Key / Shortcut                           |
-| :------------------ | :--------------------------------------- |
-| **Export Atlas**    | `Cmd + E` on macOS, `Ctrl + E` elsewhere |
-| **Export Selected** | `Cmd + S` on macOS, `Ctrl + S` elsewhere |
+Textract is designed for speed, with a full shortcut reference and workflow guide bundled in the app itself (via the `?` button in the footer). See [`docs/help.md`](docs/help.md) for the same content, kept up to date as the source the in-app doc is generated from.
 
 ## Issues
 
