@@ -1,5 +1,6 @@
 import type { MarkType } from "@/stores/mark-store";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { Group, Line } from "react-konva";
 import { useCanvasStore } from "@/stores/canvas-store";
 import { useMarkStore } from "@/stores/mark-store";
@@ -150,7 +151,17 @@ function BezierMark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
             useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
         }}
         onDragMove={(e) => {
-          setMarkOffset({ x: e.target.x(), y: e.target.y() });
+          // Konva positions the dragged outline synchronously inside this
+          // native mousemove handler and paints that same frame; a plain
+          // setState here commits on a later task, so everything positioned
+          // via `offset={markOffset}` -- the preview grid, guide lines,
+          // handle/corner points -- would trail a frame behind. flushSync
+          // keeps them in the same frame. Deliberate use, not the perf
+          // footgun the lint rule usually warns about -- this IS the fix.
+          // eslint-disable-next-line react-dom/no-flush-sync
+          flushSync(() => {
+            setMarkOffset({ x: e.target.x(), y: e.target.y() });
+          });
         }}
         onDragEnd={(e) => {
           const dx = e.target.x();
@@ -230,28 +241,49 @@ function BezierMark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
               // Same Konva click-bubbling fix as Mark.tsx's points.
               e.cancelBubble = true;
             }}
+            onDblClick={() => {
+              // Same isolate-selection behavior as Mark.tsx's points, per
+              // simonsanchezart's PR #20 review -- double-clicking a point
+              // that's part of the current multi-selection deselects
+              // everything else and keeps just that point.
+              if (selectedIndices.includes(combinedIdx)) {
+                useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
+                useCanvasStore.getState().selectPoint(CanvasType.MARK, mark.id, combinedIdx);
+              }
+            }}
             onDragStart={(e) => {
               dragStartRef.current = { corners, handles, origin: { x: e.target.x(), y: e.target.y() } };
             }}
             onDragMove={(e) => {
-              const isMultiDrag = selectedIndices.includes(combinedIdx) && selectedIndices.length > 1 && dragStartRef.current;
-              if (isMultiDrag && dragStartRef.current) {
-                const dx = e.target.x() - dragStartRef.current.origin.x;
-                const dy = e.target.y() - dragStartRef.current.origin.y;
-                const start = dragStartRef.current.handles;
-                setHandles(start.map((p, i) => (selectedIndices.includes(handleIndex(i)) ? { x: p.x + dx, y: p.y + dy } : p)));
-                if (selectedIndices.some(i => i < 4) && dragStartRef.current) {
-                  const startCorners = dragStartRef.current.corners;
-                  setCorners(startCorners.map((p, i) => (selectedIndices.includes(i) ? { x: p.x + dx, y: p.y + dy } : p)));
+              // Same late-commit issue as the outline's onDragMove above:
+              // without flushSync the OTHER selected points (which only
+              // move because this re-render positions them -- Konva only
+              // moves the node the pointer is actually on) render a frame
+              // or more stale. Invisible on a single-point drag, since
+              // there Konva is already moving the only node that needs to
+              // move. Deliberate use, not the perf footgun the lint rule
+              // usually warns about -- this IS the fix.
+              // eslint-disable-next-line react-dom/no-flush-sync
+              flushSync(() => {
+                const isMultiDrag = selectedIndices.includes(combinedIdx) && selectedIndices.length > 1 && dragStartRef.current;
+                if (isMultiDrag && dragStartRef.current) {
+                  const dx = e.target.x() - dragStartRef.current.origin.x;
+                  const dy = e.target.y() - dragStartRef.current.origin.y;
+                  const start = dragStartRef.current.handles;
+                  setHandles(start.map((p, i) => (selectedIndices.includes(handleIndex(i)) ? { x: p.x + dx, y: p.y + dy } : p)));
+                  if (selectedIndices.some(i => i < 4) && dragStartRef.current) {
+                    const startCorners = dragStartRef.current.corners;
+                    setCorners(startCorners.map((p, i) => (selectedIndices.includes(i) ? { x: p.x + dx, y: p.y + dy } : p)));
+                  }
                 }
-              }
-              else {
-                setHandles((prev) => {
-                  const next = [...prev];
-                  next[idx] = { x: e.target.x(), y: e.target.y() };
-                  return next;
-                });
-              }
+                else {
+                  setHandles((prev) => {
+                    const next = [...prev];
+                    next[idx] = { x: e.target.x(), y: e.target.y() };
+                    return next;
+                  });
+                }
+              });
             }}
             onDragEnd={(e) => {
               const isMultiDrag = selectedIndices.includes(combinedIdx) && selectedIndices.length > 1 && dragStartRef.current;
@@ -291,26 +323,47 @@ function BezierMark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
             onClick={(e) => {
               e.cancelBubble = true;
             }}
+            onDblClick={() => {
+              // Same isolate-selection behavior as Mark.tsx's points, per
+              // simonsanchezart's PR #20 review -- double-clicking a point
+              // that's part of the current multi-selection deselects
+              // everything else and keeps just that point.
+              if (selectedIndices.includes(idx)) {
+                useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
+                useCanvasStore.getState().selectPoint(CanvasType.MARK, mark.id, idx);
+              }
+            }}
             onDragStart={(e) => {
               dragStartRef.current = { corners, handles, origin: { x: e.target.x(), y: e.target.y() } };
             }}
             onDragMove={(e) => {
-              const isMultiDrag = selectedIndices.includes(idx) && selectedIndices.length > 1 && dragStartRef.current;
-              if (isMultiDrag && dragStartRef.current) {
-                const dx = e.target.x() - dragStartRef.current.origin.x;
-                const dy = e.target.y() - dragStartRef.current.origin.y;
-                const startCorners = dragStartRef.current.corners;
-                const startHandles = dragStartRef.current.handles;
-                setCorners(startCorners.map((p, i) => (selectedIndices.includes(i) ? { x: p.x + dx, y: p.y + dy } : p)));
-                setHandles(startHandles.map((p, i) => (selectedIndices.includes(handleIndex(i)) ? { x: p.x + dx, y: p.y + dy } : p)));
-              }
-              else {
-                setCorners((prev) => {
-                  const next = [...prev];
-                  next[idx] = { x: e.target.x(), y: e.target.y() };
-                  return next;
-                });
-              }
+              // Same late-commit issue as the outline's onDragMove above:
+              // without flushSync the OTHER selected points (which only
+              // move because this re-render positions them -- Konva only
+              // moves the node the pointer is actually on) render a frame
+              // or more stale. Invisible on a single-point drag, since
+              // there Konva is already moving the only node that needs to
+              // move. Deliberate use, not the perf footgun the lint rule
+              // usually warns about -- this IS the fix.
+              // eslint-disable-next-line react-dom/no-flush-sync
+              flushSync(() => {
+                const isMultiDrag = selectedIndices.includes(idx) && selectedIndices.length > 1 && dragStartRef.current;
+                if (isMultiDrag && dragStartRef.current) {
+                  const dx = e.target.x() - dragStartRef.current.origin.x;
+                  const dy = e.target.y() - dragStartRef.current.origin.y;
+                  const startCorners = dragStartRef.current.corners;
+                  const startHandles = dragStartRef.current.handles;
+                  setCorners(startCorners.map((p, i) => (selectedIndices.includes(i) ? { x: p.x + dx, y: p.y + dy } : p)));
+                  setHandles(startHandles.map((p, i) => (selectedIndices.includes(handleIndex(i)) ? { x: p.x + dx, y: p.y + dy } : p)));
+                }
+                else {
+                  setCorners((prev) => {
+                    const next = [...prev];
+                    next[idx] = { x: e.target.x(), y: e.target.y() };
+                    return next;
+                  });
+                }
+              });
             }}
             onDragEnd={(e) => {
               const isMultiDrag = selectedIndices.includes(idx) && selectedIndices.length > 1 && dragStartRef.current;
