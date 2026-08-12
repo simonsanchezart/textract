@@ -226,6 +226,26 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
               // click. That made selection look flaky rather than broken.
               e.cancelBubble = true;
             }}
+            onDblClick={() => {
+              // Deselects everything else and keeps just this point --
+              // lets you drop out of a multi-selection back to one point
+              // without first clicking empty space to clear it. Per
+              // simonsanchezart's PR #20 review (confirmed, not a guess:
+              // "it's not to multi-select, it's a way of deselecting all
+              // currently selected points, and just selecting the one
+              // that you double click, instead of having to first click
+              // outside to select a single point again") -- NOT an add-
+              // to-selection gesture, that's what Shift+Click is for.
+              // Guarded on the point already being part of the current
+              // selection, matching his exact suggested code: double-
+              // clicking a point that ISN'T selected already just
+              // behaves like a normal click (mousedown above already
+              // handles that), no separate isolate step needed.
+              if (selectedIndices.includes(id)) {
+                useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
+                useCanvasStore.getState().selectPoint(CanvasType.MARK, mark.id, id);
+              }
+            }}
             onDragStart={(e) => {
               dragStartRef.current = {
                 points,
