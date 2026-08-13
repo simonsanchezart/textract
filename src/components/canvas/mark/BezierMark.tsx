@@ -229,25 +229,14 @@ function BezierMark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
             offset={markOffset}
             selected={selected}
             scaleFactor={scale * 0.7}
-            onMouseDown={(e) => {
+            onClick={(e) => {
+              e.cancelBubble = true;
               if (e.evt.shiftKey) {
                 useCanvasStore.getState().togglePointSelection(CanvasType.MARK, mark.id, combinedIdx);
               }
-              else if (!selectedIndices.includes(combinedIdx)) {
-                useCanvasStore.getState().selectPoint(CanvasType.MARK, mark.id, combinedIdx);
-              }
-            }}
-            onClick={(e) => {
-              // Same Konva click-bubbling fix as Mark.tsx's points.
-              e.cancelBubble = true;
-            }}
-            onDblClick={() => {
-              // Same isolate-selection behavior as Mark.tsx's points, per
-              // simonsanchezart's PR #20 review -- double-clicking a point
-              // that's part of the current multi-selection deselects
-              // everything else and keeps just that point.
-              if (selectedIndices.includes(combinedIdx)) {
-                useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
+              else {
+                if (selectedIndices.includes(combinedIdx))
+                  useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
                 useCanvasStore.getState().selectPoint(CanvasType.MARK, mark.id, combinedIdx);
               }
             }}
@@ -312,24 +301,14 @@ function BezierMark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
             offset={markOffset}
             selected={selected}
             scaleFactor={scale}
-            onMouseDown={(e) => {
+            onClick={(e) => {
+              e.cancelBubble = true;
               if (e.evt.shiftKey) {
                 useCanvasStore.getState().togglePointSelection(CanvasType.MARK, mark.id, idx);
               }
-              else if (!selectedIndices.includes(idx)) {
-                useCanvasStore.getState().selectPoint(CanvasType.MARK, mark.id, idx);
-              }
-            }}
-            onClick={(e) => {
-              e.cancelBubble = true;
-            }}
-            onDblClick={() => {
-              // Same isolate-selection behavior as Mark.tsx's points, per
-              // simonsanchezart's PR #20 review -- double-clicking a point
-              // that's part of the current multi-selection deselects
-              // everything else and keeps just that point.
-              if (selectedIndices.includes(idx)) {
-                useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
+              else {
+                if (selectedIndices.includes(idx))
+                  useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
                 useCanvasStore.getState().selectPoint(CanvasType.MARK, mark.id, idx);
               }
             }}
