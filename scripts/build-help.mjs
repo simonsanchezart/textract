@@ -8,7 +8,7 @@
 // also renders it via a GitHub Action for the same source file, so both
 // paths stay in sync by construction -- there's only one place the actual
 // content lives.
-import { readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { marked } from "marked";
@@ -95,5 +95,7 @@ ${body}
 </html>
 `;
 
-writeFileSync(join(root, "src-tauri/resources/help.html"), html);
+const filePath = join(root, "src-tauri/resources/help.html");
+mkdirSync(dirname(filePath), { recursive: true });
+writeFileSync(filePath, html);
 console.log("Rendered docs/help.md -> src-tauri/resources/help.html");
