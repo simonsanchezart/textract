@@ -46,9 +46,11 @@ graph LR
 3. **Extract**: Hit `Shift + R` or click the Convert button.
 4. **Export**: Position the extracted textures on the Atlas Canvas and export!
 
-## 🎹 Controls
+## 📚 Documentation
 
-Textract is designed for speed, with a full shortcut reference and workflow guide bundled in the app itself (via the `?` button in the footer). See [`docs/help.md`](docs/help.md) for the same content, kept up to date as the source the in-app doc is generated from.
+See [`docs/help.md`](docs/help.md).
+
+The documentation is also available in-app via the `?` icon in the bottom-left corner.
 
 ## Issues
 
