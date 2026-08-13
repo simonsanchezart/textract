@@ -13,34 +13,34 @@ Texture extractor from photos — reference & shortcuts
 
 ### General & navigation
 
-| Action | macOS | Windows / Linux |
-| --- | --- | --- |
-| Zoom stage | Scroll wheel | Scroll wheel |
-| Pan canvas | Scroll-wheel click + drag / drag stage | Scroll-wheel click + drag / drag stage |
-| Context menu | Right click | Right click |
-| Select all | `Cmd+A` | `Ctrl+A` |
-| Delete selected image | `Delete` | `Delete` |
+| Action                | Shortcut                               |
+| --------------------- | -------------------------------------- |
+| Zoom stage            | Scroll wheel                           |
+| Pan canvas            | Scroll-wheel click + drag / drag stage |
+| Context menu          | Right click                            |
+| Select all            | `Cmd+A` / `Ctrl+A`                     |
+| Delete selected image | `Delete`                               |
 
 ### Mark canvas (left panel)
 
-| Action | macOS | Windows / Linux |
-| --- | --- | --- |
-| Load images | `Shift+A` | `Shift+A` |
-| Add mark point (on image) | `Cmd+Click` | `Ctrl+Click` |
-| Reset point selection (while marking) | Right click | Right click |
-| Process / convert marks | `Shift+R` | `Shift+R` |
-| Remove mark (on mark) | `Alt+Click` | `Alt+Click` |
-| Undo | `Cmd+Z` | `Ctrl+Z` |
-| Redo | `Shift+Cmd+Z` | `Shift+Ctrl+Z` |
+| Action                                | Shortcut                       |
+| ------------------------------------- | ------------------------------ |
+| Load images                           | `Shift+A`                      |
+| Add mark point (on image)             | `Cmd+Click` / `Ctrl+Click`     |
+| Reset point selection (while marking) | Right click                    |
+| Process / convert marks               | `Shift+R`                      |
+| Remove mark (on mark)                 | `Alt+Click`                    |
+| Undo                                  | `Cmd+Z` / `Ctrl+Z`             |
+| Redo                                  | `Shift+Cmd+Z` / `Shift+Ctrl+Z` |
 
 ### Atlas canvas (right panel)
 
-| Action | macOS | Windows / Linux |
-| --- | --- | --- |
-| Export atlas | `Cmd+E` | `Ctrl+E` |
-| Export selected | `Cmd+S` | `Ctrl+S` |
-| Undo | `Cmd+Z` | `Ctrl+Z` |
-| Redo | `Shift+Cmd+Z` | `Shift+Ctrl+Z` |
+| Action          | Shortcut                       |
+| --------------- | ------------------------------ |
+| Export atlas    | `Cmd+E` / `Ctrl+E`             |
+| Export selected | `Cmd+S` / `Ctrl+S`             |
+| Undo            | `Cmd+Z` / `Ctrl+Z`             |
+| Redo            | `Shift+Cmd+Z` / `Shift+Ctrl+Z` |
 
 ---
 
