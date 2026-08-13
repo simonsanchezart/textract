@@ -23,17 +23,6 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
   const [currentPoints, setCurrentPoints] = useState<Vec2[]>([]);
   const currentPointsFlat = useMemo(() => currentPoints.flatMap(p => [p.x, p.y]), [currentPoints]);
 
-  // Handle/line size is intentionally independent of the image's own pixel
-  // dimensions -- the previous formula (imageData.sizeSum * 0.0001) gave a
-  // base factor of ~0.1-0.3 for typical photos, so even maxing out
-  // markHandleScale (4x) only reached a still-tiny on-screen size. A fixed
-  // base means the Handles setting has a real, visible effect regardless of
-  // what photo is loaded. Dividing by canvasZoom keeps the on-screen size
-  // constant as the user zooms in -- only compensating above 1x, per
-  // review: dividing unconditionally also grows handles as the user zooms
-  // OUT (canvasZoom < 1 means dividing by a fraction, i.e. multiplying),
-  // so a zoomed-out view could end up with handles dominating the screen.
-  // Below 1x they now just shrink normally along with everything else.
   const scaleFactor = useMemo(
     () => markHandleScale / (canvasZoom > 1 ? canvasZoom || 1 : 1),
     [markHandleScale, canvasZoom],

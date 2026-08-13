@@ -15,11 +15,7 @@ export type CanvasState = {
 export type TransientCanvasState = {
   hoverShape: Konva.Shape | null;
   selectedNodes: Node<NodeConfig>[];
-  /**
-   * Mark canvas only: currently-selected mark point(s). Shift+Click toggles
-   * a point in/out of this array; a future select-and-convert-to-curve
-   * feature can reuse the same multi-select shape.
-   */
+  // only relevant to Mark canvas
   selectedPoints: { markId: string; pointIndex: number }[];
 };
 
