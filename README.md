@@ -50,7 +50,7 @@ graph LR
 
 See [`docs/help.md`](docs/help.md).
 
-The documentation is also available in-app via the `?` icon in the bottom-left corner.
+The documentation is also available in-app via the 📕 icon in the bottom-left corner.
 
 ## Issues
 

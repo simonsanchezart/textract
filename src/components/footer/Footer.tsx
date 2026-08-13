@@ -1,5 +1,6 @@
 import { join, resourceDir } from "@tauri-apps/api/path";
 import { openPath, openUrl } from "@tauri-apps/plugin-opener";
+import { FaBook } from "react-icons/fa";
 import { useShallow } from "zustand/react/shallow";
 import { useSettingsStore } from "@/stores/settings-store";
 import { getShortcutModifierLabel, snap as snapFn, snapPowerOfTwo } from "@/utils/utils";
@@ -43,7 +44,7 @@ export default function Footer() {
       <div className="flex gap-2 text-light-main/50 align-baseline justify-center text-center">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="outline" size="icon-xs" className="rounded-full">?</Button>
+            <Button variant="outline" size="icon-xs" className="rounded-full cursor-pointer" onClick={openHelpDoc}><FaBook /></Button>
           </TooltipTrigger>
 
           <TooltipContent className="flex flex-col gap-2">
@@ -61,15 +62,6 @@ export default function Footer() {
 
             <ShortcutHelper shortcut={`${shortcutModifier}+E`} description="Export Atlas" />
             <ShortcutHelper shortcut={`${shortcutModifier}+S`} description="Export Selected" />
-
-            <hr />
-
-            <small
-              onClick={openHelpDoc}
-              className="text-gray-400 hover:cursor-pointer hover:text-red"
-            >
-              full docs &amp; feature guide
-            </small>
 
             <hr />
 
