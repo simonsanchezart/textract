@@ -176,7 +176,8 @@ function MarkCanvas({ className = "" }: { className?: string }) {
       }
       case "HOVERED": {
         if (!hoverShape) {
-          toast.warning("No mark under the pointer to convert");
+          // this code should be unreachable
+          toast.error("No mark under the pointer to convert");
           warn("Convert Hovered: hoverShape was not set (right-click didn't land on a mark)");
           return;
         }
