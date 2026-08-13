@@ -53,6 +53,8 @@ export default function Footer() {
             <ShortcutHelper shortcut="Esc" description="Clear Point Selection" />
             <ShortcutHelper shortcut="Shift+R" description="Convert Marks" />
             <ShortcutHelper shortcut="Alt+Click" description="Delete Mark" />
+            <ShortcutHelper shortcut={`${shortcutModifier}+Z`} description="Undo" />
+            <ShortcutHelper shortcut={`Shift+${shortcutModifier}+Z`} description="Redo" />
 
             <hr />
 
@@ -61,11 +63,16 @@ export default function Footer() {
 
             <hr />
 
-            <small
-              onClick={async () => await openUrl("https://www.simonsanchez.art/")}
-              className="text-gray-400 hover:cursor-pointer hover:text-red"
-            >
-              made by simon sanchez
+            <small>
+              <a className="link" onClick={async () => await openUrl("https://www.simonsanchez.art/")}>
+                made by simon sanchez
+              </a>
+              {" "}
+              and
+              {" "}
+              <a className="link" onClick={async () => await openUrl("https://github.com/simonsanchezart/textract/graphs/contributors")}>
+                contributors
+              </a>
             </small>
           </TooltipContent>
         </Tooltip>

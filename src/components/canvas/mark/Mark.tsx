@@ -1,5 +1,5 @@
 import type { MarkType } from "@/stores/mark-store";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Group, Line } from "react-konva";
 import { useCanvasStore } from "@/stores/canvas-store";
@@ -11,6 +11,18 @@ import MarkPoint from "./MarkPoint";
 function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
   const [markOffset, setMarkOffset] = useState({ x: 0, y: 0 });
   const [points, setPoints] = useState(mark.points);
+
+  // points is a local copy (needed for live drag feedback via onDragMove,
+  // before a drag commits to the store on drag-end). It only ever gets
+  // seeded from mark.points once at mount, so an external change to the
+  // store's points -- undo/redo being the main case -- was never reflected:
+  // the store reverted correctly, but this component kept rendering the
+  // stale local copy. Re-sync whenever the prop actually changes.
+  useEffect(() => {
+    // eslint-disable-next-line react/set-state-in-effect
+    setPoints(mark.points);
+  }, [mark.points]);
+
   const pointsFlat = useMemo(() => points.flatMap(p => [p.x, p.y]), [points]);
   const selectedPoints = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].selectedPoints);
   const selectedIndices = useMemo(
