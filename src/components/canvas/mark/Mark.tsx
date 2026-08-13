@@ -17,12 +17,9 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
     () => selectedPoints.filter(sp => sp.markId === mark.id).map(sp => sp.pointIndex),
     [selectedPoints, mark.id],
   );
-  // Snapshot of `points` + the dragged point's own start position, taken on
-  // drag-start. Needed so a multi-point drag (dragging one selected point
-  // while others are also selected) can apply the same delta to every
-  // selected point -- Konva only reports drag events for the node the
-  // pointer is actually on, so the other selected points have to be moved
-  // by re-deriving the offset from this snapshot, not their own events.
+
+  // snapshot of selected points + dragged point position
+  // we calculate offset of other selected points from the dragged point offset
   const dragStartRef = useRef<{ points: typeof points; origin: { x: number; y: number } } | null>(null);
 
   const gridPoints = useMemo(() => {
@@ -54,13 +51,8 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
             useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
         }}
         onDragMove={(e) => {
-          // Konva positions the dragged node synchronously inside this
-          // native mousemove handler and paints that same frame; a plain
-          // setState here commits on a later task, so the points/lines
-          // positioned via `offset={markOffset}` would trail a frame behind
-          // the outline Konva is already dragging. flushSync keeps them in
-          // the same frame. Deliberate use, not the perf footgun the lint
-          // rule usually warns about -- this IS the fix.
+          // flushSync forces React to update the DOM
+          // avoids visual lag
           // eslint-disable-next-line react-dom/no-flush-sync
           flushSync(() => {
             setMarkOffset({ x: e.target.x(), y: e.target.y() });
@@ -99,51 +91,20 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
         const selected = selectedPoints.some(sp => sp.markId === mark.id && sp.pointIndex === id);
         return (
           <MarkPoint
-            // eslint-disable-next-line react/no-array-index-key
+          // eslint-disable-next-line react/no-array-index-key
             key={id}
             position={p}
             offset={markOffset}
             selected={selected}
-            onMouseDown={(e) => {
+            onClick={(e) => {
+              // stop propagation to parents
+              e.cancelBubble = true;
               if (e.evt.shiftKey) {
                 useCanvasStore.getState().togglePointSelection(CanvasType.MARK, mark.id, id);
               }
-              else if (!selectedIndices.includes(id)) {
-                // Only collapse to a single-point selection if this point
-                // wasn't already part of the current multi-selection --
-                // otherwise grabbing one of several selected points to drag
-                // them together would wipe the rest of the selection before
-                // the drag (onDragStart) even fires.
-                useCanvasStore.getState().selectPoint(CanvasType.MARK, mark.id, id);
-              }
-            }}
-            onClick={(e) => {
-              // Konva clicks bubble, and this point sits inside MarkImage's
-              // Group, whose onClick treats any plain left click as a
-              // background click and calls clearSelectedPoints. Without this
-              // the mousedown above selects the point and the very next
-              // mouseup wipes it again -- unless the pointer happened to move
-              // past Konva's 3px dragDistance, which suppresses the synthetic
-              // click. That made selection look flaky rather than broken.
-              e.cancelBubble = true;
-            }}
-            onDblClick={() => {
-              // Deselects everything else and keeps just this point --
-              // lets you drop out of a multi-selection back to one point
-              // without first clicking empty space to clear it. Per
-              // simonsanchezart's PR #20 review (confirmed, not a guess:
-              // "it's not to multi-select, it's a way of deselecting all
-              // currently selected points, and just selecting the one
-              // that you double click, instead of having to first click
-              // outside to select a single point again") -- NOT an add-
-              // to-selection gesture, that's what Shift+Click is for.
-              // Guarded on the point already being part of the current
-              // selection, matching his exact suggested code: double-
-              // clicking a point that ISN'T selected already just
-              // behaves like a normal click (mousedown above already
-              // handles that), no separate isolate step needed.
-              if (selectedIndices.includes(id)) {
-                useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
+              else {
+                if (selectedIndices.includes(id))
+                  useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
                 useCanvasStore.getState().selectPoint(CanvasType.MARK, mark.id, id);
               }
             }}
@@ -154,16 +115,6 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
               };
             }}
             onDragMove={(e) => {
-              // Same late-commit issue as the outline's onDragMove above:
-              // without flushSync the OTHER selected points (which only
-              // move because this re-render positions them -- Konva only
-              // moves the node the pointer is actually on) render a frame
-              // or more stale, visible as those points sitting at their
-              // pre-drag spot for a moment before snapping to place on
-              // release. Invisible on a single-point drag, since there
-              // Konva is already moving the only node that needs to move.
-              // Deliberate use, not the perf footgun the lint rule usually
-              // warns about -- this IS the fix.
               // eslint-disable-next-line react-dom/no-flush-sync
               flushSync(() => {
                 const isMultiDrag = selectedIndices.includes(id) && selectedIndices.length > 1 && dragStartRef.current;
