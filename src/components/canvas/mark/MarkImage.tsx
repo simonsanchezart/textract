@@ -130,10 +130,11 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
       onClick={(e) => {
         if (e.evt.button === 2)
           setCurrentPoints([]);
-        if (e.evt.button === 0 && isShortcutModifierPressed(e.evt))
-          addPoint(e);
-        else if (e.evt.button === 0)
+        if (e.evt.button === 0) {
+          if (isShortcutModifierPressed(e.evt))
+            addPoint(e);
           useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
+        }
       }}
       onDragStart={(e) => {
         if (e.evt.buttons !== 1) {

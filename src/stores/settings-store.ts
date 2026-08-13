@@ -19,7 +19,7 @@ export const useSettingsStore = create(
       snap: 8,
       atlasResolution: 512,
       atlasAlpha: true,
-      markHandleScale: 1,
+      markHandleScale: 0.75,
       setSnap: x => set((state) => {
         state.snap = x;
       }),

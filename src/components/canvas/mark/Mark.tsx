@@ -214,46 +214,14 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
             position={p}
             offset={markOffset}
             selected={selected}
-            onMouseDown={(e) => {
+            onClick={(e) => {
+              e.cancelBubble = true;
               if (e.evt.shiftKey) {
                 useCanvasStore.getState().togglePointSelection(CanvasType.MARK, mark.id, id);
               }
-              else if (!selectedIndices.includes(id)) {
-                // Only collapse to a single-point selection if this point
-                // wasn't already part of the current multi-selection --
-                // otherwise grabbing one of several selected points to drag
-                // them together would wipe the rest of the selection before
-                // the drag (onDragStart) even fires.
-                useCanvasStore.getState().selectPoint(CanvasType.MARK, mark.id, id);
-              }
-            }}
-            onClick={(e) => {
-              // Konva clicks bubble, and this point sits inside MarkImage's
-              // Group, whose onClick treats any plain left click as a
-              // background click and calls clearSelectedPoints. Without this
-              // the mousedown above selects the point and the very next
-              // mouseup wipes it again -- unless the pointer happened to move
-              // past Konva's 3px dragDistance, which suppresses the synthetic
-              // click. That made selection look flaky rather than broken.
-              e.cancelBubble = true;
-            }}
-            onDblClick={() => {
-              // Deselects everything else and keeps just this point --
-              // lets you drop out of a multi-selection back to one point
-              // without first clicking empty space to clear it. Per
-              // simonsanchezart's PR #20 review (confirmed, not a guess:
-              // "it's not to multi-select, it's a way of deselecting all
-              // currently selected points, and just selecting the one
-              // that you double click, instead of having to first click
-              // outside to select a single point again") -- NOT an add-
-              // to-selection gesture, that's what Shift+Click is for.
-              // Guarded on the point already being part of the current
-              // selection, matching his exact suggested code: double-
-              // clicking a point that ISN'T selected already just
-              // behaves like a normal click (mousedown above already
-              // handles that), no separate isolate step needed.
-              if (selectedIndices.includes(id)) {
-                useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
+              else {
+                if (selectedIndices.includes(id))
+                  useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
                 useCanvasStore.getState().selectPoint(CanvasType.MARK, mark.id, id);
               }
             }}
