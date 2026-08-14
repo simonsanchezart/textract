@@ -6,20 +6,27 @@ import { useMemo, useState } from "react";
 import { Group, Image, Line } from "react-konva";
 import useImage from "use-image";
 import { useShallow } from "zustand/react/shallow";
+import { useCanvasStore } from "@/stores/canvas-store";
 import { useMarkStore } from "@/stores/mark-store";
-import { Colors } from "@/types/types";
+import { useSettingsStore } from "@/stores/settings-store";
+import { CanvasType, Colors } from "@/types/types";
 import { getMiddle, isShortcutModifierPressed } from "@/utils/utils";
 import Mark from "./Mark";
 import MarkPoint from "./MarkPoint";
 
 function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
   const marks = useMarkStore(useShallow(s => s.marks));
+  const canvasZoom = useCanvasStore(s => s.canvas[CanvasType.MARK].scale);
+  const markHandleScale = useSettingsStore(s => s.markHandleScale);
 
   const [image] = useImage(imageData.src);
   const [currentPoints, setCurrentPoints] = useState<Vec2[]>([]);
   const currentPointsFlat = useMemo(() => currentPoints.flatMap(p => [p.x, p.y]), [currentPoints]);
 
-  const scaleFactor = useMemo(() => imageData.sizeSum * 0.0001, [imageData.sizeSum]);
+  const scaleFactor = useMemo(
+    () => markHandleScale / (canvasZoom > 1 ? canvasZoom || 1 : 1),
+    [markHandleScale, canvasZoom],
+  );
 
   const addPoint = (e: KonvaEventObject<MouseEvent>) => {
     const pos = e.target.getRelativePointerPosition()!;
@@ -76,8 +83,11 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
       onClick={(e) => {
         if (e.evt.button === 2)
           setCurrentPoints([]);
-        if (e.evt.button === 0 && isShortcutModifierPressed(e.evt))
-          addPoint(e);
+        if (e.evt.button === 0) {
+          if (isShortcutModifierPressed(e.evt))
+            addPoint(e);
+          useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
+        }
       }}
       onDragStart={(e) => {
         if (e.evt.buttons !== 1) {

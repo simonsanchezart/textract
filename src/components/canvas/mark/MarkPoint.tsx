@@ -7,9 +7,10 @@ type MarkPointProps = {
   position: Vec2;
   offset?: Vec2;
   scaleFactor?: number;
+  selected?: boolean;
 } & React.ComponentProps<typeof Rect>;
 
-function MarkPoint({ position, offset = { x: 0, y: 0 }, scaleFactor = 1, ...props }: MarkPointProps) {
+function MarkPoint({ position, offset = { x: 0, y: 0 }, scaleFactor = 1, selected = false, ...props }: MarkPointProps) {
   const POINT_SIZE = useMemo(() => 20 * scaleFactor, [scaleFactor]);
   const POINT_SIZE_H = useMemo(() => POINT_SIZE / 2, [POINT_SIZE]);
 
@@ -17,7 +18,9 @@ function MarkPoint({ position, offset = { x: 0, y: 0 }, scaleFactor = 1, ...prop
     <Rect
       x={position.x}
       y={position.y}
-      fill={Colors.LIGHT}
+      fill={selected ? Colors.BLUE : Colors.LIGHT}
+      stroke={selected ? Colors.LIGHT : undefined}
+      strokeWidth={selected ? 2 * scaleFactor : 0}
       shadowOffset={{ x: 0.5, y: 0.5 }}
       shadowOpacity={1}
       cornerRadius={100}
@@ -41,7 +44,7 @@ function MarkPoint({ position, offset = { x: 0, y: 0 }, scaleFactor = 1, ...prop
           height: POINT_SIZE,
           offsetX: POINT_SIZE_H - offset.x,
           offsetY: POINT_SIZE_H - offset.y,
-          fill: Colors.LIGHT,
+          fill: selected ? Colors.BLUE : Colors.LIGHT,
         });
       }}
       draggable

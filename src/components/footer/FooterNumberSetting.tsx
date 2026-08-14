@@ -65,7 +65,8 @@ export default function FooterNumberSetting({
           -
         </Button>
 
-        <div className="relative">
+        {/* `border-l-0` must stay AFTER `border` */}
+        <div className="relative flex items-center">
           <Input
             type="number"
             value={inputValue}
@@ -75,7 +76,7 @@ export default function FooterNumberSetting({
               if (e.key === "Enter")
                 handleBlur();
             }}
-            className={`w-16 h-6 text-center rounded-none border-x-0 border border-primary/50 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${className}`}
+            className={`w-16 h-6 text-center rounded-none border border-primary/50 border-l-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${className}`}
           />
 
           {unit

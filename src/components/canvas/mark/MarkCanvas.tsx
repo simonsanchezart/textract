@@ -313,9 +313,10 @@ function MarkCanvas({ className = "" }: { className?: string }) {
         if (e.shiftKey)
           convertMarks();
         break;
+      case "Escape":
+        useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
       case "KeyZ":
         if (isShortcutModifierPressed(e)) {
-          // Stop the webview's own text-undo from also firing.
           e.preventDefault();
           if (e.shiftKey)
             useMarkStore.temporal.getState().redo();
