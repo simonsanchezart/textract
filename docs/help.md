@@ -27,6 +27,8 @@ Texture extractor from photos — reference & shortcuts
 | ------------------------------------- | ------------------------------ |
 | Load images                           | `Shift+A`                      |
 | Add mark point (on image)             | `Cmd+Click` / `Ctrl+Click`     |
+| Add/Remove from Selection (on point)  | `Shift+Click`                  |
+| Clear Selection                       | `Esc`                          |
 | Reset point selection (while marking) | Right click                    |
 | Process / convert marks               | `Shift+R`                      |
 | Remove mark (on mark)                 | `Alt+Click`                    |
