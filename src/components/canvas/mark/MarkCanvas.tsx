@@ -315,6 +315,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
         break;
       case "Escape":
         useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
+        break;
       case "KeyZ":
         if (isShortcutModifierPressed(e)) {
           e.preventDefault();
