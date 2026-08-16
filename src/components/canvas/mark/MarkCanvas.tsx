@@ -249,11 +249,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
               </span>
             </ContextMenuSubTrigger>
 
-            {/*
-            onFocusOutside={e => e.preventDefault()}
-            Work around a Radix MenuSubContent bug that prematurely closes the submenu
-            when a ContextMenuItem receives focus before its click/select event completes. */}
-            <ContextMenuSubContent onFocusOutside={e => e.preventDefault()}>
+            <ContextMenuSubContent>
               <ContextMenuGroup>
                 {hoveredMark
                   && (
