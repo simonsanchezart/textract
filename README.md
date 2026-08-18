@@ -46,36 +46,11 @@ graph LR
 3. **Extract**: Hit `Shift + R` or click the Convert button.
 4. **Export**: Position the extracted textures on the Atlas Canvas and export!
 
-## 🎹 Controls
+## 📚 Documentation
 
-Textract is designed for speed. Below is a cheat sheet of shortcuts:
+See [`docs/help.md`](docs/help.md).
 
-### General & Navigation
-
-| Action           | Key / Gesture                               |
-| :--------------- | :------------------------------------------ |
-| **Pan Canvas**   | `Scroll wheel click + Drag` or `Drag Stage` |
-| **Zoom Stage**   | `Scroll Wheel`                              |
-| **Context Menu** | `Right Click`                               |
-| **Select All**   | `Cmd + A` on macOS, `Ctrl + A` elsewhere    |
-| **Delete Image** | `Delete` (with image selected)              |
-
-### Mark Canvas (Left Panel)
-
-| Action                    | Key / Shortcut                                             |
-| :------------------------ | :--------------------------------------------------------- |
-| **Load Images**           | `Shift + A`                                                |
-| **Add Mark Point**        | `Cmd + Left Click` on macOS, `Ctrl + Left Click` elsewhere |
-| **Reset Point Selection** | `Right Click` (while marking)                              |
-| **Process/Convert**       | `Shift + R`                                                |
-| **Remove Mark**           | `Alt + Left Click` (on mark)                               |
-
-### Atlas Canvas (Right Panel)
-
-| Action              | Key / Shortcut                           |
-| :------------------ | :--------------------------------------- |
-| **Export Atlas**    | `Cmd + E` on macOS, `Ctrl + E` elsewhere |
-| **Export Selected** | `Cmd + S` on macOS, `Ctrl + S` elsewhere |
+The documentation is also available in-app via the 📕 icon in the bottom-left corner.
 
 ## Issues
 

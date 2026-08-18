@@ -15,6 +15,8 @@ export type CanvasState = {
 export type TransientCanvasState = {
   hoverShape: Konva.Shape | null;
   selectedNodes: Node<NodeConfig>[];
+  // only relevant to Mark canvas
+  selectedPoints: { markId: string; pointIndex: number }[];
 };
 
 type CanvasStore = {
@@ -26,6 +28,9 @@ type CanvasStore = {
 
   setSelectedNodes: (canvas: CanvasType, nodes: Node<NodeConfig>[]) => void;
   setHoverShape: (canvas: CanvasType, shape: Konva.Shape | null) => void;
+  selectPoint: (canvas: CanvasType, markId: string, pointIndex: number) => void;
+  togglePointSelection: (canvas: CanvasType, markId: string, pointIndex: number) => void;
+  clearSelectedPoints: (canvas: CanvasType) => void;
 };
 
 export const useCanvasStore = create(
@@ -36,8 +41,8 @@ export const useCanvasStore = create(
         [CanvasType.ATLAS]: { scale: 1, x: 0, y: 0 },
       },
       transientCanvas: {
-        [CanvasType.MARK]: { hoverShape: null, selectedNodes: [] },
-        [CanvasType.ATLAS]: { hoverShape: null, selectedNodes: [] },
+        [CanvasType.MARK]: { hoverShape: null, selectedNodes: [], selectedPoints: [] },
+        [CanvasType.ATLAS]: { hoverShape: null, selectedNodes: [], selectedPoints: [] },
       },
       setCanvasScale: (canvas, scale) =>
         set((state) => {
@@ -55,6 +60,23 @@ export const useCanvasStore = create(
       setHoverShape: (canvas, shape) =>
         set((state) => {
           state.transientCanvas[canvas].hoverShape = shape;
+        }),
+      selectPoint: (canvas, markId, pointIndex) =>
+        set((state) => {
+          state.transientCanvas[canvas].selectedPoints = [{ markId, pointIndex }];
+        }),
+      togglePointSelection: (canvas, markId, pointIndex) =>
+        set((state) => {
+          const points = state.transientCanvas[canvas].selectedPoints;
+          const existingIdx = points.findIndex(p => p.markId === markId && p.pointIndex === pointIndex);
+          if (existingIdx >= 0)
+            points.splice(existingIdx, 1);
+          else
+            points.push({ markId, pointIndex });
+        }),
+      clearSelectedPoints: canvas =>
+        set((state) => {
+          state.transientCanvas[canvas].selectedPoints = [];
         }),
     })),
     {

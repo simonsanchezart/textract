@@ -6,21 +6,31 @@ import { basename } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/plugin-dialog";
 import { exists } from "@tauri-apps/plugin-fs";
 import { info, warn } from "@tauri-apps/plugin-log";
-import { TrashIcon } from "lucide-react";
+import { Redo2, TrashIcon, Undo2 } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { CgAdd } from "react-icons/cg";
 import { FaPlay } from "react-icons/fa";
 import { Line } from "react-konva";
 import { toast } from "sonner";
+import { useStore } from "zustand";
 import { Toolbar, ToolbarAction } from "@/components/Toolbar";
-import { ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuShortcut, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger } from "@/components/ui/ContextMenu";
+import {
+  ContextMenuGroup,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuShortcut,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
+} from "@/components/ui/ContextMenu";
 import { useAtlasStore } from "@/stores/atlas-store";
 import { useCanvasStore } from "@/stores/canvas-store";
 import { useMarkStore } from "@/stores/mark-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { CanvasType } from "@/types/types";
-import { snap } from "@/utils/utils";
+import { getShortcutModifierLabel, isShortcutModifierPressed, snap, VALID_IMAGE_EXTENSIONS } from "@/utils/utils";
 import Canvas from "../Canvas";
+import useDragNDrop from "../hooks/use-drag-n-drop";
 import MarkImage from "./MarkImage";
 
 function MarkCanvas({ className = "" }: { className?: string }) {
@@ -29,6 +39,8 @@ function MarkCanvas({ className = "" }: { className?: string }) {
   const selectedNodes = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].selectedNodes);
   const hoverShape = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].hoverShape);
   const snapSize = useSettingsStore(s => s.snap);
+  const canUndo = useStore(useMarkStore.temporal, s => s.pastStates.length > 0);
+  const canRedo = useStore(useMarkStore.temporal, s => s.futureStates.length > 0);
 
   const transformerRef = useRef<Konva.Transformer>(null);
 
@@ -54,19 +66,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
     removeMissingImages();
   }, [markImages]);
 
-  const loadImages = async () => {
-    const selectedImages = await open({
-      title: "Select image/s to open",
-      multiple: true,
-      directory: false,
-      filters: [{ name: "Image Files", extensions: ["png", "jpg", "jpeg", "bmp"] }],
-    });
-
-    if (!selectedImages) {
-      info("No images were selected");
-      return;
-    }
-
+  const loadImages = async (imagePaths: string[]) => {
     const stage = transformerRef.current!.getStage()!;
     const container = stage.container();
 
@@ -77,7 +77,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
     const centerX = (stageWidth / 2 - stage.x()) / scale + offset.x;
     const centerY = (stageHeight / 2 - stage.y()) / scale + offset.y;
 
-    for (const imgPath of selectedImages) {
+    for (const imgPath of imagePaths) {
       const imgName = await basename(imgPath);
       toast.info(`Loading ${imgName}`);
       info(`Loading ${imgPath}`);
@@ -108,6 +108,34 @@ function MarkCanvas({ className = "" }: { className?: string }) {
     }
   };
 
+  const pickAndLoadImages = async () => {
+    const selectedImages = await open({
+      title: "Select image/s to open",
+      multiple: true,
+      directory: false,
+      filters: [{ name: "Image Files", extensions: VALID_IMAGE_EXTENSIONS }],
+    });
+
+    if (!selectedImages) {
+      info("No images were selected");
+      return;
+    }
+
+    loadImages(selectedImages);
+  };
+
+  const dragHover = useDragNDrop({
+    onDrop: async (payload) => {
+      const filteredFiles = payload.paths.filter((f) => {
+        const extension = f.split(".").pop()?.toLowerCase();
+        return extension ? VALID_IMAGE_EXTENSIONS.includes(extension) : false;
+      });
+
+      if (filteredFiles)
+        await loadImages(filteredFiles);
+    },
+  });
+
   const convertMarks = async (type: "ALL" | "SELECTED" | "HOVERED" = "ALL") => {
     const marks = useMarkStore.getState().marks;
     const images = Object.values(markImages);
@@ -120,7 +148,8 @@ function MarkCanvas({ className = "" }: { className?: string }) {
       case "SELECTED": {
         const selectedIds = transformerRef.current?.nodes().map(n => n.id()) ?? [];
 
-        entries = images.filter(image => selectedIds.includes(image.id))
+        entries = images
+          .filter(image => selectedIds.includes(image.id))
           .filter(image => image.markIds.length > 0)
           .map(image => ({ image, markIds: image.markIds }));
         break;
@@ -203,7 +232,9 @@ function MarkCanvas({ className = "" }: { className?: string }) {
 
           if (existingAtlasImage) {
             useAtlasStore.getState().updateImageBase64(existingAtlasImage.id, base64);
-            useAtlasStore.getState().updateImageScale(existingAtlasImage.id, { x: snapScaleX, y: snapScaleY });
+            useAtlasStore
+              .getState()
+              .updateImageScale(existingAtlasImage.id, { x: snapScaleX, y: snapScaleY });
           }
           else {
             const atlasImage: AtlasImageType = {
@@ -228,54 +259,46 @@ function MarkCanvas({ className = "" }: { className?: string }) {
 
   const contextMenu = () => (
     <ContextMenuGroup>
-      <ContextMenuItem onClick={loadImages}>
+      <ContextMenuItem onClick={pickAndLoadImages}>
         <CgAdd />
         Add Images
-
         <ContextMenuShortcut>
-          <span className="flex">
-            Shift+A
-          </span>
+          <span className="flex">Shift+A</span>
         </ContextMenuShortcut>
       </ContextMenuItem>
 
-      {Object.keys(markImages).length > 0
-        && (
-          <ContextMenuSub>
-            <ContextMenuSubTrigger>
-              <FaPlay />
-              <span className="mx-2">
-                Convert
-              </span>
-            </ContextMenuSubTrigger>
+      {Object.keys(markImages).length > 0 && (
+        <ContextMenuSub>
+          <ContextMenuSubTrigger>
+            <FaPlay />
+            <span className="mx-2">Convert</span>
+          </ContextMenuSubTrigger>
 
-            <ContextMenuSubContent>
-              <ContextMenuGroup>
-                {hoveredMark
-                  && (
-                    <ContextMenuItem onClick={() => convertMarks("HOVERED")}>
-                      Hovered
-                    </ContextMenuItem>
-                  )}
-                {selectedNodes.length > 0
-                  && (
-                    <ContextMenuItem onClick={() => convertMarks("SELECTED")}>
-                      Selected Images
-                    </ContextMenuItem>
-                  )}
+          <ContextMenuSubContent>
+            <ContextMenuGroup>
+              {hoveredMark
+                && (
+                  <ContextMenuItem onClick={() => convertMarks("HOVERED")}>
+                    Hovered
+                  </ContextMenuItem>
+                )}
+              {selectedNodes.length > 0
+                && (
+                  <ContextMenuItem onClick={() => convertMarks("SELECTED")}>
+                    Selected Images
+                  </ContextMenuItem>
+                )}
 
-                <ContextMenuItem onClick={() => convertMarks("ALL")}>
-                  All
-                  <ContextMenuShortcut>
-                    <span className="flex">
-                      Shift+R
-                    </span>
-                  </ContextMenuShortcut>
-                </ContextMenuItem>
-              </ContextMenuGroup>
-            </ContextMenuSubContent>
-          </ContextMenuSub>
-        )}
+              <ContextMenuItem onClick={() => convertMarks("ALL")}>
+                All
+                <ContextMenuShortcut>
+                  <span className="flex">Shift+R</span>
+                </ContextMenuShortcut>
+              </ContextMenuItem>
+            </ContextMenuGroup>
+          </ContextMenuSubContent>
+        </ContextMenuSub>
+      )}
 
       {(hoveredMark && hoveredMarkId)
         && (
@@ -305,11 +328,23 @@ function MarkCanvas({ className = "" }: { className?: string }) {
     switch (e.code) {
       case "KeyA":
         if (e.shiftKey)
-          loadImages();
+          pickAndLoadImages();
         break;
       case "KeyR":
         if (e.shiftKey)
           convertMarks();
+        break;
+      case "Escape":
+        useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
+        break;
+      case "KeyZ":
+        if (isShortcutModifierPressed(e)) {
+          e.preventDefault();
+          if (e.shiftKey)
+            useMarkStore.temporal.getState().redo();
+          else
+            useMarkStore.temporal.getState().undo();
+        }
         break;
       default:
         break;
@@ -317,7 +352,10 @@ function MarkCanvas({ className = "" }: { className?: string }) {
   };
 
   return (
-    <div className={`relative h-full ${className}`} onKeyDown={handleShortcuts}>
+    <div
+      className={`relative h-full ${className}`}
+      onKeyDown={handleShortcuts}
+    >
       <Canvas
         transformerRef={transformerRef}
         onDelete={async (ids) => {
@@ -335,9 +373,25 @@ function MarkCanvas({ className = "" }: { className?: string }) {
       </Canvas>
 
       <Toolbar>
-        <ToolbarAction Icon={CgAdd} onClick={loadImages} tooltip="Load Images (Shift+A)" />
-        <ToolbarAction Icon={FaPlay} size={4} onClick={() => convertMarks()} tooltip="Convert Marks (Shift+R)" />
+        <ToolbarAction Icon={CgAdd} onClick={pickAndLoadImages} tooltip="Load Images (Shift+A)" />
+        <ToolbarAction
+          Icon={FaPlay}
+          size={4}
+          onClick={() => convertMarks()}
+          tooltip="Convert Marks (Shift+R)"
+        />
       </Toolbar>
+
+      <Toolbar position="top-right">
+        <ToolbarAction Icon={Undo2} disabled={!canUndo} onClick={() => useMarkStore.temporal.getState().undo()} tooltip={`Undo (${getShortcutModifierLabel()}+Z)`} />
+        <ToolbarAction Icon={Redo2} disabled={!canRedo} onClick={() => useMarkStore.temporal.getState().redo()} tooltip={`Redo (Shift+${getShortcutModifierLabel()}+Z)`} />
+      </Toolbar>
+
+      <div
+        className={`absolute bg-green-500/10 inset-0 w-full h-full flex justify-center items-center transition-all duration-100 pointer-events-none ${dragHover ? "opacity-100" : "opacity-0"}`}
+      >
+        <CgAdd className="text-9xl text-light-main/90 drop-shadow-md drop-shadow-dark-main-darker/50" />
+      </div>
     </div>
   );
 }

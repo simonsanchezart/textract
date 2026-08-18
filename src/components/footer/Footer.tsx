@@ -1,4 +1,6 @@
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { join, resourceDir } from "@tauri-apps/api/path";
+import { openPath, openUrl } from "@tauri-apps/plugin-opener";
+import { FaBook } from "react-icons/fa";
 import { useShallow } from "zustand/react/shallow";
 import { useSettingsStore } from "@/stores/settings-store";
 import { getShortcutModifierLabel, snap as snapFn, snapPowerOfTwo } from "@/utils/utils";
@@ -21,14 +23,20 @@ function ShortcutHelper({ shortcut, description }: { shortcut: string; descripti
   );
 }
 
+async function openHelpDoc() {
+  const helpPath = await join(await resourceDir(), "resources", "help.html");
+  await openPath(helpPath);
+}
+
 export default function Footer() {
   const shortcutModifier = getShortcutModifierLabel();
-  const { snap, atlasResolution, atlasAlpha }
+  const { snap, atlasResolution, atlasAlpha, markHandleScale }
     = useSettingsStore(
       useShallow(s => ({
         snap: s.snap,
         atlasResolution: s.atlasResolution,
         atlasAlpha: s.atlasAlpha,
+        markHandleScale: s.markHandleScale,
       })),
     );
 
@@ -37,7 +45,7 @@ export default function Footer() {
       <div className="flex gap-2 text-light-main/50 align-baseline justify-center text-center">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="outline" size="icon-xs" className="rounded-full">?</Button>
+            <Button variant="outline" size="icon-xs" className="rounded-full cursor-pointer" onClick={openHelpDoc}><FaBook /></Button>
           </TooltipTrigger>
 
           <TooltipContent className="flex flex-col gap-2">
@@ -48,8 +56,12 @@ export default function Footer() {
             <hr />
 
             <ShortcutHelper shortcut={`${shortcutModifier}+Click`} description="Add Mark Point" />
+            <ShortcutHelper shortcut="Shift+Click (on point)" description="Add/Remove From Selection" />
+            <ShortcutHelper shortcut="Esc" description="Clear Point Selection" />
             <ShortcutHelper shortcut="Shift+R" description="Convert Marks" />
             <ShortcutHelper shortcut="Alt+Click" description="Delete Mark" />
+            <ShortcutHelper shortcut={`${shortcutModifier}+Z`} description="Undo" />
+            <ShortcutHelper shortcut={`Shift+${shortcutModifier}+Z`} description="Redo" />
 
             <hr />
 
@@ -58,17 +70,32 @@ export default function Footer() {
 
             <hr />
 
-            <small
-              onClick={async () => await openUrl("https://www.simonsanchez.art/")}
-              className="text-gray-400 hover:cursor-pointer hover:text-red"
-            >
-              made by simon sanchez
+            <small>
+              <a className="link" onClick={async () => await openUrl("https://www.simonsanchez.art/")}>
+                made by simon sanchez
+              </a>
+              {" "}
+              and
+              {" "}
+              <a className="link" onClick={async () => await openUrl("https://github.com/simonsanchezart/textract/graphs/contributors")}>
+                contributors
+              </a>
             </small>
           </TooltipContent>
         </Tooltip>
       </div>
 
       <div className="flex gap-4">
+        <FooterNumberSetting
+          title="Handles"
+          value={markHandleScale}
+          setValue={useSettingsStore.getState().setMarkHandleScale}
+          min={0.25}
+          max={4}
+          onIncrement={x => x + 0.1}
+          onDecrement={x => x - 0.1}
+          postProcess={x => Math.round(x * 10) / 10}
+        />
         <FooterNumberSetting
           title="Snap"
           value={snap}
