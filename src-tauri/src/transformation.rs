@@ -1,5 +1,6 @@
 use base64::{engine::general_purpose, Engine};
-use image::{open, RgbaImage};
+use image::metadata::Orientation;
+use image::{DynamicImage, ImageDecoder, ImageReader, RgbaImage};
 use imageproc::geometric_transformations::{warp_into, Interpolation, Projection};
 use rayon::{
     iter::{IndexedParallelIterator, ParallelIterator},
@@ -12,7 +13,7 @@ pub async fn transform_image(img_path: String, points: Vec<f32>) -> Result<Vec<S
     let mark_count = points.len() / 8;
     log::info!("Processing {mark_count} marks for {img_path}");
 
-    let img = open(&img_path).unwrap().to_rgba8();
+    let img = open_image_with_orientation(&img_path)?;
     let img_name = crate::utils::get_filename_or_invalid(&img_path);
 
     let buffers: Result<Vec<String>, String> = points
@@ -50,6 +51,17 @@ pub async fn transform_image(img_path: String, points: Vec<f32>) -> Result<Vec<S
 
     log::info!("Finished processing all marks for {}", img_name);
     buffers
+}
+
+/// Opens an image with its EXIF orientation applied, so pixel coordinates
+/// match what the frontend renders (the browser honors EXIF when displaying).
+fn open_image_with_orientation(img_path: &str) -> Result<RgbaImage, String> {
+    let reader = ImageReader::open(img_path).map_err(|e| e.to_string())?;
+    let mut decoder = reader.into_decoder().map_err(|e| e.to_string())?;
+    let orientation = decoder.orientation().unwrap_or(Orientation::NoTransforms);
+    let mut img = DynamicImage::from_decoder(decoder).map_err(|e| e.to_string())?;
+    img.apply_orientation(orientation);
+    Ok(img.to_rgba8())
 }
 
 fn get_quad_dimensions(points: &[(f32, f32); 4]) -> (f32, f32) {
