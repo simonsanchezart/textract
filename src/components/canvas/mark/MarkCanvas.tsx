@@ -1,3 +1,4 @@
+import type Konva from "konva";
 import type { AtlasImageType } from "@/stores/atlas-store";
 import type { MarkImageType } from "@/stores/mark-store";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
@@ -5,7 +6,6 @@ import { basename } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/plugin-dialog";
 import { exists } from "@tauri-apps/plugin-fs";
 import { info, warn } from "@tauri-apps/plugin-log";
-import Konva from "konva";
 import { Redo2, TrashIcon, Undo2 } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { CgAdd } from "react-icons/cg";
@@ -43,6 +43,9 @@ function MarkCanvas({ className = "" }: { className?: string }) {
   const canRedo = useStore(useMarkStore.temporal, s => s.futureStates.length > 0);
 
   const transformerRef = useRef<Konva.Transformer>(null);
+
+  const hoveredMarkId = hoverShape?.id() || null;
+  const hoveredMark = hoveredMarkId ? useMarkStore.getState().marks[hoveredMarkId] : undefined;
 
   useEffect(() => {
     const removeMissingImages = async () => {
@@ -152,29 +155,40 @@ function MarkCanvas({ className = "" }: { className?: string }) {
         break;
       }
       case "HOVERED": {
-        if (!hoverShape)
+        if (!hoverShape) {
+          // this code should be unreachable
+          toast.error("No mark under the pointer to convert");
+          warn("Convert Hovered: hoverShape was not set (right-click didn't land on a mark)");
           return;
+        }
 
-        const hoveredMarkId = hoverShape.id();
-        const hoverMark = marks[hoveredMarkId];
+        const hitId = hoverShape.id();
+        const hoverMark = marks[hitId];
 
-        if (!hoverMark)
+        if (!hoverMark) {
+          toast.warning("No mark under the pointer to convert");
+          warn(`Convert Hovered: no mark found for id "${hitId}" (hit a ${hoverShape.getClassName()} without a valid mark id)`);
           return;
+        }
 
         if (!hoverMark.dirty) {
           toast.warning("No need to process unmodified mark");
-          warn("No need to process unmodified mark");
+          warn(`Convert Hovered: mark "${hitId}" is not dirty, nothing to reprocess`);
           return;
         }
 
         const image = markImages[hoverMark.imageId];
-        if (!image)
+        if (!image) {
+          toast.warning("No mark under the pointer to convert");
+          warn(`Convert Hovered: mark "${hitId}" has no owning image`);
           return;
+        }
 
+        info(`Convert Hovered: converting mark "${hitId}"`);
         entries = [
           {
             image,
-            markIds: [hoveredMarkId],
+            markIds: [hitId],
           },
         ];
 
@@ -262,14 +276,18 @@ function MarkCanvas({ className = "" }: { className?: string }) {
 
           <ContextMenuSubContent>
             <ContextMenuGroup>
-              {hoverShape && hoverShape instanceof Konva.Line && (
-                <ContextMenuItem onClick={() => convertMarks("HOVERED")}>Hovered</ContextMenuItem>
-              )}
-              {selectedNodes.length > 0 && (
-                <ContextMenuItem onClick={() => convertMarks("SELECTED")}>
-                  Selected Images
-                </ContextMenuItem>
-              )}
+              {hoveredMark
+                && (
+                  <ContextMenuItem onClick={() => convertMarks("HOVERED")}>
+                    Hovered
+                  </ContextMenuItem>
+                )}
+              {selectedNodes.length > 0
+                && (
+                  <ContextMenuItem onClick={() => convertMarks("SELECTED")}>
+                    Selected Images
+                  </ContextMenuItem>
+                )}
 
               <ContextMenuItem onClick={() => convertMarks("ALL")}>
                 All
@@ -282,22 +300,25 @@ function MarkCanvas({ className = "" }: { className?: string }) {
         </ContextMenuSub>
       )}
 
-      {hoverShape && hoverShape instanceof Konva.Line && (
-        <ContextMenuGroup>
-          <ContextMenuItem
-            variant="destructive"
-            onClick={() => {
-              hoverShape.getAttr("removeMark")?.();
-            }}
-          >
-            <TrashIcon />
-            Remove Mark
-            <ContextMenuShortcut>
-              <span className="flex">Alt+LClick</span>
-            </ContextMenuShortcut>
-          </ContextMenuItem>
-        </ContextMenuGroup>
-      )}
+      {(hoveredMark && hoveredMarkId)
+        && (
+          <ContextMenuGroup>
+            <ContextMenuItem
+              variant="destructive"
+              onClick={() => {
+                useMarkStore.getState().removeMark(hoveredMarkId);
+              }}
+            >
+              <TrashIcon />
+              Remove Mark
+              <ContextMenuShortcut>
+                <span className="flex">
+                  Alt+LClick
+                </span>
+              </ContextMenuShortcut>
+            </ContextMenuItem>
+          </ContextMenuGroup>
+        )}
 
       <ContextMenuSeparator />
     </ContextMenuGroup>

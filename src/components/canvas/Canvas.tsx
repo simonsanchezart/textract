@@ -104,7 +104,12 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
                 return;
 
               const stage = stageRef.current;
-              const shape = stage.getIntersection(stage.getPointerPosition()!);
+              const pos = stage.getPointerPosition();
+              const shape = pos ? stage.getIntersection(pos) : null;
+              debug(
+                `Context menu hit-test: pos=${pos ? `${Math.round(pos.x)},${Math.round(pos.y)}` : "null"} `
+                + `shape=${shape ? shape.getClassName() : "none"} id="${shape?.id() ?? ""}"`,
+              );
               useCanvasStore.getState().setHoverShape(canvasType, shape);
             }}
             {...props}
