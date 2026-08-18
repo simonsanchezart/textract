@@ -4,6 +4,7 @@ import { temporal } from "zundo";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
+import { useMarkStore } from "./mark-store";
 import { leadingDebounce } from "./store-utils";
 
 export type AtlasImageType = {
@@ -79,6 +80,7 @@ export const useAtlasStore = create(
             if (!image)
               return;
 
+            useMarkStore.getState().updateMarkDirty(image.markId, true);
             delete state.images[imageId];
           }),
       })),
