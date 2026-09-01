@@ -2,9 +2,9 @@ import type Konva from "konva";
 import type { AtlasImageType } from "@/stores/atlas-store";
 import type { MarkImageType } from "@/stores/mark-store";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
-import { basename } from "@tauri-apps/api/path";
+import { appLocalDataDir, basename, dirname, extname, join, tempDir } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/plugin-dialog";
-import { exists } from "@tauri-apps/plugin-fs";
+import { copyFile, exists, mkdir } from "@tauri-apps/plugin-fs";
 import { info, warn } from "@tauri-apps/plugin-log";
 import { Redo2, TrashIcon, Undo2 } from "lucide-react";
 import { useEffect, useRef } from "react";
@@ -126,10 +126,26 @@ function MarkCanvas({ className = "" }: { className?: string }) {
 
   const dragHover = useDragNDrop({
     onDrop: async (payload) => {
-      const filteredFiles = payload.paths.filter((f) => {
+      const filteredFiles = await Promise.all(payload.paths.filter((f) => {
         const extension = f.split(".").pop()?.toLowerCase();
         return extension ? VALID_IMAGE_EXTENSIONS.includes(extension) : false;
-      });
+      }).map(async (f) => {
+        const isTemp = await dirname(f) === (await tempDir()).slice(0, -1);
+        if (!isTemp)
+          return f;
+
+        const appLocalData = await appLocalDataDir();
+        const fileExt = await extname(f);
+        const newFileName = `${await basename(f, fileExt) + crypto.randomUUID()}.${fileExt}`;
+
+        const cacheDir = await join(appLocalData, "cache");
+        if (!(await exists(cacheDir)))
+          await mkdir(cacheDir);
+        const targetPath = await join(cacheDir, newFileName);
+
+        await copyFile(f, targetPath);
+        return targetPath;
+      }));
 
       if (filteredFiles)
         await loadImages(filteredFiles);
