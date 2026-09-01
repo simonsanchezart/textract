@@ -23,17 +23,17 @@ Texture extractor from photos — reference & shortcuts
 
 ### Mark canvas (left panel)
 
-| Action                                | Shortcut                       |
-| ------------------------------------- | ------------------------------ |
-| Load images                           | `Shift+A`                      |
-| Add mark point (on image)             | `Cmd+Click` / `Ctrl+Click`     |
-| Add/Remove from Selection (on point)  | `Shift+Click`                  |
-| Clear Selection                       | `Esc`                          |
-| Reset point selection (while marking) | Right click                    |
-| Process / convert marks               | `Shift+R`                      |
-| Remove mark (on mark)                 | `Alt+Click`                    |
-| Undo                                  | `Cmd+Z` / `Ctrl+Z`             |
-| Redo                                  | `Shift+Cmd+Z` / `Shift+Ctrl+Z` |
+| Action                               | Shortcut                       |
+| ------------------------------------ | ------------------------------ |
+| Load images                          | `Shift+A`                      |
+| Add mark point (on image)            | `Cmd+Click` / `Ctrl+Click`     |
+| Add/Remove from Selection (on point) | `Shift+Click`                  |
+| Clear Selection                      | `Esc`                          |
+| Clear current points (while marking) | `Esc`                          |
+| Process / convert marks              | `Shift+R`                      |
+| Remove mark (on mark)                | `Alt+Click`                    |
+| Undo                                 | `Cmd+Z` / `Ctrl+Z`             |
+| Redo                                 | `Shift+Cmd+Z` / `Shift+Ctrl+Z` |
 
 ### Atlas canvas (right panel)
 

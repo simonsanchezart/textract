@@ -2,7 +2,7 @@ import type Konva from "konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 import type { MarkImageType } from "@/stores/mark-store";
 import type { Vec2 } from "@/types/types";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Group, Image, Line } from "react-konva";
 import useImage from "use-image";
 import { useShallow } from "zustand/react/shallow";
@@ -27,6 +27,18 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
     () => markHandleScale / (canvasZoom > 1 ? canvasZoom || 1 : 1),
     [markHandleScale, canvasZoom],
   );
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape")
+        setCurrentPoints([]);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   const addPoint = (e: KonvaEventObject<MouseEvent>) => {
     const pos = e.target.getRelativePointerPosition()!;
@@ -81,8 +93,6 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
       scale={imageData.scale}
       resetScale={() => useMarkStore.getState().updateImageScale(imageData.id, { x: 1.0, y: 1.0 })}
       onClick={(e) => {
-        if (e.evt.button === 2)
-          setCurrentPoints([]);
         if (e.evt.button === 0) {
           if (isShortcutModifierPressed(e.evt))
             addPoint(e);
