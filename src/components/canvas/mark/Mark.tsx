@@ -38,10 +38,18 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
   }, [points]);
 
   const edgeHandles = useMemo(() => {
-    const handleTop = { pos: lerpVec2(points[0], points[1], 0.5), points: [0, 1] };
-    const handleRight = { pos: lerpVec2(points[1], points[2], 0.5), points: [1, 2] };
-    const handleBottom = { pos: lerpVec2(points[2], points[3], 0.5), points: [2, 3] };
-    const handleLeft = { pos: lerpVec2(points[3], points[0], 0.5), points: [3, 0] };
+    // todo: extract func for rotation
+    const rotTop = Math.atan2(points[1].y - points[0].y, points[1].x - points[0].x) * (180 / Math.PI);
+    const handleTop = { pos: lerpVec2(points[0], points[1], 0.5), points: [0, 1], rotation: rotTop };
+
+    const rotRight = Math.atan2(points[2].y - points[1].y, points[2].x - points[1].x) * (180 / Math.PI);
+    const handleRight = { pos: lerpVec2(points[1], points[2], 0.5), points: [1, 2], rotation: rotRight };
+
+    const rotBottom = Math.atan2(points[3].y - points[2].y, points[3].x - points[2].x) * (180 / Math.PI);
+    const handleBottom = { pos: lerpVec2(points[2], points[3], 0.5), points: [2, 3], rotation: rotBottom };
+
+    const rotLeft = Math.atan2(points[0].y - points[3].y, points[0].x - points[3].x) * (180 / Math.PI);
+    const handleLeft = { pos: lerpVec2(points[3], points[0], 0.5), points: [3, 0], rotation: rotLeft };
     return { handles: [handleTop, handleRight, handleBottom, handleLeft] };
   }, [points]);
 
@@ -108,11 +116,12 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
         // eslint-disable-next-line react/no-array-index-key
           key={idx}
           draggable
-          offset={{ x: -markOffset.x, y: -markOffset.y }}
-          width={12 * scale}
+          offset={{ x: 12 * scale, y: 6 * scale }}
+          width={24 * scale}
           height={12 * scale}
-          x={handle.pos.x - 6 * scale}
-          y={handle.pos.y - 6 * scale}
+          x={handle.pos.x + markOffset.x}
+          y={handle.pos.y + markOffset.y}
+          rotation={handle.rotation}
           fill={Colors.LIGHT}
           shadowOffset={{ x: 0.5, y: 0.5 }}
           shadowOpacity={1}
