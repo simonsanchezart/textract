@@ -57,6 +57,7 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
         closed
         draggable
         onClick={(e) => {
+          e.cancelBubble = !(e.evt.ctrlKey || e.evt.shiftKey);
           if (e.evt.altKey)
             useMarkStore.getState().removeMark(mark.id);
           else
