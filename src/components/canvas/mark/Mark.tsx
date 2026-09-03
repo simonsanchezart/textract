@@ -2,11 +2,12 @@ import type Konva from "konva";
 import type { MarkType } from "@/stores/mark-store";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { Group, Line, Rect } from "react-konva";
+import { Group, Line } from "react-konva";
 import { useCanvasStore } from "@/stores/canvas-store";
 import { useMarkStore } from "@/stores/mark-store";
 import { CanvasType, Colors } from "@/types/types";
 import { angleBetweenPoints, lerpVec2, RAD_TO_DEG } from "@/utils/utils";
+import MarkEdgeHandle from "./MarkEdgeHandle";
 import MarkPoint from "./MarkPoint";
 
 function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
@@ -140,33 +141,13 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
       ))}
 
       {edgeHandles.handles.map((handle, idx) => (
-        // todo: extract into component
-        <Rect
-        // eslint-disable-next-line react/no-array-index-key
+        <MarkEdgeHandle
+          // eslint-disable-next-line react/no-array-index-key
           key={idx}
-          draggable
-          offset={{ x: 12 * scale, y: 6 * scale }}
-          width={24 * scale}
-          height={12 * scale}
-          x={handle.pos.x + markOffset.x}
-          y={handle.pos.y + markOffset.y}
+          position={handle.pos}
+          offset={markOffset}
           rotation={handle.rotation}
-          fill={Colors.LIGHT}
-          shadowOffset={{ x: 0.5, y: 0.5 }}
-          shadowOpacity={1}
-          cornerRadius={1}
-          onPointerEnter={(e) => {
-            e.target.to({
-              duration: 0.05,
-              fill: Colors.GREEN,
-            });
-          }}
-          onPointerLeave={(e) => {
-            e.target.to({
-              duration: 0.05,
-              fill: Colors.LIGHT,
-            });
-          }}
+          scaleFactor={scale}
           onDragStart={initDragStart}
           onDragMove={(e) => {
             // eslint-disable-next-line react-dom/no-flush-sync
