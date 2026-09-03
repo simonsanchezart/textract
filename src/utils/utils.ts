@@ -31,6 +31,12 @@ export function getMiddle(v: Vec2[]) {
   return average;
 }
 
+export const RAD_TO_DEG = (180 / Math.PI);
+
+export function angleBetweenPoints(a: Vec2, b: Vec2): number {
+  return Math.atan2(b.y - a.y, b.x - a.x);
+}
+
 export function lerpVec2(a: Vec2, b: Vec2, t: number): Vec2 {
   return {
     x: a.x + (b.x - a.x) * t,

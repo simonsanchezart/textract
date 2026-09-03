@@ -10,7 +10,7 @@ import { useCanvasStore } from "@/stores/canvas-store";
 import { useMarkStore } from "@/stores/mark-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { CanvasType, Colors } from "@/types/types";
-import { getMiddle, isShortcutModifierPressed } from "@/utils/utils";
+import { angleBetweenPoints, getMiddle, isShortcutModifierPressed } from "@/utils/utils";
 import Mark from "./Mark";
 import MarkPoint from "./MarkPoint";
 
@@ -47,8 +47,8 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
     if (updated.length === 4) {
       const center = getMiddle(updated);
       const sortedPoints = updated.sort((a, b) => {
-        const angleA = Math.atan2(center.y - a.y, center.x - a.x);
-        const angleB = Math.atan2(center.y - b.y, center.x - b.x);
+        const angleA = angleBetweenPoints(a, center);
+        const angleB = angleBetweenPoints(b, center);
 
         return angleA < angleB ? 1 : -1;
       });

@@ -1,3 +1,4 @@
+import type Konva from "konva";
 import type { MarkType } from "@/stores/mark-store";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
@@ -5,7 +6,7 @@ import { Group, Line, Rect } from "react-konva";
 import { useCanvasStore } from "@/stores/canvas-store";
 import { useMarkStore } from "@/stores/mark-store";
 import { CanvasType, Colors } from "@/types/types";
-import { lerpVec2 } from "@/utils/utils";
+import { angleBetweenPoints, lerpVec2, RAD_TO_DEG } from "@/utils/utils";
 import MarkPoint from "./MarkPoint";
 
 function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
@@ -29,6 +30,35 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
   // we calculate offset of other selected points from the dragged point offset
   const dragStartRef = useRef<{ points: typeof points; origin: { x: number; y: number } } | null>(null);
 
+  const initDragStart = (e: Konva.KonvaEventObject<DragEvent>) => {
+    dragStartRef.current = {
+      points,
+      origin: { x: e.target.x(), y: e.target.y() },
+    };
+  };
+
+  const updateMarkOffset = (e: Konva.KonvaEventObject<DragEvent>, points: number[]) => {
+    if (!dragStartRef.current)
+      return;
+
+    const dx = e.target.x() - dragStartRef.current.origin.x;
+    const dy = e.target.y() - dragStartRef.current.origin.y;
+    const start = dragStartRef.current.points;
+    setPoints(start.map((p, idx) => (points.includes(idx) ? { x: p.x + dx, y: p.y + dy } : p)));
+  };
+
+  const applyMarkOffset = (e: Konva.KonvaEventObject<DragEvent>, points: number[]) => {
+    if (!dragStartRef.current)
+      return;
+
+    const dx = e.target.x() - dragStartRef.current.origin.x;
+    const dy = e.target.y() - dragStartRef.current.origin.y;
+    const start = dragStartRef.current.points;
+    const next = start.map((p, idx) => (points.includes(idx) ? { x: p.x + dx, y: p.y + dy } : p));
+    setPoints(next);
+    useMarkStore.getState().updateMark(mark.id, next);
+  };
+
   const gridPoints = useMemo(() => {
     const gridLineY1 = { p1: lerpVec2(points[0], points[1], 0.33), p2: lerpVec2(points[3], points[2], 0.33) };
     const gridLineY2 = { p1: lerpVec2(points[0], points[1], 0.67), p2: lerpVec2(points[3], points[2], 0.67) };
@@ -38,17 +68,16 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
   }, [points]);
 
   const edgeHandles = useMemo(() => {
-    // todo: extract func for rotation
-    const rotTop = Math.atan2(points[1].y - points[0].y, points[1].x - points[0].x) * (180 / Math.PI);
+    const rotTop = angleBetweenPoints(points[0], points[1]) * RAD_TO_DEG;
     const handleTop = { pos: lerpVec2(points[0], points[1], 0.5), points: [0, 1], rotation: rotTop };
 
-    const rotRight = Math.atan2(points[2].y - points[1].y, points[2].x - points[1].x) * (180 / Math.PI);
+    const rotRight = angleBetweenPoints(points[1], points[2]) * RAD_TO_DEG;
     const handleRight = { pos: lerpVec2(points[1], points[2], 0.5), points: [1, 2], rotation: rotRight };
 
-    const rotBottom = Math.atan2(points[3].y - points[2].y, points[3].x - points[2].x) * (180 / Math.PI);
+    const rotBottom = angleBetweenPoints(points[2], points[3]) * RAD_TO_DEG;
     const handleBottom = { pos: lerpVec2(points[2], points[3], 0.5), points: [2, 3], rotation: rotBottom };
 
-    const rotLeft = Math.atan2(points[0].y - points[3].y, points[0].x - points[3].x) * (180 / Math.PI);
+    const rotLeft = angleBetweenPoints(points[3], points[0]) * RAD_TO_DEG;
     const handleLeft = { pos: lerpVec2(points[3], points[0], 0.5), points: [3, 0], rotation: rotLeft };
     return { handles: [handleTop, handleRight, handleBottom, handleLeft] };
   }, [points]);
@@ -138,34 +167,15 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
               fill: Colors.LIGHT,
             });
           }}
-          onDragStart={(e) => {
-            dragStartRef.current = {
-              points,
-              origin: { x: e.target.x(), y: e.target.y() },
-            };
-          }}
+          onDragStart={initDragStart}
           onDragMove={(e) => {
-            // todo: refactor, remove duplication
             // eslint-disable-next-line react-dom/no-flush-sync
             flushSync(() => {
-              if (dragStartRef.current) {
-                const dx = e.target.x() - dragStartRef.current.origin.x;
-                const dy = e.target.y() - dragStartRef.current.origin.y;
-                const start = dragStartRef.current.points;
-                setPoints(start.map((p, idx) => (handle.points.includes(idx) ? { x: p.x + dx, y: p.y + dy } : p)));
-              }
+              updateMarkOffset(e, handle.points);
             });
           }}
           onDragEnd={(e) => {
-            // todo: refactor, remove duplication
-            if (dragStartRef.current) {
-              const dx = e.target.x() - dragStartRef.current.origin.x;
-              const dy = e.target.y() - dragStartRef.current.origin.y;
-              const start = dragStartRef.current.points;
-              const next = start.map((p, idx) => (handle.points.includes(idx) ? { x: p.x + dx, y: p.y + dy } : p));
-              setPoints(next);
-              useMarkStore.getState().updateMark(mark.id, next);
-            }
+            applyMarkOffset(e, handle.points);
             useMarkStore.getState().updateMarkDirty(mark.id, true);
             dragStartRef.current = null;
           }}
@@ -194,21 +204,13 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
                 useCanvasStore.getState().selectPoint(CanvasType.MARK, mark.id, id);
               }
             }}
-            onDragStart={(e) => {
-              dragStartRef.current = {
-                points,
-                origin: { x: e.target.x(), y: e.target.y() },
-              };
-            }}
+            onDragStart={initDragStart}
             onDragMove={(e) => {
               // eslint-disable-next-line react-dom/no-flush-sync
               flushSync(() => {
-                const isMultiDrag = selectedIndices.includes(id) && selectedIndices.length > 1 && dragStartRef.current;
+                const isMultiDrag = selectedIndices.includes(id) && selectedIndices.length > 1;
                 if (isMultiDrag && dragStartRef.current) {
-                  const dx = e.target.x() - dragStartRef.current.origin.x;
-                  const dy = e.target.y() - dragStartRef.current.origin.y;
-                  const start = dragStartRef.current.points;
-                  setPoints(start.map((p, idx) => (selectedIndices.includes(idx) ? { x: p.x + dx, y: p.y + dy } : p)));
+                  updateMarkOffset(e, selectedIndices);
                 }
                 else {
                   setPoints((prev) => {
@@ -220,18 +222,11 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
               });
             }}
             onDragEnd={(e) => {
-              const isMultiDrag = selectedIndices.includes(id) && selectedIndices.length > 1 && dragStartRef.current;
-              if (isMultiDrag && dragStartRef.current) {
-                const dx = e.target.x() - dragStartRef.current.origin.x;
-                const dy = e.target.y() - dragStartRef.current.origin.y;
-                const start = dragStartRef.current.points;
-                const next = start.map((p, idx) => (selectedIndices.includes(idx) ? { x: p.x + dx, y: p.y + dy } : p));
-                setPoints(next);
-                useMarkStore.getState().updateMark(mark.id, next);
-              }
-              else {
+              const isMultiDrag = selectedIndices.includes(id) && selectedIndices.length > 1;
+              if (isMultiDrag)
+                applyMarkOffset(e, selectedIndices);
+              else
                 useMarkStore.getState().updateMarkPoint(mark.id, id, { x: e.target.x(), y: e.target.y() });
-              }
               useMarkStore.getState().updateMarkDirty(mark.id, true);
               dragStartRef.current = null;
             }}
