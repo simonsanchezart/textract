@@ -87,7 +87,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
       img.src = assetUrl;
       await img.decode();
 
-      const scaleFactor = 512 / img.width;
+      const scaleFactor = 1024 / img.width;
       const scaledWidth = img.width * scaleFactor;
       const scaledHeight = img.height * scaleFactor;
       const snappedWidth = snap(scaledWidth, snapSize);
