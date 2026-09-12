@@ -20,29 +20,28 @@ Texture extractor from photos — reference & shortcuts
 | Context menu          | Right click                            |
 | Select all            | `Cmd+A` / `Ctrl+A`                     |
 | Delete selected image | `Delete`                               |
+| Undo                  | `Cmd+Z` / `Ctrl+Z`                     |
+| Redo                  | `Shift+Cmd+Z` / `Shift+Ctrl+Z`         |
 
 ### Mark canvas (left panel)
 
-| Action                               | Shortcut                       |
-| ------------------------------------ | ------------------------------ |
-| Load images                          | `Shift+A`                      |
-| Add mark point (on image)            | `Cmd+Click` / `Ctrl+Click`     |
-| Add/Remove from Selection (on point) | `Shift+Click`                  |
-| Clear Selection                      | `Esc`                          |
-| Clear current points (while marking) | `Esc`                          |
-| Process / convert marks              | `Shift+R`                      |
-| Remove mark (on mark)                | `Alt+Click`                    |
-| Undo                                 | `Cmd+Z` / `Ctrl+Z`             |
-| Redo                                 | `Shift+Cmd+Z` / `Shift+Ctrl+Z` |
+| Action                               | Shortcut                   |
+| ------------------------------------ | -------------------------- |
+| Load images                          | `Shift+A`                  |
+| Add mark point (on image)            | `Cmd+Click` / `Ctrl+Click` |
+| Add/Remove from Selection (on point) | `Shift+Click`              |
+| Clear Selection                      | `Esc`                      |
+| Clear current points (while marking) | `Esc`                      |
+| Process / convert marks              | `Shift+R`                  |
+| Remove mark (on mark)                | `Alt+Click`                |
+| Quick Zoom                           | `Space` (hold)             |
 
 ### Atlas canvas (right panel)
 
-| Action          | Shortcut                       |
-| --------------- | ------------------------------ |
-| Export atlas    | `Cmd+E` / `Ctrl+E`             |
-| Export selected | `Cmd+S` / `Ctrl+S`             |
-| Undo            | `Cmd+Z` / `Ctrl+Z`             |
-| Redo            | `Shift+Cmd+Z` / `Shift+Ctrl+Z` |
+| Action          | Shortcut           |
+| --------------- | ------------------ |
+| Export atlas    | `Cmd+E` / `Ctrl+E` |
+| Export selected | `Cmd+S` / `Ctrl+S` |
 
 ---
 
