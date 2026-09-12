@@ -1,17 +1,12 @@
 import type Konva from "konva";
 import { useCallback } from "react";
 
-type CanvasGridSettings = {
-  dotSpacing?: number;
-  dotSize?: number;
-  zoomLimit?: number;
-};
-
-export default function useCanvasGrid(settings: CanvasGridSettings, stageRef: React.RefObject<Konva.Stage | null>) {
-  const { dotSpacing = 16, dotSize = 0.5, zoomLimit = 2.0 } = settings;
+export default function useCanvasGrid(stageRef: React.RefObject<Konva.Stage | null>, dotSpacing: number = 16) {
+  const DOT_SIZE = 0.5;
 
   const drawGrid = useCallback((ctx: Konva.Context, shape: Konva.Shape) => {
     const clampedSpacing = Math.max(16, dotSpacing);
+    const zoomLimit = 2.0 / (dotSpacing / 10);
 
     const stage = stageRef.current;
     if (!stage)
@@ -43,14 +38,14 @@ export default function useCanvasGrid(settings: CanvasGridSettings, stageRef: Re
     for (let x = firstX; x < endX; x += clampedSpacing) {
       for (let y = firstY; y < endY; y += clampedSpacing) {
         ctx.beginPath();
-        ctx.arc(x, y, dotSize, 0, Math.PI * 2, false);
+        ctx.arc(x, y, DOT_SIZE / (scale * 0.25), 0, Math.PI * 2, false);
         ctx.closePath();
         ctx.fill();
       }
     }
 
     ctx.fillStrokeShape(shape);
-  }, [dotSpacing, dotSize, zoomLimit, stageRef]);
+  }, [dotSpacing, stageRef]);
 
   return drawGrid;
 }
