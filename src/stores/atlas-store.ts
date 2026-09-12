@@ -86,12 +86,6 @@ export const useAtlasStore = create(
       })),
       {
         limit: 50,
-        // Same leading-edge requirement as mark-store's undo (see its own
-        // comment for the full reasoning): a transform gesture fires 3
-        // separate set() calls (scale, rotation, position) that must
-        // coalesce into one undo step, and zundo's handleSet receives the
-        // state from BEFORE the triggering set, so only a leading-edge
-        // debounce restores to the pre-gesture state rather than a no-op.
         handleSet: handleSet => leadingDebounce<typeof handleSet>(handleSet, 300),
       },
     ),
