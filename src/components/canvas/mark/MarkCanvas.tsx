@@ -100,7 +100,6 @@ function MarkCanvas({ className = "" }: { className?: string }) {
         },
         rotation: 0,
         scale: { x: snapScaleX, y: snapScaleY },
-        sizeSum: img.width + img.height,
         markIds: [],
       };
 
