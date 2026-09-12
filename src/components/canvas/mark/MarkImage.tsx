@@ -96,7 +96,7 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
         if (e.evt.button === 0) {
           if (isShortcutModifierPressed(e.evt))
             addPoint(e);
-          useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
+          useCanvasStore.getState().clearSelectedPoints();
         }
       }}
       onDragStart={(e) => {
