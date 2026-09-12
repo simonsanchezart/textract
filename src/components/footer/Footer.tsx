@@ -16,8 +16,10 @@ function ShortcutHelper({ shortcut, description }: { shortcut: string; descripti
         <b>{shortcut}</b>
         {" "}
         -
-        {" "}
-        <span className="opacity-50">{description}</span>
+        <span className="opacity-50">
+          {" "}
+          {description}
+        </span>
       </span>
     </>
   );
@@ -30,22 +32,28 @@ async function openHelpDoc() {
 
 export default function Footer() {
   const shortcutModifier = getShortcutModifierLabel();
-  const { snap, atlasResolution, atlasAlpha, markHandleScale }
-    = useSettingsStore(
-      useShallow(s => ({
-        snap: s.snap,
-        atlasResolution: s.atlasResolution,
-        atlasAlpha: s.atlasAlpha,
-        markHandleScale: s.markHandleScale,
-      })),
-    );
+  const { snap, atlasResolution, atlasAlpha, markHandleScale } = useSettingsStore(
+    useShallow(s => ({
+      snap: s.snap,
+      atlasResolution: s.atlasResolution,
+      atlasAlpha: s.atlasAlpha,
+      markHandleScale: s.markHandleScale,
+    })),
+  );
 
   return (
     <div className="bg-dark-main-darker/80 p-1.5 px-3 flex gap-6 items-center justify-between ring-1 ring-primary/25 z-10">
       <div className="flex gap-2 text-light-main/50 align-baseline justify-center text-center">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="outline" size="icon-xs" className="rounded-full cursor-pointer" onClick={openHelpDoc}><FaBook /></Button>
+            <Button
+              variant="outline"
+              size="icon-xs"
+              className="rounded-full cursor-pointer"
+              onClick={openHelpDoc}
+            >
+              <FaBook />
+            </Button>
           </TooltipTrigger>
 
           <TooltipContent className="flex flex-col gap-2">
@@ -60,6 +68,7 @@ export default function Footer() {
             <ShortcutHelper shortcut="Esc" description="Clear Point Selection" />
             <ShortcutHelper shortcut="Shift+R" description="Convert Marks" />
             <ShortcutHelper shortcut="Alt+Click" description="Delete Mark" />
+            <ShortcutHelper shortcut="Space (hold)" description="Quick Zoom" />
             <ShortcutHelper shortcut={`${shortcutModifier}+Z`} description="Undo" />
             <ShortcutHelper shortcut={`Shift+${shortcutModifier}+Z`} description="Redo" />
 
@@ -77,7 +86,11 @@ export default function Footer() {
               {" "}
               and
               {" "}
-              <a className="link" onClick={async () => await openUrl("https://github.com/simonsanchezart/textract/graphs/contributors")}>
+              <a
+                className="link"
+                onClick={async () =>
+                  await openUrl("https://github.com/simonsanchezart/textract/graphs/contributors")}
+              >
                 contributors
               </a>
             </small>
@@ -120,7 +133,11 @@ export default function Footer() {
           className="w-18"
         />
 
-        <FooterBooleanSetting value={atlasAlpha} setValue={useSettingsStore.getState().setAtlasAlpha} name="Transparent Background" />
+        <FooterBooleanSetting
+          value={atlasAlpha}
+          setValue={useSettingsStore.getState().setAtlasAlpha}
+          name="Transparent Background"
+        />
       </div>
     </div>
   );
