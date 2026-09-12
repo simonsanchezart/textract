@@ -9,13 +9,21 @@ import { Layer, Shape, Stage, Transformer } from "react-konva";
 import useCanvasGrid from "@/components/canvas/hooks/use-canvas-grid";
 import useCanvasSelection from "@/components/canvas/hooks/use-canvas-selection";
 import useTransformSnapping from "@/components/canvas/hooks/use-canvas-snapping";
-import useCanvasZoom from "@/components/canvas/hooks/use-canvas-zoom";
+import useCanvasZoom, { zoomCanvas } from "@/components/canvas/hooks/use-canvas-zoom";
 import { useCanvasStore } from "@/stores/canvas-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { CanvasType } from "@/types/types";
 import { isShortcutModifierPressed } from "@/utils/utils";
 import PopupConfirm from "../PopupConfirm";
-import { ContextMenu, ContextMenuContent, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuShortcut, ContextMenuTrigger } from "../ui/ContextMenu";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuGroup,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuShortcut,
+  ContextMenuTrigger,
+} from "../ui/ContextMenu";
 import useCanvasPanning from "./hooks/use-canvas-panning";
 
 type CanvasProps = {
@@ -56,7 +64,10 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
     transformerRef.current?.nodes([]);
   }, [onDelete, transformerRef]);
 
-  const handleShortcuts = async (e: React.KeyboardEvent<HTMLDivElement>) => {
+  const onKeyDown = async (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.code === "Space" && !e.repeat && canvasType === CanvasType.MARK)
+      zoomCanvas({ canvasType, stageRef, zoomMultiplier: 10, direction: 1 });
+
     switch (e.code) {
       case "Delete":
         confirmImageDelete();
@@ -70,8 +81,13 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
     }
   };
 
+  const onKeyUp = async (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.code === "Space" && canvasType === CanvasType.MARK)
+      zoomCanvas({ canvasType, stageRef, zoomMultiplier: 10, direction: -1 });
+  };
+
   return (
-    <div className="h-full" tabIndex={-1} onKeyDown={handleShortcuts}>
+    <div className="h-full" tabIndex={-1} onKeyDown={onKeyDown} onKeyUp={onKeyUp}>
       <PopupConfirm
         title="Delete Selected"
         description="Are you sure you want to delete the selected images?"
@@ -148,29 +164,29 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
         <ContextMenuContent onContextMenu={e => e.preventDefault()}>
           {contextMenu}
 
-          {selectedNodes.length > 0
-            && (
-              <>
-                <ContextMenuGroup>
-                  <ContextMenuItem onClick={() => {
+          {selectedNodes.length > 0 && (
+            <>
+              <ContextMenuGroup>
+                <ContextMenuItem
+                  onClick={() => {
                     transformerRef.current?.nodes().forEach((n) => {
                       n.getAttr("resetScale")?.();
                     });
                   }}
-                  >
-                    <IoIosResize />
-                    Reset Scale
-                  </ContextMenuItem>
+                >
+                  <IoIosResize />
+                  Reset Scale
+                </ContextMenuItem>
 
-                  <ContextMenuItem variant="destructive" onClick={confirmImageDelete}>
-                    <TrashIcon />
-                    Delete Images
-                    <ContextMenuShortcut>Del</ContextMenuShortcut>
-                  </ContextMenuItem>
-                </ContextMenuGroup>
-                <ContextMenuSeparator />
-              </>
-            )}
+                <ContextMenuItem variant="destructive" onClick={confirmImageDelete}>
+                  <TrashIcon />
+                  Delete Images
+                  <ContextMenuShortcut>Del</ContextMenuShortcut>
+                </ContextMenuItem>
+              </ContextMenuGroup>
+              <ContextMenuSeparator />
+            </>
+          )}
 
           <ContextMenuGroup>
             <ContextMenuItem onClick={resetPan}>
