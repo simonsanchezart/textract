@@ -28,9 +28,9 @@ type CanvasStore = {
 
   setSelectedNodes: (canvas: CanvasType, nodes: Node<NodeConfig>[]) => void;
   setHoverShape: (canvas: CanvasType, shape: Konva.Shape | null) => void;
-  selectPoint: (canvas: CanvasType, markId: string, pointIndex: number) => void;
-  togglePointSelection: (canvas: CanvasType, markId: string, pointIndex: number) => void;
-  clearSelectedPoints: (canvas: CanvasType) => void;
+  selectPoint: (markId: string, pointIndex: number) => void;
+  togglePointSelection: (markId: string, pointIndex: number) => void;
+  clearSelectedPoints: () => void;
 };
 
 export const useCanvasStore = create(
@@ -61,22 +61,22 @@ export const useCanvasStore = create(
         set((state) => {
           state.transientCanvas[canvas].hoverShape = shape;
         }),
-      selectPoint: (canvas, markId, pointIndex) =>
+      selectPoint: (markId, pointIndex) =>
         set((state) => {
-          state.transientCanvas[canvas].selectedPoints = [{ markId, pointIndex }];
+          state.transientCanvas[CanvasType.MARK].selectedPoints = [{ markId, pointIndex }];
         }),
-      togglePointSelection: (canvas, markId, pointIndex) =>
+      togglePointSelection: (markId, pointIndex) =>
         set((state) => {
-          const points = state.transientCanvas[canvas].selectedPoints;
+          const points = state.transientCanvas[CanvasType.MARK].selectedPoints;
           const existingIdx = points.findIndex(p => p.markId === markId && p.pointIndex === pointIndex);
           if (existingIdx >= 0)
             points.splice(existingIdx, 1);
           else
             points.push({ markId, pointIndex });
         }),
-      clearSelectedPoints: canvas =>
+      clearSelectedPoints: () =>
         set((state) => {
-          state.transientCanvas[canvas].selectedPoints = [];
+          state.transientCanvas[CanvasType.MARK].selectedPoints = [];
         }),
     })),
     {

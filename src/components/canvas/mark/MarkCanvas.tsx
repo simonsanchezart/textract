@@ -351,7 +351,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
           convertMarks();
         break;
       case "Escape":
-        useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
+        useCanvasStore.getState().clearSelectedPoints();
         break;
       case "KeyZ":
         if (isShortcutModifierPressed(e)) {

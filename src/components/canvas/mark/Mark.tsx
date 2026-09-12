@@ -101,7 +101,7 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
           if (e.evt.altKey)
             useMarkStore.getState().removeMark(mark.id);
           else
-            useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
+            useCanvasStore.getState().clearSelectedPoints();
         }}
         onDragMove={(e) => {
           // flushSync forces React to update the DOM
@@ -148,7 +148,9 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
           offset={markOffset}
           rotation={handle.rotation}
           scaleFactor={scale}
-          onDragStart={initDragStart}
+          onDragStart={
+            initDragStart
+          }
           onDragMove={(e) => {
             // eslint-disable-next-line react-dom/no-flush-sync
             flushSync(() => {
@@ -177,12 +179,12 @@ function Mark({ mark, scale = 1 }: { mark: MarkType; scale?: number }) {
               // stop propagation to parents
               e.cancelBubble = true;
               if (e.evt.shiftKey) {
-                useCanvasStore.getState().togglePointSelection(CanvasType.MARK, mark.id, id);
+                useCanvasStore.getState().togglePointSelection(mark.id, id);
               }
               else {
                 if (selectedIndices.includes(id))
-                  useCanvasStore.getState().clearSelectedPoints(CanvasType.MARK);
-                useCanvasStore.getState().selectPoint(CanvasType.MARK, mark.id, id);
+                  useCanvasStore.getState().clearSelectedPoints();
+                useCanvasStore.getState().selectPoint(mark.id, id);
               }
             }}
             onDragStart={initDragStart}
