@@ -91,7 +91,7 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
       y={imageData.position.y}
       rotation={imageData.rotation}
       scale={imageData.scale}
-      resetScale={() => useMarkStore.getState().updateImageScale(imageData.id, { x: 1.0, y: 1.0 })}
+      resetScale={() => useMarkStore.getState().updateImageScale(imageData.id, imageData.initialScale)}
       onClick={(e) => {
         if (e.evt.button === 0) {
           if (isShortcutModifierPressed(e.evt))

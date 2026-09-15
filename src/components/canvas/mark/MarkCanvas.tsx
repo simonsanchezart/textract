@@ -87,19 +87,26 @@ function MarkCanvas({ className = "" }: { className?: string }) {
       img.src = assetUrl;
       await img.decode();
 
-      const snapScaleX = snap(img.width, snapSize) / img.width;
-      const snapScaleY = snap(img.height, snapSize) / img.height;
+      const scaleFactor = 1024 / img.width;
+      const scaledWidth = img.width * scaleFactor;
+      const scaledHeight = img.height * scaleFactor;
+      const snappedWidth = snap(scaledWidth, snapSize);
+      const snappedHeight = snap(scaledHeight, snapSize);
+
+      const imagePosition = {
+        x: snap(centerX - snappedWidth / 2, snapSize),
+        y: snap(centerY - snappedHeight / 2, snapSize),
+      };
+      const imageScale = { x: snappedWidth / img.width, y: snappedHeight / img.height };
 
       const markImage: MarkImageType = {
         id: crypto.randomUUID(),
         filepath: imgPath,
         src: assetUrl,
-        position: {
-          x: snap(centerX - img.width / 2, snapSize),
-          y: snap(centerY - img.height / 2, snapSize),
-        },
+        position: imagePosition,
         rotation: 0,
-        scale: { x: snapScaleX, y: snapScaleY },
+        scale: imageScale,
+        initialScale: imageScale,
         markIds: [],
       };
 
@@ -242,14 +249,17 @@ function MarkCanvas({ className = "" }: { className?: string }) {
           const img = new Image();
           img.src = base64;
           await img.decode();
-          const snapScaleX = snap(img.width, snapSize) / img.width;
-          const snapScaleY = snap(img.height, snapSize) / img.height;
+
+          const scaleFactor = (useSettingsStore.getState().atlasResolution / 4) / img.width;
+          const scaledWidth = img.width * scaleFactor;
+          const scaledHeight = img.height * scaleFactor;
+          const snappedWidth = snap(scaledWidth, snapSize);
+          const snappedHeight = snap(scaledHeight, snapSize);
+
+          const imageScale = { x: snappedWidth / img.width, y: snappedHeight / img.height };
 
           if (existingAtlasImage) {
             useAtlasStore.getState().updateImageBase64(existingAtlasImage.id, base64);
-            useAtlasStore
-              .getState()
-              .updateImageScale(existingAtlasImage.id, { x: snapScaleX, y: snapScaleY });
           }
           else {
             const atlasImage: AtlasImageType = {
@@ -258,7 +268,8 @@ function MarkCanvas({ className = "" }: { className?: string }) {
               markId,
               position: { x: 0, y: 0 },
               rotation: 0,
-              scale: { x: snapScaleX, y: snapScaleY },
+              scale: imageScale,
+              initialScale: imageScale,
             };
 
             useAtlasStore.getState().addImage(atlasImage);

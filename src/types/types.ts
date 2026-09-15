@@ -1,6 +1,7 @@
 export type ImageType = {
   id: string;
   position: Vec2;
+  initialScale: Vec2;
   scale: Vec2;
   rotation: number;
 };
