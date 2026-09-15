@@ -1,5 +1,7 @@
 import type { ClassValue } from "clsx";
 import type { Vec2 } from "@/types/types";
+import { appLocalDataDir, join } from "@tauri-apps/api/path";
+import { exists, mkdir } from "@tauri-apps/plugin-fs";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -7,6 +9,15 @@ export const VALID_IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "bmp"];
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+export async function getCacheDirectory() {
+  const appLocalData = await appLocalDataDir();
+  const cacheDir = await join(appLocalData, "cache");
+  if (!(await exists(cacheDir)))
+    await mkdir(cacheDir);
+
+  return cacheDir;
 }
 
 function isMacOS() {

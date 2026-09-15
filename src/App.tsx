@@ -1,8 +1,10 @@
+import { useEffect } from "react";
 import { Toaster } from "sonner";
 import Footer from "./components/footer/Footer";
 import Navbar from "./components/Navbar";
 import Textract from "./components/Textract";
 import useAutoUpdater from "./hooks/UseAutoUpdater";
+import { useSettingsStore } from "./stores/settings-store";
 import { isShortcutModifierPressed } from "./utils/utils";
 import "./app.css";
 
@@ -13,6 +15,9 @@ function App() {
   });
 
   useAutoUpdater();
+  useEffect(() => {
+    useSettingsStore.getState().calculateCacheSize();
+  });
 
   return (
     <main className="flex flex-col h-full text-light-main dark">
