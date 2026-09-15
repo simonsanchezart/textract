@@ -22,7 +22,7 @@ function CanvasSplitter({ className }: { className?: string }) {
           onDoubleClick={(e) => {
             if ((e.target as HTMLElement).closest("[data-no-panel-resize]"))
               return;
-            leftPanelRef.current?.resize("80%");
+            leftPanelRef.current?.resize("90%");
           }}
         >
           <MarkCanvas />
@@ -45,7 +45,7 @@ function CanvasSplitter({ className }: { className?: string }) {
           onDoubleClick={(e) => {
             if ((e.target as HTMLElement).closest("[data-no-panel-resize]"))
               return;
-            leftPanelRef.current?.resize("20%");
+            leftPanelRef.current?.resize("10%");
           }}
         >
           <AtlasCanvas />
