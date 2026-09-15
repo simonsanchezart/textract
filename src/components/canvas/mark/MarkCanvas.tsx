@@ -38,6 +38,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
   const atlasImages = useAtlasStore(state => state.images);
   const selectedNodes = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].selectedNodes);
   const hoverShape = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].hoverShape);
+  const canvasZoom = useCanvasStore(s => s.canvas[CanvasType.MARK].scale);
   const snapSize = useSettingsStore(s => s.snap);
   const canUndo = useStore(useMarkStore.temporal, s => s.pastStates.length > 0);
   const canRedo = useStore(useMarkStore.temporal, s => s.futureStates.length > 0);
@@ -390,8 +391,8 @@ function MarkCanvas({ className = "" }: { className?: string }) {
         contextMenu={contextMenu()}
         canvasType={CanvasType.MARK}
       >
-        <Line points={[0, -10e10, 0, 10e10]} stroke="green" strokeWidth={1} opacity={0.5} listening={false} />
-        <Line points={[-10e10, 0, 10e10, 0]} stroke="red" strokeWidth={1} opacity={0.5} listening={false} />
+        <Line points={[0, -10e10, 0, 10e10]} stroke="green" strokeWidth={1 / canvasZoom} opacity={0.5} listening={false} />
+        <Line points={[-10e10, 0, 10e10, 0]} stroke="red" strokeWidth={1 / canvasZoom} opacity={0.5} listening={false} />
 
         {Object.values(markImages).map((i) => {
           return <MarkImage key={i.id} imageData={i} />;
