@@ -1,5 +1,5 @@
 import { openPath } from "@tauri-apps/plugin-opener";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FaCog } from "react-icons/fa";
 import { IoMdRefresh } from "react-icons/io";
 import { useShallow } from "zustand/react/shallow";
