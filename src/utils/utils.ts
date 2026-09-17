@@ -20,6 +20,19 @@ export async function getCacheDirectory() {
   return cacheDir;
 }
 
+export async function getLogFile() {
+  const appLocalData = await appLocalDataDir();
+  const logDir = await join(appLocalData, "logs");
+  if (!(await exists(logDir)))
+    return;
+
+  const logFile = await join(logDir, "Textract.log");
+  if (!(await exists(logFile)))
+    return;
+
+  return logFile;
+}
+
 function isMacOS() {
   return navigator.platform.toLowerCase().includes("mac");
 }
