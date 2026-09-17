@@ -1,3 +1,4 @@
+import { debug } from "@tauri-apps/plugin-log";
 import { useEffect } from "react";
 import { Toaster } from "sonner";
 import Footer from "./components/footer/Footer";
@@ -15,7 +16,9 @@ function App() {
   });
 
   useAutoUpdater();
+
   useEffect(() => {
+    debug("Starting app...");
     useSettingsStore.getState().calculateCacheSize();
   });
 
@@ -35,7 +38,6 @@ function App() {
         toastOptions={{
           style: { minWidth: "280px", maxWidth: "320px" },
         }}
-
       />
     </main>
   );
