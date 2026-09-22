@@ -34,6 +34,18 @@
       "allow": [
         {
           "path": "**/*"
+        },
+        {
+          "path": "/**/*"
+        },
+        {
+          "path": "$APPLOCALDATA"
+        },
+        {
+          "path": "$APPLOCALDATA/**/*"
+        },
+        {
+          "path": "$RESOURCE/**/*"
         }
       ]
     },
