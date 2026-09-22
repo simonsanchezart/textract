@@ -14,8 +14,7 @@ export function cn(...inputs: ClassValue[]) {
 export async function getCacheDirectory() {
   const appLocalData = await appLocalDataDir();
   const cacheDir = await join(appLocalData, "cache");
-  if (!(await exists(cacheDir)))
-    await mkdir(cacheDir);
+  await mkdir(cacheDir, { recursive: true });
 
   return cacheDir;
 }
