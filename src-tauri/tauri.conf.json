@@ -27,7 +27,8 @@
         "scope": {
           "requireLiteralLeadingDot": false,
           "allow": [
-            "**/*"
+            "**/*",
+            "/**/*"
           ]
         }
       }
@@ -56,6 +57,9 @@
     "shortDescription": "Texture extractor from photos"
   },
   "plugins": {
+    "fs": {
+      "requireLiteralLeadingDot": false
+    },
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDA0NTg1QjA4Nzk2OEFGNDYKUldSR3IyaDVDRnRZQkMxbUlXMzExeWJCU0tFTVlENzFiSEpOQXUzSnAxMG9SQUY4aGJsalNjLy8K",
       "endpoints": [

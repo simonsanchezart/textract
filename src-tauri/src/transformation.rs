@@ -37,7 +37,7 @@ pub async fn transform_image(img_path: String, points: Vec<f32>) -> Result<Vec<S
             warp_into(
                 &img,
                 &proj,
-                Interpolation::Bilinear, // todo: pass interpolation as parameter
+                Interpolation::Bilinear,
                 image::Rgba([0, 0, 0, 0]),
                 &mut result,
             );

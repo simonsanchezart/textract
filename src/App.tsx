@@ -1,8 +1,11 @@
+import { debug } from "@tauri-apps/plugin-log";
+import { useEffect } from "react";
 import { Toaster } from "sonner";
 import Footer from "./components/footer/Footer";
 import Navbar from "./components/Navbar";
 import Textract from "./components/Textract";
 import useAutoUpdater from "./hooks/UseAutoUpdater";
+import { useSettingsStore } from "./stores/settings-store";
 import { isShortcutModifierPressed } from "./utils/utils";
 import "./app.css";
 
@@ -13,6 +16,11 @@ function App() {
   });
 
   useAutoUpdater();
+
+  useEffect(() => {
+    debug("Starting app...");
+    useSettingsStore.getState().calculateCacheSize();
+  });
 
   return (
     <main className="flex flex-col h-full text-light-main dark">
@@ -30,7 +38,6 @@ function App() {
         toastOptions={{
           style: { minWidth: "280px", maxWidth: "320px" },
         }}
-
       />
     </main>
   );

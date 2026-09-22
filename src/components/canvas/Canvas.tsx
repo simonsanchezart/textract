@@ -6,6 +6,7 @@ import { EyeIcon, TrashIcon } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import { IoIosResize } from "react-icons/io";
 import { Layer, Shape, Stage, Transformer } from "react-konva";
+import { useShallow } from "zustand/react/shallow";
 import useCanvasGrid from "@/components/canvas/hooks/use-canvas-grid";
 import useCanvasSelection from "@/components/canvas/hooks/use-canvas-selection";
 import useTransformSnapping from "@/components/canvas/hooks/use-canvas-snapping";
@@ -39,7 +40,13 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
   const STAGE_SIZE = 2048;
   const stageRef = useRef<Konva.Stage>(null);
 
-  const snapSize = useSettingsStore(s => s.snap);
+  const { snapSize, showGrid } = useSettingsStore(
+    useShallow(s => ({
+      snapSize: s.snap,
+      showGrid: s.showGrid,
+    })),
+  );
+
   const canvasState = useCanvasStore(s => s.canvas[canvasType]);
 
   const drawGrid = useCanvasGrid(stageRef, snapSize);
@@ -131,7 +138,7 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
             {...props}
           >
             <Layer listening={false}>
-              <Shape sceneFunc={drawGrid} />
+              <Shape sceneFunc={showGrid ? drawGrid : () => {}} />
             </Layer>
 
             <Layer>

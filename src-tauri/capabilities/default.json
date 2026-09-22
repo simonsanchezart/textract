@@ -14,6 +14,7 @@
     "core:window:allow-toggle-maximize",
     "core:window:allow-close",
     "core:window:allow-start-dragging",
+    "fs:allow-size",
     "fs:allow-exists",
     "fs:allow-read",
     "fs:write-all",
@@ -22,6 +23,15 @@
       "allow": [
         {
           "path": "**/*"
+        },
+        {
+          "path": "/**/*"
+        },
+        {
+          "path": "$APPLOG"
+        },
+        {
+          "path": "$APPLOG/**/*"
         }
       ]
     },
@@ -30,6 +40,24 @@
       "allow": [
         {
           "path": "**/*"
+        },
+        {
+          "path": "/**/*"
+        },
+        {
+          "path": "$APPLOCALDATA"
+        },
+        {
+          "path": "$APPLOCALDATA/**/*"
+        },
+        {
+          "path": "$APPLOG"
+        },
+        {
+          "path": "$APPLOG/**/*"
+        },
+        {
+          "path": "$RESOURCE/**/*"
         }
       ]
     },
