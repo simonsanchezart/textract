@@ -26,6 +26,12 @@
         },
         {
           "path": "/**/*"
+        },
+        {
+          "path": "$APPLOG"
+        },
+        {
+          "path": "$APPLOG/**/*"
         }
       ]
     },
@@ -43,6 +49,12 @@
         },
         {
           "path": "$APPLOCALDATA/**/*"
+        },
+        {
+          "path": "$APPLOG"
+        },
+        {
+          "path": "$APPLOG/**/*"
         },
         {
           "path": "$RESOURCE/**/*"

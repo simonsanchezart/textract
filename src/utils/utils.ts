@@ -1,6 +1,6 @@
 import type { ClassValue } from "clsx";
 import type { Vec2 } from "@/types/types";
-import { appLocalDataDir, join } from "@tauri-apps/api/path";
+import { appLocalDataDir, appLogDir, join } from "@tauri-apps/api/path";
 import { exists, mkdir } from "@tauri-apps/plugin-fs";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -20,8 +20,7 @@ export async function getCacheDirectory() {
 }
 
 export async function getLogFile() {
-  const appLocalData = await appLocalDataDir();
-  const logDir = await join(appLocalData, "logs");
+  const logDir = await appLogDir();
   if (!(await exists(logDir)))
     return;
 
