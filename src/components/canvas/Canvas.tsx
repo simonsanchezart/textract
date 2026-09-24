@@ -64,6 +64,7 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
       setOpenConfirmation(true);
   };
 
+  // bug: make this work properly with undo/redo
   const packImages = async () => {
     type Rect = { x: number; y: number; width: number; height: number };
 
@@ -91,7 +92,18 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
     ));
     const targetRect = getBoundingBox(imgRects);
 
-    await invoke("pack_images", { imgRects, targetRect });
+    const packedRects: Rect[] = await invoke("pack_images", { imgRects, targetRect });
+    selected.forEach((img, i) => {
+      const srcRect = imgRects[i];
+      const targetRect = packedRects[i];
+
+      console.log(srcRect.width, targetRect.width);
+      console.log(srcRect.height, targetRect.height);
+
+      const targetPos = { x: targetRect.x, y: targetRect.y };
+      img.setPosition(targetPos);
+    });
+    console.log(packedRects);
   };
 
   const onConfirmDeletion = useCallback(() => {
