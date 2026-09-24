@@ -68,42 +68,25 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
   const packImages = async () => {
     type Rect = { x: number; y: number; width: number; height: number };
 
-    const getBoundingBox = (rects: Rect[]): Rect => {
-      const left = Math.min(...rects.map(r => r.x));
-      const top = Math.min(...rects.map(r => r.y));
-      const right = Math.max(...rects.map(r => r.x + r.width));
-      const bottom = Math.max(...rects.map(r => r.y + r.height));
-
-      //  must always be relative to 0,0
-      return {
-        x: 0,
-        y: 0,
-        width: right - left,
-        height: bottom - top,
-      };
-    };
-
+    let totalArea = 0;
     const selected = transformerRef.current?.nodes() ?? [];
-
-    const imgRects: Rect[] = selected.map(img => (
-      roundObject(img.getClientRect({
+    const imgRects: Rect[] = selected.map((img) => {
+      const rect = roundObject(img.getClientRect({
         relativeTo: img.getParent()!,
-      })) as Rect
-    ));
-    const targetRect = getBoundingBox(imgRects);
+      })) as Rect;
 
-    const packedRects: Rect[] = await invoke("pack_images", { imgRects, targetRect });
-    selected.forEach((img, i) => {
-      const srcRect = imgRects[i];
-      const targetRect = packedRects[i];
-
-      console.log(srcRect.width, targetRect.width);
-      console.log(srcRect.height, targetRect.height);
-
-      const targetPos = { x: targetRect.x, y: targetRect.y };
-      img.setPosition(targetPos);
+      totalArea += rect.width * rect.height;
+      return rect;
     });
-    console.log(packedRects);
+
+    const targetRectSize = Math.ceil(Math.sqrt(totalArea)) * 2;
+    const padding = canvasType === CanvasType.MARK ? 4 : 0;
+    const packedRects: Rect[] = await invoke("pack_images", { imgRects, targetRectSize, padding });
+
+    selected.forEach((img, i) => {
+      const targetRect = packedRects[i];
+      img.setPosition({ x: targetRect.x, y: targetRect.y });
+    });
   };
 
   const onConfirmDeletion = useCallback(() => {

@@ -1,4 +1,4 @@
-use binpack2d::{bin_new, BinType, Dimension};
+use binpack2d::{binpack::maxrects::Heuristic, maxrects::MaxRectsBin, Dimension};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -9,22 +9,22 @@ pub struct Rect {
     height: i32,
 }
 
-// todo: for mark canvas, target box should be client rect of transformer
-// todo: for atlas canvas, if no selection, target box is canvas
-// todo: for atlas canvas, if selection, target box is client rect of transformer
-
-// check these : https://docs.rs/binpack2d/latest/binpack2d/binpack/maxrects/enum.Heuristic.html
-// bug: doesn't work properly with overlapping images before packing
 #[tauri::command]
-pub async fn pack_images(img_rects: Vec<Rect>, target_rect: Rect) -> Result<Vec<Rect>, String> {
-    let mut bin = bin_new(BinType::MaxRects, target_rect.width, target_rect.height);
+pub async fn pack_images(
+    img_rects: Vec<Rect>,
+    target_rect_size: i32,
+    padding: i32,
+) -> Result<Vec<Rect>, String> {
+    let mut bin = MaxRectsBin::new(target_rect_size, target_rect_size);
     let items: Vec<Dimension> = img_rects
         .iter()
         .enumerate()
-        .map(|(id, rect)| Dimension::with_id(id.try_into().unwrap(), rect.width, rect.height, 0))
+        .map(|(id, rect)| {
+            Dimension::with_id(id.try_into().unwrap(), rect.width, rect.height, padding)
+        })
         .collect();
 
-    let (mut placed, _) = bin.insert_list(&items);
+    let (mut placed, _) = bin.insert_list(&items, Heuristic::BottomLeftRule);
     placed.sort_by_key(|rect| rect.id());
 
     let packed_rects = placed
