@@ -4,6 +4,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.2.0] - 2026-09-26
+### :sparkles: New Features
+- [`5b1910e`](https://github.com/simonsanchezart/textract/commit/5b1910e9a98ec8e7a0355a95b3fc013a4d207c9e) - implement support from drag-n-drop from browser/temp sources *(PR [#32](https://github.com/simonsanchezart/textract/pull/32) by [@simonsanchezart](https://github.com/simonsanchezart))*
+- [`2029d24`](https://github.com/simonsanchezart/textract/commit/2029d24a0cf9c95d63d81652af163ef1276ffff0) - don't select image on mark click by default *(commit by [@simonsanchezart](https://github.com/simonsanchezart))*
+- [`fd9dee0`](https://github.com/simonsanchezart/textract/commit/fd9dee0ca2a21fb8a0695170b1967e8df56bfd7f) - use 'esc' instead of right-click to clear current points *(commit by [@simonsanchezart](https://github.com/simonsanchezart))*
+- [`91c7428`](https://github.com/simonsanchezart/textract/commit/91c742880fb0de4b8658c83c903f59a8ed6898da) - add mark draggeable edges *(PR [#33](https://github.com/simonsanchezart/textract/pull/33) by [@simonsanchezart](https://github.com/simonsanchezart))*
+- [`19f2274`](https://github.com/simonsanchezart/textract/commit/19f22741570908b0a82339c17a511622f9e346f6) - implement quick zoom to mouse position *(PR [#34](https://github.com/simonsanchezart/textract/pull/34) by [@simonsanchezart](https://github.com/simonsanchezart))*
+- [`bedbd5f`](https://github.com/simonsanchezart/textract/commit/bedbd5faaf99d48f082e0981f52f8d8e223e60ee) - improve dot grid behavior *(commit by [@simonsanchezart](https://github.com/simonsanchezart))*
+- [`0e07f2e`](https://github.com/simonsanchezart/textract/commit/0e07f2e9473759db23aed151c7f14cf0daa697d0) - improve image sizing on import and conversion (consistent sizes) *(PR [#35](https://github.com/simonsanchezart/textract/pull/35) by [@simonsanchezart](https://github.com/simonsanchezart))*
+- [`076d8a5`](https://github.com/simonsanchezart/textract/commit/076d8a537eadd6ca8757d96d3a800c8650a5214f) - make target canvas even bigger on double click *(commit by [@simonsanchezart](https://github.com/simonsanchezart))*
+- [`db10286`](https://github.com/simonsanchezart/textract/commit/db10286538b0f0a6a0d136b350e22e43f75b6982) - make axis lines size zoom-independent *(commit by [@simonsanchezart](https://github.com/simonsanchezart))*
+- [`bbf03df`](https://github.com/simonsanchezart/textract/commit/bbf03dfabaada5a04f0f9471da1feb178c9fc295) - add settings menu *(PR [#36](https://github.com/simonsanchezart/textract/pull/36) by [@simonsanchezart](https://github.com/simonsanchezart))*
+- [`4cf9dc4`](https://github.com/simonsanchezart/textract/commit/4cf9dc4b5fc155269eba1dd962ba2983c5c36938) - image packing *(PR [#37](https://github.com/simonsanchezart/textract/pull/37) by [@simonsanchezart](https://github.com/simonsanchezart))*
+
+### :bug: Bug Fixes
+- [`7f41e9e`](https://github.com/simonsanchezart/textract/commit/7f41e9eca3c0616cdf3660112ef130d6385b64bf) - hover conversion when hovering mark line/point *(PR [#23](https://github.com/simonsanchezart/textract/pull/23) by [@ghsnyc](https://github.com/ghsnyc))*
+- [`5c4e16f`](https://github.com/simonsanchezart/textract/commit/5c4e16f4d4ff7bf276f583e14ce5a7d2b611bb26) - apply EXIF orientation when decoding images *(PR [#29](https://github.com/simonsanchezart/textract/pull/29) by [@AbdullahPesteli](https://github.com/AbdullahPesteli))*
+- [`ae4e6b8`](https://github.com/simonsanchezart/textract/commit/ae4e6b8e57b3013233e5ce8d6774290d90e034ac) - set mark as dirty when deleting atlas image *(PR [#30](https://github.com/simonsanchezart/textract/pull/30) by [@simonsanchezart](https://github.com/simonsanchezart))*
+  - :arrow_lower_right: *fixes issue [#28](https://github.com/simonsanchezart/textract/issues/28) opened by [@ghsnyc](https://github.com/ghsnyc)*
+- [`3ebe99f`](https://github.com/simonsanchezart/textract/commit/3ebe99f7a0857585eec9cc62c68fcdcf3c0723e5) - non-required parameter *(commit by [@simonsanchezart](https://github.com/simonsanchezart))*
+
+### :recycle: Refactors
+- [`b364d6e`](https://github.com/simonsanchezart/textract/commit/b364d6ed63d4105a61f638ea00080c5da1ffce86) - remove unecessary argument *(commit by [@simonsanchezart](https://github.com/simonsanchezart))*
+- [`9aa6689`](https://github.com/simonsanchezart/textract/commit/9aa6689aceea93e43330969d0015a7c3438d9f64) - remove comments *(commit by [@simonsanchezart](https://github.com/simonsanchezart))*
+- [`f8315ed`](https://github.com/simonsanchezart/textract/commit/f8315edb1cecf74b453ac7b6b400166890b7991e) - remove unused variable *(commit by [@simonsanchezart](https://github.com/simonsanchezart))*
+
+### :wrench: Chores
+- [`58e0b98`](https://github.com/simonsanchezart/textract/commit/58e0b9822a4229176493108cd5bd4adf3034f6ac) - ignore ts deprecations *(commit by [@simonsanchezart](https://github.com/simonsanchezart))*
+
+
 ## [v1.1.0] - 2026-08-15
 ### :sparkles: New Features
 - [`d10aa0a`](https://github.com/simonsanchezart/textract/commit/d10aa0a7c4fd8cf06e85b9873471f96b9db1f9ea) - implement drag-n-drop images *(PR [#17](https://github.com/simonsanchezart/textract/pull/17) by [@simonsanchezart](https://github.com/simonsanchezart))*
@@ -42,3 +72,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [v1.0.0]: https://github.com/simonsanchezart/textract/compare/v0.0.0...v1.0.0
 [v1.1.0]: https://github.com/simonsanchezart/textract/compare/v1.0.0...v1.1.0
+[v1.2.0]: https://github.com/simonsanchezart/textract/compare/v1.1.0...v1.2.0
