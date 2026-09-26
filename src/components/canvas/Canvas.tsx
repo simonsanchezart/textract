@@ -68,14 +68,19 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
   const packImages = async () => {
     type Rect = { x: number; y: number; width: number; height: number };
 
-    let totalArea = 0;
     const selected = transformerRef.current?.nodes() ?? [];
+    const offset = { x: Number.MAX_VALUE, y: Number.MAX_VALUE };
+    let totalArea = 0;
+
     const imgRects: Rect[] = selected.map((img) => {
       const rect = roundObject(img.getClientRect({
         relativeTo: img.getParent()!,
       })) as Rect;
 
       totalArea += rect.width * rect.height;
+      offset.x = Math.min(offset.x, rect.x);
+      offset.y = Math.min(offset.y, rect.y);
+
       return rect;
     });
 
@@ -85,7 +90,7 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
 
     selected.forEach((img, i) => {
       const targetRect = packedRects[i];
-      img.getAttr("updatePosition")?.({ x: targetRect.x, y: targetRect.y });
+      img.getAttr("updatePosition")?.({ x: targetRect.x + offset.x, y: targetRect.y + offset.y });
     });
   };
 
