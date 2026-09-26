@@ -14,7 +14,6 @@ import useCanvasSelection from "@/components/canvas/hooks/use-canvas-selection";
 import useTransformSnapping from "@/components/canvas/hooks/use-canvas-snapping";
 import useCanvasZoom, { zoomCanvas } from "@/components/canvas/hooks/use-canvas-zoom";
 import { useCanvasStore } from "@/stores/canvas-store";
-import { useMarkStore } from "@/stores/mark-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { CanvasType } from "@/types/types";
 import { isShortcutModifierPressed, roundObject } from "@/utils/utils";
