@@ -14,6 +14,7 @@ import useCanvasSelection from "@/components/canvas/hooks/use-canvas-selection";
 import useTransformSnapping from "@/components/canvas/hooks/use-canvas-snapping";
 import useCanvasZoom, { zoomCanvas } from "@/components/canvas/hooks/use-canvas-zoom";
 import { useCanvasStore } from "@/stores/canvas-store";
+import { useMarkStore } from "@/stores/mark-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { CanvasType } from "@/types/types";
 import { isShortcutModifierPressed, roundObject } from "@/utils/utils";
@@ -64,7 +65,6 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
       setOpenConfirmation(true);
   };
 
-  // bug: make this work properly with undo/redo
   const packImages = async () => {
     type Rect = { x: number; y: number; width: number; height: number };
 
@@ -85,7 +85,7 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
 
     selected.forEach((img, i) => {
       const targetRect = packedRects[i];
-      img.setPosition({ x: targetRect.x, y: targetRect.y });
+      img.getAttr("updatePosition")?.({ x: targetRect.x, y: targetRect.y });
     });
   };
 
