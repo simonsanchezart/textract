@@ -83,3 +83,7 @@ export function snapPowerOfTwo(x: number) {
 export function clamp(x: number, min: number, max: number) {
   return Math.max(Math.min(x, max), min);
 }
+
+export function roundObject(object: object) {
+  return Object.fromEntries(Object.entries(object).map(([k, v]) => [k, Math.round(v)]));
+}

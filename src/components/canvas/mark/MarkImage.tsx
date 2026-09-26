@@ -91,6 +91,7 @@ function MarkImageComponent({ imageData }: { imageData: MarkImageType }) {
       y={imageData.position.y}
       rotation={imageData.rotation}
       scale={imageData.scale}
+      updatePosition={(pos: Vec2) => useMarkStore.getState().updateImagePosition(imageData.id, pos)}
       resetScale={() => useMarkStore.getState().updateImageScale(imageData.id, imageData.initialScale)}
       onClick={(e) => {
         if (e.evt.button === 0) {

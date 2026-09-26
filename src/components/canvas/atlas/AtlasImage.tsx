@@ -1,5 +1,6 @@
 import type Konva from "konva";
 import type { AtlasImageType } from "@/stores/atlas-store";
+import type { Vec2 } from "@/types/types";
 import { Group, Image } from "react-konva";
 import useImage from "use-image";
 import { useAtlasStore } from "@/stores/atlas-store";
@@ -21,6 +22,7 @@ function AtlasImageComponent({ imageData }: { imageData: AtlasImageType }) {
       y={imageData.position.y}
       rotation={imageData.rotation}
       scale={imageData.scale}
+      updatePosition={(pos: Vec2) => useAtlasStore.getState().updateImagePosition(imageData.id, pos)}
       resetScale={() => useAtlasStore.getState().updateImageScale(imageData.id, imageData.initialScale)}
       onTransformEnd={(e) => {
         const attrs = e.currentTarget.attrs;

@@ -1,9 +1,11 @@
 import type Konva from "konva";
 import type { KonvaPointerEvent } from "konva/lib/PointerEvents";
 import type { ReactNode } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { debug } from "@tauri-apps/plugin-log";
 import { EyeIcon, TrashIcon } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
+import { CiGrid31 } from "react-icons/ci";
 import { IoIosResize } from "react-icons/io";
 import { Layer, Shape, Stage, Transformer } from "react-konva";
 import { useShallow } from "zustand/react/shallow";
@@ -14,7 +16,7 @@ import useCanvasZoom, { zoomCanvas } from "@/components/canvas/hooks/use-canvas-
 import { useCanvasStore } from "@/stores/canvas-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { CanvasType } from "@/types/types";
-import { isShortcutModifierPressed } from "@/utils/utils";
+import { isShortcutModifierPressed, roundObject } from "@/utils/utils";
 import PopupConfirm from "../PopupConfirm";
 import {
   ContextMenu,
@@ -60,6 +62,35 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
     const selected = transformerRef.current?.nodes() ?? [];
     if (selected.length !== 0)
       setOpenConfirmation(true);
+  };
+
+  const packImages = async () => {
+    type Rect = { x: number; y: number; width: number; height: number };
+
+    const selected = transformerRef.current?.nodes() ?? [];
+    const offset = { x: Number.MAX_VALUE, y: Number.MAX_VALUE };
+    let totalArea = 0;
+
+    const imgRects: Rect[] = selected.map((img) => {
+      const rect = roundObject(img.getClientRect({
+        relativeTo: img.getParent()!,
+      })) as Rect;
+
+      totalArea += rect.width * rect.height;
+      offset.x = Math.min(offset.x, rect.x);
+      offset.y = Math.min(offset.y, rect.y);
+
+      return rect;
+    });
+
+    const targetRectSize = Math.ceil(Math.sqrt(totalArea)) * 2;
+    const padding = canvasType === CanvasType.MARK ? 4 : 0;
+    const packedRects: Rect[] = await invoke("pack_images", { imgRects, targetRectSize, padding });
+
+    selected.forEach((img, i) => {
+      const targetRect = packedRects[i];
+      img.getAttr("updatePosition")?.({ x: targetRect.x + offset.x, y: targetRect.y + offset.y });
+    });
   };
 
   const onConfirmDeletion = useCallback(() => {
@@ -138,7 +169,7 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
             {...props}
           >
             <Layer listening={false}>
-              <Shape sceneFunc={showGrid ? drawGrid : () => {}} />
+              <Shape sceneFunc={showGrid ? drawGrid : () => { }} />
             </Layer>
 
             <Layer>
@@ -171,6 +202,17 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
         <ContextMenuContent onContextMenu={e => e.preventDefault()}>
           {contextMenu}
 
+          {selectedNodes.length > 1 && (
+            <>
+              <ContextMenuGroup>
+                <ContextMenuItem onClick={packImages}>
+                  <CiGrid31 />
+                  Pack Images
+                </ContextMenuItem>
+              </ContextMenuGroup>
+            </>
+          )}
+
           {selectedNodes.length > 0 && (
             <>
               <ContextMenuGroup>
@@ -184,7 +226,6 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
                   <IoIosResize />
                   Reset Scale
                 </ContextMenuItem>
-
                 <ContextMenuItem variant="destructive" onClick={confirmImageDelete}>
                   <TrashIcon />
                   Delete Images
