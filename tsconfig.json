@@ -8,8 +8,6 @@
       "DOM.Iterable"
     ],
     "useDefineForClassFields": true,
-    "baseUrl": ".",
-    "ignoreDeprecations": "6.0",
     "module": "ESNext",
     /* Bundler mode */
     "moduleResolution": "bundler",
