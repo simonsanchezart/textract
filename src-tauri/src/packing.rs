@@ -17,7 +17,7 @@ pub async fn pack_images(
 ) -> Result<Vec<Rect>, String> {
     let mut bin = MaxRectsBin::new(target_rect_size, target_rect_size);
     let items: Vec<Dimension> = img_rects
-        .iter()
+        .into_iter()
         .enumerate()
         .map(|(id, rect)| {
             Dimension::with_id(id.try_into().unwrap(), rect.width, rect.height, padding)
@@ -28,7 +28,7 @@ pub async fn pack_images(
     placed.sort_by_key(|rect| rect.id());
 
     let packed_rects = placed
-        .iter()
+        .into_iter()
         .map(|rect| Rect {
             x: rect.x(),
             y: rect.y(),
