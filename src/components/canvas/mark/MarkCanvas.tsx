@@ -35,7 +35,6 @@ import MarkImage from "./MarkImage";
 
 function MarkCanvas({ className = "" }: { className?: string }) {
   const markImages = useMarkStore(state => state.images);
-  const atlasImages = useAtlasStore(state => state.images);
   const selectedNodes = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].selectedNodes);
   const hoverShape = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].hoverShape);
   const canvasZoom = useCanvasStore(s => s.canvas[CanvasType.MARK].scale);
@@ -241,14 +240,20 @@ function MarkCanvas({ className = "" }: { className?: string }) {
           points: markPoints,
         });
 
-        results.forEach(async (base64, idx) => {
+        let converted = 0;
+        for (const [idx, base64] of results.entries()) {
           const markId = dirtyIds[idx];
-          const existingAtlasImage = Object.values(atlasImages).find(image => image.markId === markId);
 
           const img = new Image();
           img.src = base64;
           await img.decode();
 
+          const currentMark = useMarkStore.getState().marks[markId];
+          if (!currentMark?.dirty || currentMark.points !== marks[markId].points)
+            continue;
+
+          const atlas = useAtlasStore.getState();
+          const existingAtlasImage = Object.values(atlas.images).find(image => image.markId === markId);
           const scaleFactor = (useSettingsStore.getState().atlasResolution / 4) / img.width;
           const scaledWidth = img.width * scaleFactor;
           const scaledHeight = img.height * scaleFactor;
@@ -258,7 +263,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
           const imageScale = { x: snappedWidth / img.width, y: snappedHeight / img.height };
 
           if (existingAtlasImage) {
-            useAtlasStore.getState().updateImageBase64(existingAtlasImage.id, base64);
+            atlas.updateImageBase64(existingAtlasImage.id, base64);
           }
           else {
             const atlasImage: AtlasImageType = {
@@ -271,13 +276,18 @@ function MarkCanvas({ className = "" }: { className?: string }) {
               initialScale: imageScale,
             };
 
-            useAtlasStore.getState().addImage(atlasImage);
+            atlas.addImage(atlasImage);
           }
           useMarkStore.getState().updateMarkDirty(markId, false);
-        });
+          converted++;
+        }
 
-        toast.success(`Finished processing ${dirtyIds.length} marks for ${imgName}`);
-        info(`Finished processing ${dirtyIds.length} marks for ${imgName}`);
+        if (converted > 0) {
+          toast.success(`Finished processing ${converted} marks for ${imgName}`);
+          info(`Finished processing ${converted} marks for ${imgName}`);
+        }
+        if (converted < dirtyIds.length)
+          toast.warning(`Skipped changed marks for ${imgName}`);
       }),
     );
   };
