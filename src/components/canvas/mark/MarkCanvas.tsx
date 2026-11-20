@@ -249,7 +249,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
           await img.decode();
 
           const currentMark = useMarkStore.getState().marks[markId];
-          if (!currentMark?.dirty || currentMark.points !== marks[markId].points)
+          if (!currentMark?.dirty)
             continue;
 
           const atlas = useAtlasStore.getState();
@@ -278,7 +278,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
 
             atlas.addImage(atlasImage);
           }
-          useMarkStore.getState().updateMarkDirty(markId, false);
+          useMarkStore.getState().updateMarkDirty(markId, currentMark.points !== marks[markId].points);
           converted++;
         }
 
@@ -286,8 +286,6 @@ function MarkCanvas({ className = "" }: { className?: string }) {
           toast.success(`Finished processing ${converted} marks for ${imgName}`);
           info(`Finished processing ${converted} marks for ${imgName}`);
         }
-        if (converted < dirtyIds.length)
-          toast.warning(`Skipped changed marks for ${imgName}`);
       }),
     );
   };
