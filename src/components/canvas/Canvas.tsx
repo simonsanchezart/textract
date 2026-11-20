@@ -8,6 +8,7 @@ import { useCallback, useRef, useState } from "react";
 import { CiGrid31 } from "react-icons/ci";
 import { IoIosResize } from "react-icons/io";
 import { Layer, Shape, Stage, Transformer } from "react-konva";
+import { toast } from "sonner";
 import { useShallow } from "zustand/react/shallow";
 import useCanvasGrid from "@/components/canvas/hooks/use-canvas-grid";
 import useCanvasSelection from "@/components/canvas/hooks/use-canvas-selection";
@@ -83,9 +84,23 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
       return rect;
     });
 
-    const targetRectSize = Math.ceil(Math.sqrt(totalArea)) * 2;
     const padding = canvasType === CanvasType.MARK ? 4 : 0;
-    const packedRects: Rect[] = await invoke("pack_images", { imgRects, targetRectSize, padding });
+    const minSide = Math.max(...imgRects.map(rect => Math.max(rect.width, rect.height))) + 2 * padding;
+    const targetRectSize = Math.max(minSide, Math.ceil(Math.sqrt(totalArea)) * 2);
+
+    let packedRects: Rect[];
+    try {
+      packedRects = await invoke("pack_images", { imgRects, targetRectSize, padding });
+    }
+    catch (error) {
+      toast.error(String(error));
+      return;
+    }
+
+    if (packedRects.length !== selected.length) {
+      toast.error("Could not pack every selected image");
+      return;
+    }
 
     selected.forEach((img, i) => {
       const targetRect = packedRects[i];
