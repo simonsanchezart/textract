@@ -104,7 +104,11 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
 
     selected.forEach((img, i) => {
       const targetRect = packedRects[i];
-      img.getAttr("updatePosition")?.({ x: targetRect.x + offset.x, y: targetRect.y + offset.y });
+      const bounds = img.getClientRect({ relativeTo: img.getParent()! });
+      img.getAttr("updatePosition")?.({
+        x: img.x() + targetRect.x + offset.x - bounds.x,
+        y: img.y() + targetRect.y + offset.y - bounds.y,
+      });
     });
   };
 
