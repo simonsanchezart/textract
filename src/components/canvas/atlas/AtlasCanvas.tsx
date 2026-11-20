@@ -99,19 +99,24 @@ function AtlasCanvas({ className }: { className?: string }) {
     const exportBasePath = await dirname(exportDir);
     const selectedImages = transformer.getNodes();
     for (const img of selectedImages) {
-      const rect = img.getClientRect({
+      const clone = img.clone({ x: 0, y: 0 });
+      const rect = clone.getClientRect({
         skipShadow: true,
         skipStroke: true,
       });
 
-      const dataUrl = img.toDataURL({
+      // Remove floating-point noise, caused transparent edges
+      const width = Math.ceil(Number(rect.width.toFixed(1)));
+      const height = Math.ceil(Number(rect.height.toFixed(1)));
+      const dataUrl = clone.toDataURL({
         x: rect.x,
         y: rect.y,
-        width: rect.width,
-        height: rect.height,
+        width,
+        height,
         pixelRatio: 1,
         imageSmoothingEnabled: false,
       });
+      clone.destroy();
 
       const response = await fetch(dataUrl);
       const buffer = await response.arrayBuffer();
