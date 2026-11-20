@@ -90,7 +90,7 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
 
     let packedRects: Rect[];
     try {
-      packedRects = await invoke("pack_images", { imgRects, targetRectSize, padding, grow: true });
+      packedRects = await invoke("pack_images", { imgRects, targetRectSize, padding });
     }
     catch (error) {
       toast.error(String(error));
