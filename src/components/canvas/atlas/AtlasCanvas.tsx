@@ -105,22 +105,15 @@ function AtlasCanvas({ className }: { className?: string }) {
         skipStroke: true,
       });
 
-      let dataUrl: string;
-      try {
-        const x = Math.floor(rect.x);
-        const y = Math.floor(rect.y);
-        dataUrl = clone.toDataURL({
-          x,
-          y,
-          width: Math.ceil(rect.x + rect.width) - x,
-          height: Math.ceil(rect.y + rect.height) - y,
-          pixelRatio: 1,
-          imageSmoothingEnabled: false,
-        });
-      }
-      finally {
-        clone.destroy();
-      }
+      const dataUrl = clone.toDataURL({
+        x: Math.floor(rect.x),
+        y: Math.floor(rect.y),
+        width: Math.ceil(rect.x + rect.width) - x,
+        height: Math.ceil(rect.y + rect.height) - y,
+        pixelRatio: 1,
+        imageSmoothingEnabled: false,
+      });
+      clone.destroy();
 
       const response = await fetch(dataUrl);
       const buffer = await response.arrayBuffer();
