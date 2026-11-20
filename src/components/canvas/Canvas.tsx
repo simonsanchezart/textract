@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { debug } from "@tauri-apps/plugin-log";
 import { EyeIcon, TrashIcon } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CiGrid31 } from "react-icons/ci";
 import { IoIosResize } from "react-icons/io";
 import { Layer, Shape, Stage, Transformer } from "react-konva";
@@ -58,6 +58,23 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
   const { selectedNodes, handleSelection, selectAll } = useCanvasSelection({ canvasType, transformerRef });
   const { handleTransformDragMove, handleTransformSnapping } = useTransformSnapping({ stageRef, snapSize });
   const [openConfirmation, setOpenConfirmation] = useState(false);
+
+  const quickZoomView = useRef<typeof canvasState | null>(null);
+  const restoreQuickZoom = useCallback(() => {
+    const view = quickZoomView.current;
+    if (!view)
+      return;
+
+    quickZoomView.current = null;
+    const store = useCanvasStore.getState();
+    store.setCanvasPosition(canvasType, { x: view.x, y: view.y });
+    store.setCanvasScale(canvasType, view.scale);
+  }, [canvasType]);
+
+  useEffect(() => {
+    window.addEventListener("blur", restoreQuickZoom);
+    return () => window.removeEventListener("blur", restoreQuickZoom);
+  }, [restoreQuickZoom]);
 
   const confirmImageDelete = () => {
     const selected = transformerRef.current?.nodes() ?? [];
@@ -122,8 +139,13 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
   }, [onDelete, transformerRef]);
 
   const onKeyDown = async (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.code === "Space" && !e.repeat && canvasType === CanvasType.MARK)
-      zoomCanvas({ canvasType, stageRef, zoomMultiplier: 10, direction: 1 });
+    if (e.code === "Space" && canvasType === CanvasType.MARK) {
+      e.preventDefault();
+      if (!e.repeat && !quickZoomView.current && stageRef.current) {
+        quickZoomView.current = useCanvasStore.getState().canvas[canvasType];
+        zoomCanvas({ canvasType, stageRef, zoomMultiplier: 10, direction: 1 });
+      }
+    }
 
     switch (e.code) {
       case "Delete":
@@ -139,12 +161,21 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
   };
 
   const onKeyUp = async (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.code === "Space" && canvasType === CanvasType.MARK)
-      zoomCanvas({ canvasType, stageRef, zoomMultiplier: 10, direction: -1 });
+    if (e.code === "Space")
+      restoreQuickZoom();
   };
 
   return (
-    <div className="h-full" tabIndex={-1} onKeyDown={onKeyDown} onKeyUp={onKeyUp}>
+    <div
+      className="h-full"
+      tabIndex={-1}
+      onKeyDown={onKeyDown}
+      onKeyUp={onKeyUp}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget))
+          restoreQuickZoom();
+      }}
+    >
       <PopupConfirm
         title="Delete Selected"
         description="Are you sure you want to delete the selected images?"

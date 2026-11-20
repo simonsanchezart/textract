@@ -18,7 +18,7 @@ export function zoomCanvas({ canvasType, stageRef, zoomMultiplier = 1.1, minZoom
     return { newPos: { x: 0, y: 0 }, newScale: 1.0 };
 
   const oldScale = stage.scaleX();
-  const pointer = stage.getPointerPosition()!;
+  const pointer = stage.getPointerPosition() ?? { x: stage.width() / 2, y: stage.height() / 2 };
   const offset = stage.offset();
   const mousePointTo = {
     x: (pointer.x - stage.x()) / oldScale + offset.x,
