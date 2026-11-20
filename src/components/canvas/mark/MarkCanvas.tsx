@@ -240,8 +240,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
           points: markPoints,
         });
 
-        let converted = 0;
-        for (const [idx, base64] of results.entries()) {
+        results.forEach(async (base64, idx) => {
           const markId = dirtyIds[idx];
 
           const img = new Image();
@@ -250,7 +249,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
 
           const currentMark = useMarkStore.getState().marks[markId];
           if (!currentMark?.dirty)
-            continue;
+            return;
 
           const atlas = useAtlasStore.getState();
           const existingAtlasImage = Object.values(atlas.images).find(image => image.markId === markId);
@@ -279,13 +278,10 @@ function MarkCanvas({ className = "" }: { className?: string }) {
             atlas.addImage(atlasImage);
           }
           useMarkStore.getState().updateMarkDirty(markId, currentMark.points !== marks[markId].points);
-          converted++;
-        }
+        });
 
-        if (converted > 0) {
-          toast.success(`Finished processing ${converted} marks for ${imgName}`);
-          info(`Finished processing ${converted} marks for ${imgName}`);
-        }
+        toast.success(`Finished processing ${dirtyIds.length} marks for ${imgName}`);
+        info(`Finished processing ${dirtyIds.length} marks for ${imgName}`);
       }),
     );
   };
