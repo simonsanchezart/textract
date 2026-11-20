@@ -105,11 +105,14 @@ function AtlasCanvas({ className }: { className?: string }) {
         skipStroke: true,
       });
 
+      // Remove floating-point noise, caused transparent edges
+      const width = Math.ceil(Number(rect.width.toFixed(1)));
+      const height = Math.ceil(Number(rect.height.toFixed(1)));
       const dataUrl = clone.toDataURL({
-        x: Math.floor(rect.x),
-        y: Math.floor(rect.y),
-        width: Math.ceil(rect.x + rect.width) - x,
-        height: Math.ceil(rect.y + rect.height) - y,
+        x: rect.x,
+        y: rect.y,
+        width,
+        height,
         pixelRatio: 1,
         imageSmoothingEnabled: false,
       });
