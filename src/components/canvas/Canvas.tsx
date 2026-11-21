@@ -139,7 +139,12 @@ function Canvas({ canvasType, onDelete, transformerRef, contextMenu, children, c
   }, [onDelete, transformerRef]);
 
   const onKeyDown = async (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.code === "Space" && canvasType === CanvasType.MARK) {
+    if (
+      e.code === "Space"
+      && canvasType === CanvasType.MARK
+      && e.target instanceof Node
+      && e.currentTarget.contains(e.target)
+    ) {
       e.preventDefault();
       if (!e.repeat && !quickZoomView.current && stageRef.current) {
         quickZoomView.current = useCanvasStore.getState().canvas[canvasType];
