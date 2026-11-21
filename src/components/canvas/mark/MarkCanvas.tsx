@@ -35,7 +35,6 @@ import MarkImage from "./MarkImage";
 
 function MarkCanvas({ className = "" }: { className?: string }) {
   const markImages = useMarkStore(state => state.images);
-  const atlasImages = useAtlasStore(state => state.images);
   const selectedNodes = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].selectedNodes);
   const hoverShape = useCanvasStore(s => s.transientCanvas[CanvasType.MARK].hoverShape);
   const canvasZoom = useCanvasStore(s => s.canvas[CanvasType.MARK].scale);
@@ -243,12 +242,17 @@ function MarkCanvas({ className = "" }: { className?: string }) {
 
         results.forEach(async (base64, idx) => {
           const markId = dirtyIds[idx];
-          const existingAtlasImage = Object.values(atlasImages).find(image => image.markId === markId);
 
           const img = new Image();
           img.src = base64;
           await img.decode();
 
+          const currentMark = useMarkStore.getState().marks[markId];
+          if (!currentMark?.dirty)
+            return;
+
+          const atlas = useAtlasStore.getState();
+          const existingAtlasImage = Object.values(atlas.images).find(image => image.markId === markId);
           const scaleFactor = (useSettingsStore.getState().atlasResolution / 4) / img.width;
           const scaledWidth = img.width * scaleFactor;
           const scaledHeight = img.height * scaleFactor;
@@ -258,7 +262,7 @@ function MarkCanvas({ className = "" }: { className?: string }) {
           const imageScale = { x: snappedWidth / img.width, y: snappedHeight / img.height };
 
           if (existingAtlasImage) {
-            useAtlasStore.getState().updateImageBase64(existingAtlasImage.id, base64);
+            atlas.updateImageBase64(existingAtlasImage.id, base64);
           }
           else {
             const atlasImage: AtlasImageType = {
@@ -271,9 +275,9 @@ function MarkCanvas({ className = "" }: { className?: string }) {
               initialScale: imageScale,
             };
 
-            useAtlasStore.getState().addImage(atlasImage);
+            atlas.addImage(atlasImage);
           }
-          useMarkStore.getState().updateMarkDirty(markId, false);
+          useMarkStore.getState().updateMarkDirty(markId, currentMark.points !== marks[markId].points);
         });
 
         toast.success(`Finished processing ${dirtyIds.length} marks for ${imgName}`);
