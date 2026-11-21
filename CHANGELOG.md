@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.2.1] - 2026-11-21
+### :bug: Bug Fixes
+- [`56eb75b`](https://github.com/simonsanchezart/textract/commit/56eb75b6a1dc92d338773ad9fc0207a078d0b4d7) - improve packing for thin images *(PR [#38](https://github.com/simonsanchezart/textract/pull/38) by [@simonsanchezart](https://github.com/simonsanchezart))*
+- [`5413478`](https://github.com/simonsanchezart/textract/commit/541347813daa70918b5d68feff41b3f2f42a8b70) - align rotated images to packed bounds *(PR [#39](https://github.com/simonsanchezart/textract/pull/39) by [@simonsanchezart](https://github.com/simonsanchezart))*
+- [`49bd067`](https://github.com/simonsanchezart/textract/commit/49bd067295cc18624e253281a494663ba6f62cfa) - restore the view after quick zoom *(PR [#40](https://github.com/simonsanchezart/textract/pull/40) by [@simonsanchezart](https://github.com/simonsanchezart))*
+- [`9c2b945`](https://github.com/simonsanchezart/textract/commit/9c2b945de652722386cd90f9f4fc1543ae0c2fc8) - export selected textures at atlas scale *(PR [#41](https://github.com/simonsanchezart/textract/pull/41) by [@simonsanchezart](https://github.com/simonsanchezart))*
+- [`b8e6d92`](https://github.com/simonsanchezart/textract/commit/b8e6d92856eb970adf091aa0e414d3b433ed8cf8) - preserve mark edits during conversion *(PR [#42](https://github.com/simonsanchezart/textract/pull/42) by [@simonsanchezart](https://github.com/simonsanchezart))*
+- [`815d6f4`](https://github.com/simonsanchezart/textract/commit/815d6f44b32bafefb45f0601426f08b87d7568e2) - avoid quick zoom on delete dialog *(commit by [@simonsanchezart](https://github.com/simonsanchezart))*
+
+### :recycle: Refactors
+- [`2accb43`](https://github.com/simonsanchezart/textract/commit/2accb43799b56485c1f4045899268b705c83c1a1) - use into_iter() *(commit by [@simonsanchezart](https://github.com/simonsanchezart))*
+
+
 ## [v1.2.0] - 2026-09-26
 ### :sparkles: New Features
 - [`5b1910e`](https://github.com/simonsanchezart/textract/commit/5b1910e9a98ec8e7a0355a95b3fc013a4d207c9e) - implement support from drag-n-drop from browser/temp sources *(PR [#32](https://github.com/simonsanchezart/textract/pull/32) by [@simonsanchezart](https://github.com/simonsanchezart))*
@@ -73,3 +86,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [v1.0.0]: https://github.com/simonsanchezart/textract/compare/v0.0.0...v1.0.0
 [v1.1.0]: https://github.com/simonsanchezart/textract/compare/v1.0.0...v1.1.0
 [v1.2.0]: https://github.com/simonsanchezart/textract/compare/v1.1.0...v1.2.0
+[v1.2.1]: https://github.com/simonsanchezart/textract/compare/v1.2.0...v1.2.1
