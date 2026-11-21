@@ -1,7 +1,7 @@
 {
   "name": "textract",
   "type": "module",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
   "scripts": {
     "dev": "node scripts/build-help.mjs && vite",
